@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils/index.js';
 import { supabase } from '@/lib/supabaseClient.js';
+import { useAuth } from '@/lib/AuthContext.jsx';
 import {
   LayoutDashboard, LogOut, FileText, Users, Briefcase, Shield, CheckSquare,
   Truck, UserCheck, FileSearch, DollarSign, BarChart3, ChevronDown,
@@ -166,7 +167,8 @@ const isPublicPage = (pathname) => {
 };
 
 function PrivateLayout({ children, currentPageName }) {
-  const [user, setUser] = useState(null);
+  const { user: contextUser } = useAuth();
+  const [user, setUser] = useState(contextUser || null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -178,10 +180,11 @@ function PrivateLayout({ children, currentPageName }) {
         const { data: { user: currentUser }, error } = await supabase.auth.getUser();
         if (error) throw error;
         
-        setUser(currentUser);
+        const effectiveUser = currentUser || contextUser;
+        setUser(effectiveUser);
 
-        if (currentUser && currentUser.email) {
-          const userEmail = currentUser.email.toLowerCase();
+        if (effectiveUser && effectiveUser.email) {
+          const userEmail = effectiveUser.email.toLowerCase();
 
           const adminEmails = [
                     'lena@m2fleetcom.com', 'orville@m2fleetcom.com', 'steve@m2fleetcom.com',
@@ -192,7 +195,7 @@ function PrivateLayout({ children, currentPageName }) {
           const specialContractorEmails = ['tjserota@gmail.com'];
 
           const isVeloPM = userEmail.endsWith('@velociti.com') || userEmail === 'omcvay@gmail.com';
-          const isAdmin = currentUser?.user_metadata?.role === 'admin' || adminEmails.includes(userEmail);
+          const isAdmin = effectiveUser?.user_metadata?.role === 'admin' || adminEmails.includes(userEmail);
           const isQC = qcEmails.includes(userEmail);
           const isContractor = !isVeloPM && (
             userEmail.includes('.contractor@m2fleetcom.com') || 
@@ -206,24 +209,21 @@ function PrivateLayout({ children, currentPageName }) {
           const surveyPortalUrl = createPageUrl('VeloSurveyPortal');
 
           if (isVeloPM && currentPath !== surveyPortalUrl) {
-            console.log('Redirecting Velo PM to their survey portal.');
             navigate(surveyPortalUrl, { replace: true });
             return;
           }
 
-          // Profile completion check for contractors
           if (isContractor && !isAdmin && !isQC && !isVeloPM) {
             const hasRequiredFields = 
-              currentUser.displayName && 
-              currentUser.business && 
-              currentUser.phone &&
-              currentUser.emergencyContactName &&
-              currentUser.emergencyContactPhone;
+              effectiveUser.displayName && 
+              effectiveUser.business && 
+              effectiveUser.phone &&
+              effectiveUser.emergencyContactName &&
+              effectiveUser.emergencyContactPhone;
             
             const isOnProfilePage = currentPath === profilePageUrl;
             
             if (!hasRequiredFields && !isOnProfilePage) {
-              console.log('Redirecting contractor to complete profile.');
               navigate(profilePageUrl, { replace: true });
               return;
             }
@@ -231,12 +231,10 @@ function PrivateLayout({ children, currentPageName }) {
 
           if (currentPath === '/' || currentPath.endsWith('/AdminDashboard')) {
              if (isM2PM) {
-                console.log('Redirecting M2 PM to My Team dashboard.');
                 navigate(createPageUrl('MyTeam'), { replace: true });
                 return;
              }
              if (isContractor && !isAdmin && !isQC && !isVeloPM) {
-                console.log('Redirecting general contractor from admin page or root to ContractorDashboard.');
                 navigate(createPageUrl('ContractorDashboard'), { replace: true });
                 return;
              }
@@ -246,20 +244,20 @@ function PrivateLayout({ children, currentPageName }) {
             const currentPage = currentPath.split('/').pop() || 'AdminDashboard';
 
             if (adminOnlyPages.includes(currentPage) || currentPage === '' || currentPage === 'AdminDashboard') {
-              console.log('Redirecting general contractor from admin page:', currentPage);
               navigate(createPageUrl('ContractorDashboard'), { replace: true });
               return;
             }
           }
         }
       } catch (error) {
-        console.error('Authentication error:', error);
+        console.error('Authentication error, falling back to demo user:', error);
+        setUser(contextUser || null);
       } finally {
         setLoading(false);
       }
     };
     checkUser();
-  }, [navigate, location, currentPageName]);
+  }, [navigate, location, currentPageName, contextUser]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

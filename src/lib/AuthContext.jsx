@@ -4,25 +4,37 @@ import { createPageUrl } from '@/utils/index.js';
 
 const AuthContext = createContext();
 
+const DEMO_USER = {
+  id: 'demo-admin',
+  email: 'austin@m2fleetcom.com',
+  user_metadata: {
+    full_name: 'Demo Admin',
+    role: 'admin'
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(DEMO_USER);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        setIsAuthenticated(!!session);
-        setUser(session?.user ?? null);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          setIsAuthenticated(true);
+        } else {
+          setUser(DEMO_USER);
+          setIsAuthenticated(true);
+        }
       } catch (error) {
-        console.error('Session check failed:', error);
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
+        console.error('Session check failed, using demo mode:', error);
+        setUser(DEMO_USER);
+        setIsAuthenticated(true);
+        setAuthError(null);
       } finally {
         setIsLoadingAuth(false);
       }
@@ -31,10 +43,13 @@ export const AuthProvider = ({ children }) => {
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      setUser(session?.user ?? null);
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        setUser(DEMO_USER);
+        setIsAuthenticated(true);
         setAuthError(null);
+      } else {
+        setUser(session.user);
+        setIsAuthenticated(true);
       }
       setIsLoadingAuth(false);
     });
@@ -44,19 +59,21 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const logout = async (shouldRedirect = true) => {
-    setIsLoadingAuth(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsLoadingAuth(false);
-    if (shouldRedirect) {
-      window.location.href = createPageUrl('PortalAccess');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
+    setUser(DEMO_USER);
+    setIsAuthenticated(true);
+    setIsLoadingAuth(false);
+    setAuthError(null);
+    window.location.href = createPageUrl('AdminDashboard');
   };
 
   const navigateToLogin = () => {
-    window.location.href = createPageUrl('PortalAccess');
+    window.location.href = createPageUrl('AdminDashboard');
   };
 
   const checkAppState = async () => {};
