@@ -1,0 +1,26 @@
+{
+  "files.exclude": {
+    "_api_backend/**": true,
+    "*.zip": true,
+    "node_modules/**": true
+  },
+  "search.exclude": {
+    "_api_backend/**": true,
+    "node_modules/**": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "_api_backend/**": true,
+    "**/dist/**": true
+  },
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.maxTsServerMemory": 512,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriorityPolling"
+  },
+  "javascript.validate.enable": false,
+  "typescript.validate.enable": false,
+  "js/ts.implicitProjectConfig.checkJs": false
+}
