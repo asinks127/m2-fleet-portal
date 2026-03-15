@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient.js';
+import { createPageUrl } from '@/utils/index.js';
 
 const AuthContext = createContext();
 
@@ -10,13 +11,10 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    // Check active session on mount
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
         if (error) throw error;
-
         setIsAuthenticated(!!session);
         setUser(session?.user ?? null);
       } catch (error) {
@@ -29,9 +27,9 @@ export const AuthProvider = ({ children }) => {
         setIsLoadingAuth(false);
       }
     };
+
     checkSession();
 
-    // Listen to Supabase auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
       setUser(session?.user ?? null);
@@ -53,25 +51,24 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setIsLoadingAuth(false);
     if (shouldRedirect) {
-        window.location.href = '/login'; 
+      window.location.href = createPageUrl('PortalAccess');
     }
   };
 
   const navigateToLogin = () => {
-    window.location.href = '/login';
+    window.location.href = createPageUrl('PortalAccess');
   };
 
-  // Keep this empty wrapper to avoid breaking older components that rely on it
-  const checkAppState = async () => {}; 
+  const checkAppState = async () => {};
 
   return (
     <AuthContext.Provider value={{ 
       user, 
       isAuthenticated, 
       isLoadingAuth,
-      isLoadingPublicSettings: false, // Legacy prop from Base44
+      isLoadingPublicSettings: false,
       authError,
-      appPublicSettings: {}, // Legacy prop from Base44
+      appPublicSettings: {},
       logout,
       navigateToLogin,
       checkAppState

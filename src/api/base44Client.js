@@ -5,6 +5,7 @@
 import { supabase } from '@/lib/supabaseClient.js';
 import entities from '@/api/entities.js';
 import { Core } from '@/api/integrations.js';
+import { createPageUrl } from '@/utils/index.js';
 
 // Legacy-compatible client that mirrors the old base44 API surface
 export const base44 = {
@@ -16,10 +17,10 @@ export const base44 = {
     },
     logout: (redirectUrl) => {
       supabase.auth.signOut();
-      if (redirectUrl) window.location.href = '/login';
+      if (redirectUrl) window.location.href = createPageUrl('PortalAccess');
     },
-    redirectToLogin: (returnUrl) => {
-      window.location.href = '/login';
+    redirectToLogin: () => {
+      window.location.href = createPageUrl('PortalAccess');
     }
   },
   entities,
