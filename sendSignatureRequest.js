@@ -1,126 +1,70 @@
+import crypto from 'node:crypto';
 import { supabase, getAuthUser } from './_lib/supabaseServer.js';
 
-export default export default async function handler(req, res) {
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  try {    
-    if (req.method === 'OPTIONS') {
-      return res.status(204).send(null);
-    }
-
-    const { documentId, recipients } = req.body.catch(() => ({}));
-
-    if (!documentId || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
+  try {
+    const { documentId, recipients } = req.body || {};
+    if (!documentId || !Array.isArray(recipients) || recipients.length === 0) {
       return res.status(400).json({ success: false, error: 'Missing documentId or recipients' });
     }
 
     const user = await getAuthUser(req);
-    // Allow admin or specific emails
-    const adminEmails = [
-       'lena@m2fleetcom.com', 'orville@m2fleetcom.com', 'steve@m2fleetcom.com',
-       'austin@m2fleetcom.com', 'adam@m2fleetcom.com', 'jason@m2fleetcom.com', 'erica@m2fleetcom.com',
-       'lowell@m2fleetcom.com'
-    ];
-    const userEmail = user?.email?.toLowerCase();
-    
-    // Check if user is admin or in allowed list
-    if (!user || (user.role !== 'admin' && !adminEmails.includes(userEmail))) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const document = await supabase.from('SignableDocument').select('*').eq('id', documentId).single();
+    const { data: document, error: documentError } = await supabase
+      .from('SignableDocument')
+      .select('*')
+      .eq('id', documentId)
+      .single();
+
+    if (documentError) throw documentError;
     if (!document) {
       return res.status(404).json({ success: false, error: 'Document not found' });
     }
-    
+
+    const appUrl = (req.headers.origin || process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
     const results = [];
-    const APP_URL = req.headers['origin'] || process.env.APP_URL || 'http://localhost:5173'; 
 
     for (const recipient of recipients) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!recipient.name || !recipient.email || !emailRegex.test(recipient.email)) {
-        results.push({ ...recipient, status: 'failed', error: 'Invalid name or email format' });
+      if (!recipient?.name || !recipient?.email) {
+        results.push({ ...recipient, status: 'failed', error: 'Missing name or email' });
         continue;
       }
-      
+
       try {
         const signatureToken = crypto.randomUUID();
-        const baseUrl = APP_URL.replace(/\/$/, "");
-        const signingUrl = `${baseUrl}/SignDocument?token=${signatureToken}`;
-
-        // Construct payload safely - removing undefined/null for optional string fields
-        // to avoid schema validation errors (type: "string" does not accept null)
-        const requestData = {
+        const signingUrl = `${appUrl}/SignDocument?token=${signatureToken}`;
+        const payload = {
           documentId: document.id,
           documentTitle: document.title,
           technicianName: recipient.name,
           technicianEmail: recipient.email,
           status: 'Sent',
-          signatureToken: signatureToken,
+          signatureToken,
         };
-        
-        if (recipient.technicianId) {
-            requestData.technicianId = recipient.technicianId;
-        }
+        if (recipient.technicianId) payload.technicianId = recipient.technicianId;
 
-        console.log(`Creating SignatureRequest for ${recipient.email}...`);
-        
-        try {
-            await supabase.from('SignatureRequest').insert(requestData);
-        } catch (dbError) {
-            console.error('Database create error:', dbError);
-            throw new Error(`Failed to create database record: ${dbError.message}`);
-        }
+        const { error } = await supabase.from('SignatureRequest').insert(payload);
+        if (error) throw error;
 
-        const emailBody = `
-          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <p>Hello ${recipient.name},</p>
-            <p>You have received a document from <strong>M2 Fleet Solutions</strong> that requires your signature: <strong>${document.title}</strong>.</p>
-            <p>Please click the button below to review and sign:</p>
-            <div style="margin: 25px 0;">
-                <a href="${signingUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Sign Document</a>
-            </div>
-            <p style="font-size: 14px; color: #666;">Or copy and paste this link into your browser:</p>
-            <p style="font-size: 12px; color: #888; background: #f9fafb; padding: 10px; border-radius: 4px; word-break: break-all;">${signingUrl}</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
-            <p style="font-size: 12px; color: #999;">M2 Fleet Solutions Portal</p>
-          </div>
-        `;
-
-        let emailStatus = 'sent_attempted';
-        
-        // Skip email for internal technicians (they use the dashboard)
-        if (recipient.technicianId) {
-             console.log(`Skipping email for internal technician: ${recipient.email}`);
-             emailStatus = 'skipped_internal';
-        } else {
-            try {
-              await /* TODO: Setup Resend */ resend.emails.send({
-                to: recipient.email,
-                subject: `Action Required: Sign Document - ${document.title}`,
-                body: emailBody,
-                from_name: "M2 Fleet Solutions"
-              });
-              emailStatus = 'sent_success';
-            } catch (emailError) {
-              console.warn(`Email sending failed for ${recipient.email}:`, emailError.message);
-              emailStatus = 'sent_failed';
-            }
-        }
-
-        results.push({ ...recipient, signingUrl, status: emailStatus });
-
-      } catch (e) {
-        console.error(`Error processing recipient ${recipient.email}:`, e);
-        results.push({ ...recipient, status: 'failed', error: e.message });
+        results.push({
+          ...recipient,
+          signingUrl,
+          status: recipient.technicianId ? 'created_internal' : 'created_pending_email'
+        });
+      } catch (error) {
+        results.push({ ...recipient, status: 'failed', error: error.message });
       }
     }
-    
-    return res.status(200).json({ success: true, results });
 
+    return res.status(200).json({ success: true, results });
   } catch (error) {
     console.error('Critical error in sendSignatureRequest:', error);
-    return res.status(200).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Invoice } from '@/api/entities.js';
+import { User, Invoice, PaymentLedger } from '@/api/entities.js';
 import { Card, CardContent } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Input } from '@/components/ui/input.jsx';
@@ -40,6 +40,13 @@ import { format } from 'date-fns';
 import UploadInvoiceDialog from '../components/invoices/UploadInvoiceDialog';
 import EditInvoiceDialog from '../components/invoices/EditInvoiceDialog';
 import ExportReportDialog from '../components/invoices/ExportReportDialog';
+import { supabase } from '@/lib/supabaseClient.js';
+
+const DEMO_CURRENT_USER = {
+  id: '22222222-2222-4222-8222-222222222222',
+  email: 'pm.west@m2fleetcom.com',
+  user_metadata: { full_name: 'Casey Walker', role: 'pm' }
+};
 
 export default function ContractorAccounting() {
   const [contractors, setContractors] = useState([]);
@@ -83,7 +90,9 @@ export default function ContractorAccounting() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    User.me().then(setCurrentUser).catch(console.error);
+    supabase.auth.getUser()
+      .then(({ data }) => setCurrentUser(data?.user || DEMO_CURRENT_USER))
+      .catch(() => setCurrentUser(DEMO_CURRENT_USER));
     loadData();
   }, []);
 
@@ -92,7 +101,7 @@ export default function ContractorAccounting() {
     try {
       const [userData, invoiceData] = await Promise.all([
         User.list(),
-        Invoice.list('-created_date', 1000)
+        Invoice.list('-created_at', 1000)
       ]);
       setContractors(userData);
       setInvoices(invoiceData);
@@ -191,7 +200,7 @@ export default function ContractorAccounting() {
           
           return true;
         })
-        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+        .sort((a, b) => new Date(b.created_at || b.created_date || 0) - new Date(a.created_at || a.created_date || 0))
     : [];
 
   const getStatusBadge = (invoice) => {
@@ -235,7 +244,7 @@ export default function ContractorAccounting() {
     
     setIsProcessingPayment(true);
     try {
-      // Update invoice with payment information
+      const numericAmount = Number(paymentAmount || 0);
       await Invoice.update(selectedInvoiceForPayment.id, {
         paymentStatus: 'paid',
         paymentDate: paymentDate,
@@ -244,7 +253,18 @@ export default function ContractorAccounting() {
         approvalNotes: `${selectedInvoiceForPayment.approvalNotes || ''}\nPayment recorded: ${paymentMethod} ${paymentReference ? `#${paymentReference}` : ''} on ${paymentDate}`.trim()
       });
 
-      // Reload data
+      await PaymentLedger.create({
+        invoiceId: selectedInvoiceForPayment.id,
+        contractorEmail: selectedInvoiceForPayment.contractorEmail,
+        contractorName: selectedInvoiceForPayment.contractorName,
+        amount: numericAmount,
+        paymentDate,
+        paymentMethod,
+        paymentReference,
+        status: 'paid',
+        notes: `Recorded by ${currentUser?.email || 'demo-user'}`
+      });
+
       await loadData();
       
       setShowPaymentDialog(false);
@@ -683,7 +703,7 @@ export default function ContractorAccounting() {
                             transactions.map((invoice) => (
                               <tr key={invoice.id} className="hover:bg-gray-50">
                                 <td className="px-4 py-3 text-sm">
-                                  {format(new Date(invoice.created_date), 'MM/dd/yyyy')}
+                                  {format(new Date(invoice.created_at || invoice.created_date), 'MM/dd/yyyy')}
                                 </td>
                                 <td className="px-4 py-3 text-sm">
                                   <div className="flex items-center gap-2">
@@ -955,7 +975,7 @@ export default function ContractorAccounting() {
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600">Date Submitted</Label>
-                  <p className="font-medium">{format(new Date(selectedInvoice.created_date), 'MMM d, yyyy')}</p>
+                  <p className="font-medium">{format(new Date(selectedInvoice.created_at || selectedInvoice.created_date), 'MMM d, yyyy')}</p>
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600">Week Ending</Label>
@@ -972,7 +992,7 @@ export default function ContractorAccounting() {
                         setEditDateDialog({ open: true, invoice: selectedInvoice });
                         setNewWeekEndingDate(selectedInvoice.weekEndingDate || '');
                       }}
-                      className="p-1 h-fit"
+                      className="text-orange-600 hover:text-orange-700 h-auto p-1"
                     >
                       <Edit className="w-3 h-3" />
                     </Button>

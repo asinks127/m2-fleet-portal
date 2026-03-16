@@ -1,38 +1,40 @@
 import { supabase, getAuthUser } from './_lib/supabaseServer.js';
 
 export default async function handler(req, res) {
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  try {    
-    // Verify user is authenticated
+  try {
     const user = await getAuthUser(req);
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Fetch all necessary data using service role for admin access
-    const [users, wcRecords] = await Promise.all([
+    const [{ data: users, error: usersError }, { data: wcRecords, error: wcError }, { data: certs, error: certsError }] = await Promise.all([
       supabase.from('User').select('*'),
-      supabase.from('WorkersCompRecord').select('*')
+      supabase.from('WorkersCompRecord').select('*'),
+      supabase.from('SafetyCertification').select('*')
     ]);
 
-    return Response.json({
+    if (usersError) throw usersError;
+    if (wcError) throw wcError;
+    if (certsError) throw certsError;
+
+    return res.status(200).json({
       data: {
-        users,
-        wcRecords
+        users: users || [],
+        wcRecords: wcRecords || [],
+        certifications: certs || []
       },
       error: null
     });
-
   } catch (error) {
     console.error('Error in getComplianceDashboardData:', error);
-    return Response.json({
+    return res.status(500).json({
       data: null,
       error: {
-        message: error.message || 'Failed to fetch compliance data',
-        stack: error.stack
+        message: error.message || 'Failed to fetch compliance data'
       }
-    }, { status: 500 });
+    });
   }
 }
