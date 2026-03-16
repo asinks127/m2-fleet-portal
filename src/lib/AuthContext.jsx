@@ -5,11 +5,11 @@ import { createPageUrl } from '@/utils/index.js';
 const AuthContext = createContext();
 
 const DEMO_USER = {
-  id: 'demo-admin',
-  email: 'austin@m2fleetcom.com',
+  id: '22222222-2222-4222-8222-222222222222',
+  email: 'pm.west@m2fleetcom.com',
   user_metadata: {
-    full_name: 'Demo Admin',
-    role: 'admin'
+    full_name: 'Casey Walker',
+    role: 'pm'
   }
 };
 

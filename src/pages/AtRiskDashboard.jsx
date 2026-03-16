@@ -30,14 +30,25 @@ export default function AtRiskDashboard() {
   const loadAtRiskData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/analyzeAtRiskTechnicians');
+      const response = await fetch('/api/analyzeAtRiskTechnicians', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
       const data = await response.json();
       if (data && data.success) {
-        setAtRiskData(data.atRiskTechnicians);
-        setFilteredData(data.atRiskTechnicians);
+        setAtRiskData(data.atRiskTechnicians || []);
+        setFilteredData(data.atRiskTechnicians || []);
+      } else {
+        setAtRiskData([]);
+        setFilteredData([]);
       }
     } catch (error) {
       console.error('Error loading at-risk data:', error);
+      setAtRiskData([]);
+      setFilteredData([]);
     } finally {
       setIsLoading(false);
     }

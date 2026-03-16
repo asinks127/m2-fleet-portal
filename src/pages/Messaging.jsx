@@ -11,40 +11,54 @@ import EditDMDialog from '@/components/messaging/EditDMDialog';
 import ChannelTasksPanel from '@/components/messaging/ChannelTasksPanel';
 import { Users } from 'lucide-react';
 
+const DEMO_USER = {
+  email: 'pm.west@m2fleetcom.com',
+  full_name: 'Casey Walker',
+  role: 'pm'
+};
+
 export default function Messaging() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(DEMO_USER);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [selectedDMThread, setSelectedDMThread] = useState(null);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [showNewDM, setShowNewDM] = useState(false);
   const [showEditDM, setShowEditDM] = useState(false);
-  const [activeTab, setActiveTab] = useState('messages'); // 'messages' or 'tasks'
+  const [activeTab, setActiveTab] = useState('messages');
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    (supabase.auth.getUser().then(res => res.data.user)).then(setCurrentUser);
+    supabase.auth.getUser().then((res) => {
+      const user = res?.data?.user;
+      if (user) {
+        setCurrentUser({
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email,
+          role: user.user_metadata?.role || 'pm'
+        });
+      }
+    });
   }, []);
 
-  // Queries
   const { data: channels = [] } = useQuery({
     queryKey: ['channels'],
-    queryFn: async () => (await supabase.from('Channel').select('*') /* TODO: restore sorting/limit '-created_date', 100 */).data,
+    queryFn: async () => (await supabase.from('Channel').select('*')).data || [],
     enabled: !!currentUser,
   });
 
   const { data: channelMembers = [] } = useQuery({
     queryKey: ['channelMembers'],
-    queryFn: async () => (await supabase.from('ChannelMember').select('*') /* TODO: restore sorting/limit '', 1000 */).data,
+    queryFn: async () => (await supabase.from('ChannelMember').select('*')).data || [],
     enabled: !!currentUser,
   });
 
   const { data: directMessages = [] } = useQuery({
     queryKey: ['directMessages'],
-    queryFn: async () => (await supabase.from('DirectMessageThread').select('*') /* TODO: restore sorting/limit '-lastActivityAt', 50 */).data,
+    queryFn: async () => (await supabase.from('DirectMessageThread').select('*')).data || [],
     enabled: !!currentUser,
   });
 
-  const { data: messages = [], refetch: refetchMessages } = useQuery({
+  const { data: messages = [] } = useQuery({
     queryKey: ['messages', selectedChannel?.id, selectedDMThread?.id],
     queryFn: async () => {
       let payload = {};
@@ -57,9 +71,9 @@ export default function Messaging() {
       }
       try {
         const response = await getMessages(payload);
-        return response.data.messages || [];
+        return response.data?.messages || [];
       } catch (e) {
-        console.error("Failed to fetch messages securely", e);
+        console.error('Failed to fetch messages securely', e);
         return [];
       }
     },
@@ -67,39 +81,31 @@ export default function Messaging() {
     refetchInterval: false,
   });
 
-  // Filter channels/DMs for current user
   const myMemberships = channelMembers.filter(m => m.userEmail === currentUser?.email);
   const myChannelIds = new Set(myMemberships.map(m => m.channelId));
-  const isAdmin = currentUser?.role === 'admin';
 
   const visibleChannels = channels.filter(ch => {
     if (ch.type === 'public') return true;
     return myChannelIds.has(ch.id);
   });
 
-  const myDMThreads = dmThreads.filter(t =>
+  const myDMThreads = directMessages.filter(t =>
     t.participantEmails?.includes(currentUser?.email)
   );
 
-  // Ensure selection is valid
   useEffect(() => {
     if (!currentUser) return;
-    if (selectedChannel && selectedChannel.type !== 'public') {
-      if (!myChannelIds.has(selectedChannel.id)) {
-        setSelectedChannel(null);
-      }
+    if (selectedChannel && selectedChannel.type !== 'public' && !myChannelIds.has(selectedChannel.id)) {
+      setSelectedChannel(null);
     }
-    if (selectedDMThread) {
-      if (!myDMThreads.find(t => t.id === selectedDMThread.id)) {
-        setSelectedDMThread(null);
-      }
+    if (selectedDMThread && !myDMThreads.find(t => t.id === selectedDMThread.id)) {
+      setSelectedDMThread(null);
     }
-  }, [channelMembers, dmThreads, selectedChannel, selectedDMThread, currentUser, myChannelIds, myDMThreads]);
+  }, [selectedChannel, selectedDMThread, currentUser, myDMThreads, myChannelIds]);
 
-  // Seed default channels if none exist
   useEffect(() => {
     const seedDefaultChannels = async () => {
-      const existing = await (await supabase.from('Channel').select('*')).data;
+      const existing = (await supabase.from('Channel').select('*')).data || [];
       if (existing.length === 0 && currentUser) {
         const defaults = [
           { name: 'general', description: 'General team discussion', type: 'public' },
@@ -107,11 +113,11 @@ export default function Messaging() {
           { name: 'install-team', description: 'Install team coordination', type: 'public' },
         ];
         for (const ch of defaults) {
-          await (await supabase.from('Channel').insert({
+          await supabase.from('Channel').insert({
             ...ch,
             createdByEmail: currentUser.email,
             isArchived: false,
-          })).data;
+          });
         }
         queryClient.invalidateQueries({ queryKey: ['channels'] });
       }
@@ -121,20 +127,11 @@ export default function Messaging() {
     }
   }, [currentUser, channels.length, queryClient]);
 
-  // Real-time subscription
-  useEffect(() => {
-    const unsubscribe = /* FIXME: Unconverted base44 call */ supabase.entities.ChatMessage.subscribe((event) => {
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-    });
-    return unsubscribe;
-  }, [queryClient]);
-
-  // Select first channel on load
   useEffect(() => {
     if (visibleChannels.length > 0 && !selectedChannel && !selectedDMThread) {
       setSelectedChannel(visibleChannels[0]);
     }
-  }, [visibleChannels.length, selectedChannel, selectedDMThread]);
+  }, [visibleChannels, selectedChannel, selectedDMThread]);
 
   const handleSelectChannel = (channel) => {
     setSelectedChannel(channel);
@@ -156,7 +153,7 @@ export default function Messaging() {
   };
 
   const handleDMCreated = (thread) => {
-    queryClient.invalidateQueries({ queryKey: ['dmThreads'] });
+    queryClient.invalidateQueries({ queryKey: ['directMessages'] });
     setSelectedDMThread(thread);
     setSelectedChannel(null);
     setShowNewDM(false);
@@ -176,159 +173,84 @@ export default function Messaging() {
     };
     if (selectedChannel) msgData.channelId = selectedChannel.id;
     if (selectedDMThread) msgData.dmThreadId = selectedDMThread.id;
-    await (await supabase.from('ChatMessage').insert(msgData)).data;
+    await supabase.from('ChatMessage').insert(msgData);
     queryClient.invalidateQueries({ queryKey: ['messages'] });
   };
-
-  const handleReact = async (message, emoji) => {
-    const reactions = message.reactions || [];
-    const existing = reactions.findIndex(r => r.emoji === emoji && r.userEmail === currentUser.email);
-    let newReactions;
-    if (existing >= 0) {
-      newReactions = reactions.filter((_, i) => i !== existing);
-    } else {
-      newReactions = [...reactions, { emoji, userEmail: currentUser.email }];
-    }
-    await (await supabase.from('ChatMessage').update({ reactions: newReactions }).eq('id', message.id)).data;
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
-
-  const handleEditMessage = async (message, newContent) => {
-    await (await supabase.from('ChatMessage').update({ content: newContent, edited: true }).eq('id', message.id)).data;
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
-
-  const handleDeleteMessage = async (message) => {
-    await (await supabase.from('ChatMessage').update({ deleted: true, content: '[Message deleted]' }).eq('id', message.id)).data;
-    queryClient.invalidateQueries({ queryKey: ['messages'] });
-  };
-
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsersForMessaging'],
-    queryFn: async () => (await supabase.from('User').select('*') /* TODO: restore sorting/limit '', 1000 */).data,
-    enabled: !!currentUser,
-  });
-
-  if (!currentUser) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>;
-  }
-
-  const currentTitle = selectedChannel 
-    ? `#${selectedChannel.name}`
-    : selectedDMThread
-    ? selectedDMThread.participantNames?.filter(n => n !== (currentUser.full_name || currentUser.email)).join(', ') || 'Empty Conversation'
-    : 'Select a conversation';
 
   return (
-    <div className="flex h-[calc(100vh-65px)] bg-white overflow-hidden">
+    <div className="h-[calc(100vh-6rem)] flex bg-white rounded-xl border overflow-hidden">
       <ChannelSidebar
+        currentUser={currentUser}
         channels={visibleChannels}
         dmThreads={myDMThreads}
-        currentUser={currentUser}
-        selectedChannelId={selectedChannel?.id}
-        selectedDMThreadId={selectedDMThread?.id}
+        selectedChannel={selectedChannel}
+        selectedDMThread={selectedDMThread}
         onSelectChannel={handleSelectChannel}
         onSelectDM={handleSelectDM}
         onCreateChannel={() => setShowCreateChannel(true)}
         onNewDM={() => setShowNewDM(true)}
-        isAdmin={isAdmin}
       />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
+
+      <div className="flex-1 flex flex-col min-w-0">
         {selectedChannel || selectedDMThread ? (
           <>
-            <div className="px-4 py-3 border-b bg-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">{currentTitle}</span>
-                {selectedChannel?.description && (
-                  <span className="text-sm text-gray-500 ml-2 border-l pl-2">{selectedChannel.description}</span>
-                )}
-                {selectedDMThread && (
-                  <button 
-                    onClick={() => setShowEditDM(true)}
-                    className="ml-2 text-gray-400 hover:text-blue-600 focus:outline-none p-1 rounded-md hover:bg-gray-100"
-                    title="Manage Members"
-                  >
-                    <Users className="w-4 h-4" />
-                  </button>
-                )}
+            <div className="border-b px-6 py-4 flex items-center justify-between">
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  {selectedChannel ? `# ${selectedChannel.name}` : selectedDMThread?.participantNames?.filter(n => n !== currentUser?.full_name)[0] || 'Direct Message'}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {selectedChannel?.description || 'Secure team messaging'}
+                </p>
               </div>
-              {(selectedChannel || selectedDMThread) && (
-                <div className="flex bg-gray-100 p-1 rounded-lg">
-                  <button 
-                    onClick={() => setActiveTab('messages')}
-                    className={`px-3 py-1 text-sm font-medium rounded-md ${activeTab === 'messages' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Messages
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('tasks')}
-                    className={`px-3 py-1 text-sm font-medium rounded-md ${activeTab === 'tasks' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    Tasks
-                  </button>
-                </div>
+              {selectedChannel ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab(activeTab === 'messages' ? 'tasks' : 'messages')}
+                  className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  <Users className="h-4 w-4" />
+                  {activeTab === 'messages' ? 'Channel Tasks' : 'Messages'}
+                </button>
+              ) : null}
+            </div>
+
+            <div className="flex-1 min-h-0">
+              {activeTab === 'tasks' && selectedChannel ? (
+                <ChannelTasksPanel channel={selectedChannel} currentUser={currentUser} />
+              ) : (
+                <>
+                  <MessageList messages={messages} currentUser={currentUser} />
+                  <MessageInput onSendMessage={handleSendMessage} />
+                </>
               )}
             </div>
-            
-            {activeTab === 'messages' || (!selectedChannel && !selectedDMThread) ? (
-              <>
-                <MessageList
-                  messages={messages.filter(m => !m.deleted)}
-                  currentUser={currentUser}
-                  onReact={handleReact}
-                  onEdit={handleEditMessage}
-                  onDelete={handleDeleteMessage}
-                  isAdmin={isAdmin}
-                />
-                <MessageInput
-                  onSend={handleSendMessage}
-                  users={allUsers}
-                  placeholder={`Message ${currentTitle}`}
-                />
-              </>
-            ) : (
-              <ChannelTasksPanel 
-                channel={selectedChannel} 
-                dmThread={selectedDMThread}
-                currentUser={currentUser} 
-                allUsers={allUsers} 
-              />
-            )}
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <p className="text-xl font-semibold mb-2">Welcome to Team Messaging</p>
-              <p className="text-sm">Select a channel or direct message to start chatting</p>
-            </div>
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select a channel or direct message to begin.
           </div>
         )}
       </div>
 
       <CreateChannelDialog
         open={showCreateChannel}
-        onClose={() => setShowCreateChannel(false)}
-        onCreated={handleChannelCreated}
+        onOpenChange={setShowCreateChannel}
         currentUser={currentUser}
-        allUsers={allUsers}
+        onCreated={handleChannelCreated}
       />
-
       <NewDMDialog
         open={showNewDM}
-        onClose={() => setShowNewDM(false)}
-        onCreated={handleDMCreated}
+        onOpenChange={setShowNewDM}
         currentUser={currentUser}
-        allUsers={allUsers}
-        existingThreads={myDMThreads}
+        onCreated={handleDMCreated}
       />
-
       <EditDMDialog
         open={showEditDM}
-        onClose={() => setShowEditDM(false)}
+        onOpenChange={setShowEditDM}
         thread={selectedDMThread}
         currentUser={currentUser}
-        allUsers={allUsers}
+        onUpdated={() => queryClient.invalidateQueries({ queryKey: ['directMessages'] })}
       />
     </div>
   );
