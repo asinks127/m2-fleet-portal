@@ -76,6 +76,17 @@ export default function TechRoster() {
   const [error, setError] = useState(null);
   const [expandedRows, setExpandedRows] = useState(new Set());
 
+  const [newUser, setNewUser] = useState({
+    email: '',
+    full_name: '',
+    role: 'contractor',
+    project: 'M2',
+    m2PM: '',
+    veloPM: '',
+    active: true
+  });
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+
   // Get initial state from URL params
   const getInitialFilters = useCallback(() => {
     const params = new URLSearchParams(location.search);
@@ -249,8 +260,6 @@ export default function TechRoster() {
     try {
       toast.info("Initiating document sync to Google Drive. This may take a moment.");
       const response = await /* FIXME: Unconverted base44 call */ supabase.functions.invoke('syncContractorDocumentsToDrive');
-      // The SDK returns { data, status, ... } or throws. 
-      // If the function returns Response.json({ success: true }), response.data will contain that.
       if (response && response.data && response.data.success) {
         toast.success(`Document sync completed. Processed ${response.data.count} documents.`);
       } else {
@@ -261,6 +270,51 @@ export default function TechRoster() {
       toast.error("An error occurred during document sync.");
     } finally {
       setIsSyncingDocuments(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    const email = newUser.email.trim().toLowerCase();
+    const fullName = newUser.full_name.trim();
+    if (!email || !fullName) {
+      setError('Email and full name are required.');
+      return;
+    }
+
+    setIsCreatingUser(true);
+    setError(null);
+    try {
+      const displayName = fullName;
+      const role = newUser.role;
+      const payload = {
+        email,
+        full_name: fullName,
+        displayName,
+        active: true,
+        project: newUser.project || 'M2',
+        m2PM: newUser.m2PM || null,
+        veloPM: newUser.veloPM || null,
+        user_metadata: { role }
+      };
+      await User.create(payload);
+      setIsAddUserDialogOpen(false);
+      setNewUser({
+        email: '',
+        full_name: '',
+        role: 'contractor',
+        project: 'M2',
+        m2PM: '',
+        veloPM: '',
+        active: true
+      });
+      await loadUsers();
+      toast.success('User added successfully.');
+    } catch (err) {
+      console.error('Error creating user:', err);
+      setError(err?.message || 'Failed to create user.');
+      toast.error('Failed to add user.');
+    } finally {
+      setIsCreatingUser(false);
     }
   };
 
@@ -914,32 +968,81 @@ export default function TechRoster() {
       <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>How to Add a New Technician</DialogTitle>
+            <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>
-              To add a new contractor, they must be invited to the platform with a specific email address format.
+              Create a new portal user record. You can set contractor, PM, QC, or admin role now.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-semibold text-gray-900">Email Format</h4>
-              <p className="text-sm text-gray-700">
-                Please use one of the following email formats when inviting a new contractor:
-              </p>
-              <div className="space-y-2 mt-2">
-                <code className="block bg-gray-100 p-2 rounded text-sm">
-                  firstname.lastname.contractor@m2fleetcom.com
-                </code>
-                <code className="block bg-gray-100 p-2 rounded text-sm">
-                  firstname.lastname.contractor@smcinstallations.com
-                </code>
+            <div>
+              <Label htmlFor="new-user-email">Email</Label>
+              <Input
+                id="new-user-email"
+                placeholder="name@company.com"
+                value={newUser.email}
+                onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-user-fullname">Full Name</Label>
+              <Input
+                id="new-user-fullname"
+                placeholder="Full name"
+                value={newUser.full_name}
+                onChange={(e) => setNewUser(prev => ({ ...prev, full_name: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label>Role</Label>
+                <Select value={newUser.role} onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contractor">Contractor</SelectItem>
+                    <SelectItem value="pm">Project Manager</SelectItem>
+                    <SelectItem value="qc">QC</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Project</Label>
+                <Select value={newUser.project} onValueChange={(value) => setNewUser(prev => ({ ...prev, project: value }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M2">M2</SelectItem>
+                    <SelectItem value="SMC">SMC</SelectItem>
+                    <SelectItem value="VELOCITI">VELOCITI</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <p className="text-sm text-gray-600">
-              Once invited, their account will automatically be assigned the "Contractor" role, and they will appear in the Tech Roster where you can edit their full profile details.
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="new-user-m2pm">M2 PM</Label>
+                <Input
+                  id="new-user-m2pm"
+                  placeholder="Optional"
+                  value={newUser.m2PM}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, m2PM: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-user-velopm">Velo PM</Label>
+                <Input
+                  id="new-user-velopm"
+                  placeholder="Optional"
+                  value={newUser.veloPM}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, veloPM: e.target.value }))}
+                />
+              </div>
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setIsAddUserDialogOpen(false)}>Got it</Button>
+            <Button variant="outline" onClick={() => setIsAddUserDialogOpen(false)} disabled={isCreatingUser}>Cancel</Button>
+            <Button onClick={handleCreateUser} disabled={isCreatingUser}>
+              {isCreatingUser ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : 'Create User'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

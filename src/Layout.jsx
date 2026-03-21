@@ -183,6 +183,14 @@ function PrivateLayout({ children, currentPageName }) {
         const effectiveUser = currentUser || contextUser;
         setUser(effectiveUser);
 
+        if (!effectiveUser) {
+          const currentPath = window.location.pathname;
+          if (!isPublicPage(currentPath) && currentPath !== createPageUrl('PortalAccess')) {
+            navigate(createPageUrl('PortalAccess'), { replace: true });
+            return;
+          }
+        }
+
         if (effectiveUser && effectiveUser.email) {
           const userEmail = effectiveUser.email.toLowerCase();
 

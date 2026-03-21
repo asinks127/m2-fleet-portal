@@ -525,14 +525,23 @@ export default function PendingInvoices() {
       
       await supabase.from('Invoice').update({
         status: 'approved',
-        approvedDate: new Date().toISOString(), // Store as UTC
+        approvedDate: new Date().toISOString(),
         approvedBy: user.email,
         approvalNotes: notes || `Approved by ${user.email}`,
         rejectionReason: null,
         pendingReason: null
       }).eq('id', invoice.id);
 
-      // Trigger automatic upload to Google Drive
+      const billedAmount = Number(invoice.amount || 0);
+      await supabase.from('PaymentLedger').upsert({
+        invoiceId: invoice.id,
+        contractorEmail: invoice.contractorEmail,
+        contractorName: invoice.contractorName || invoice.contractorEmail,
+        amount: billedAmount,
+        status: 'pending',
+        notes: `Auto-created from approved invoice ${invoice.fileName || invoice.id}`
+      }, { onConflict: 'invoiceId' });
+
       if (invoice.fileUrl) {
         fetch('/api/uploadToDrive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
             fileUrl: invoice.fileUrl,
@@ -543,7 +552,7 @@ export default function PendingInvoices() {
         }) }).then(res => res.json()).catch(e => console.error(`Background Drive upload failed for ${invoice.id}:`, e));
       }
 
-      setSuccess(`Invoice "${invoice.fileName}" has been approved and queued for Drive upload.`);
+      setSuccess(`Invoice "${invoice.fileName}" has been approved and added to Payment Ledger.`);
       setApprovalDialog({ open: false, invoice: null });
       loadPendingInvoices();
     } catch (err) {

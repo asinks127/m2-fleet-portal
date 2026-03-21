@@ -4,6 +4,8 @@ import { createPageUrl } from '@/utils/index.js';
 
 const AuthContext = createContext();
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
 const DEMO_USER = {
   id: '22222222-2222-4222-8222-222222222222',
   email: 'pm.west@m2fleetcom.com',
@@ -14,27 +16,40 @@ const DEMO_USER = {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(DEMO_USER);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user, setUser] = useState(DEMO_MODE ? DEMO_USER : null);
+  const [isAuthenticated, setIsAuthenticated] = useState(DEMO_MODE);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
         if (session?.user) {
           setUser(session.user);
           setIsAuthenticated(true);
-        } else {
+          setAuthError(null);
+        } else if (DEMO_MODE) {
           setUser(DEMO_USER);
           setIsAuthenticated(true);
+          setAuthError(null);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          setAuthError({ type: 'auth_required', message: 'Authentication required' });
         }
       } catch (error) {
-        console.error('Session check failed, using demo mode:', error);
-        setUser(DEMO_USER);
-        setIsAuthenticated(true);
-        setAuthError(null);
+        if (DEMO_MODE) {
+          setUser(DEMO_USER);
+          setIsAuthenticated(true);
+          setAuthError(null);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          setAuthError({ type: 'auth_required', message: 'Authentication required' });
+        }
       } finally {
         setIsLoadingAuth(false);
       }
@@ -44,12 +59,19 @@ export const AuthProvider = ({ children }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
-        setUser(DEMO_USER);
-        setIsAuthenticated(true);
-        setAuthError(null);
+        if (DEMO_MODE) {
+          setUser(DEMO_USER);
+          setIsAuthenticated(true);
+          setAuthError(null);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          setAuthError({ type: 'auth_required', message: 'Authentication required' });
+        }
       } else {
         setUser(session.user);
         setIsAuthenticated(true);
+        setAuthError(null);
       }
       setIsLoadingAuth(false);
     });
@@ -62,26 +84,32 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch {}
+
+    if (DEMO_MODE) {
+      setUser(DEMO_USER);
+      setIsAuthenticated(true);
+      setAuthError(null);
+      window.location.href = createPageUrl('AdminDashboard');
+      return;
     }
-    setUser(DEMO_USER);
-    setIsAuthenticated(true);
-    setIsLoadingAuth(false);
-    setAuthError(null);
-    window.location.href = createPageUrl('AdminDashboard');
+
+    setUser(null);
+    setIsAuthenticated(false);
+    setAuthError({ type: 'auth_required', message: 'Authentication required' });
+    window.location.href = createPageUrl('PortalAccess');
   };
 
   const navigateToLogin = () => {
-    window.location.href = createPageUrl('AdminDashboard');
+    window.location.href = createPageUrl('PortalAccess');
   };
 
   const checkAppState = async () => {};
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
       isLoadingAuth,
       isLoadingPublicSettings: false,
       authError,
