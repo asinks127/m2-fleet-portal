@@ -81,6 +81,6 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('Error exporting payment ledger:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: "An unexpected error occurred. Please try again later." });
     }
 }

@@ -9,7 +9,7 @@ import CreateChannelDialog from '@/components/messaging/CreateChannelDialog';
 import NewDMDialog from '@/components/messaging/NewDMDialog';
 import EditDMDialog from '@/components/messaging/EditDMDialog';
 import ChannelTasksPanel from '@/components/messaging/ChannelTasksPanel';
-import { Users } from 'lucide-react';
+import { Users, Trash2 } from 'lucide-react';
 
 const DEMO_USER = {
   email: 'pm.west@m2fleetcom.com',
@@ -177,18 +177,32 @@ export default function Messaging() {
     queryClient.invalidateQueries({ queryKey: ['messages'] });
   };
 
+  const handleDeleteChannel = async (channelId) => {
+    if (!window.confirm('Are you sure you want to delete this channel?')) return;
+    await supabase.from('Channel').delete().eq('id', channelId);
+    queryClient.invalidateQueries({ queryKey: ['channels'] });
+    if (selectedChannel?.id === channelId) {
+      setSelectedChannel(visibleChannels[0] || null);
+    }
+  };
+
+  const isAdmin = currentUser?.role === 'admin' || 
+    ['austin@m2fleetcom.com', 'adam@m2fleetcom.com', 'lena@m2fleetcom.com', 'orville@m2fleetcom.com'].includes(currentUser?.email?.toLowerCase());
+
   return (
     <div className="h-[calc(100vh-6rem)] flex bg-white rounded-xl border overflow-hidden">
       <ChannelSidebar
         currentUser={currentUser}
         channels={visibleChannels}
         dmThreads={myDMThreads}
-        selectedChannel={selectedChannel}
-        selectedDMThread={selectedDMThread}
+        selectedChannelId={selectedChannel?.id}
+        selectedDMThreadId={selectedDMThread?.id}
         onSelectChannel={handleSelectChannel}
         onSelectDM={handleSelectDM}
         onCreateChannel={() => setShowCreateChannel(true)}
         onNewDM={() => setShowNewDM(true)}
+        isAdmin={isAdmin}
+        onDeleteChannel={handleDeleteChannel}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -203,6 +217,16 @@ export default function Messaging() {
                   {selectedChannel?.description || 'Secure team messaging'}
                 </p>
               </div>
+              {selectedChannel && isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteChannel(selectedChannel.id)}
+                  className="inline-flex items-center gap-2 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Channel
+                </button>
+              )}
               {selectedChannel ? (
                 <button
                   type="button"
@@ -221,7 +245,7 @@ export default function Messaging() {
               ) : (
                 <>
                   <MessageList messages={messages} currentUser={currentUser} />
-                  <MessageInput onSendMessage={handleSendMessage} />
+                  <MessageInput onSend={handleSendMessage} users={[]} placeholder="Type a message..." />
                 </>
               )}
             </div>

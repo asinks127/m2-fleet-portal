@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient.js';
+import { base44 } from '@/lib/supabaseClient.js';
 
 export default function MessageInput({ onSend, users, placeholder }) {
   const [content, setContent] = useState('');
@@ -39,7 +39,7 @@ export default function MessageInput({ onSend, users, placeholder }) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await supabase.storage.from('documents').upload( file .file.name,  file .file);
+    const { file_url } = await supabase.storage.from("documents").upload({ file });
     setAttachment({ url: file_url, name: file.name });
     setUploading(false);
   };

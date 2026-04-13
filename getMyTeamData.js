@@ -98,6 +98,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error fetching My Team data:', error);
-    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    return res.status(500).json({ error: 'Internal Server Error', details: "See server logs for details" });
   }
 }

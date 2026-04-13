@@ -4,6 +4,6 @@ export default async function handler(req, res) {
   try {
     return res.status(200).json({ received: true, message: 'Webhook acknowledged.' });
   } catch (error) {
-    return res.status(500).json({ error: error?.message || 'Internal error' });
+    return res.status(500).json({ error: "An unexpected error occurred. Please try again later." });
   }
 }

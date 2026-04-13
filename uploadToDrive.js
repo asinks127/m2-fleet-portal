@@ -3,6 +3,22 @@ import { google } from 'googleapis';
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 
+// File upload security constraints
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB max
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+  'text/csv'
+];
+
 const ROOT_FOLDER_ID = '0AG5XubOTYKLFUk9PVA';
 const DOCUMENT_TYPE_FOLDERS = {
   invoice: 'Contractor Invoices',
@@ -11,6 +27,20 @@ const DOCUMENT_TYPE_FOLDERS = {
   initial_paperwork: 'Initial Paperwork',
   w9: 'Initial Paperwork',
 };
+
+function validateFileUpload(contentType, contentLength) {
+  const errors = [];
+  
+  if (contentLength && contentLength > MAX_FILE_SIZE) {
+    errors.push(`File size exceeds maximum allowed (${MAX_FILE_SIZE / 1024 / 1024}MB)`);
+  }
+  
+  if (contentType && !ALLOWED_MIME_TYPES.includes(contentType)) {
+    errors.push(`File type "${contentType}" is not allowed`);
+  }
+  
+  return errors;
+}
 
 function webToNodeStream(webStream) {
   if (!webStream) return new Readable({ read() { this.push(null); } });

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Hash, Lock, Plus, MessageSquare, User } from 'lucide-react';
-import { Button } from '@/components/ui/button.jsx';
+import { Hash, Lock, Plus, MessageSquare, User, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-export default function ChannelSidebar({ channels, dmThreads, currentUser, selectedChannelId, selectedDMThreadId, onSelectChannel, onSelectDM, onCreateChannel, onNewDM, isAdmin }) {
+export default function ChannelSidebar({ channels, dmThreads, currentUser, selectedChannelId, selectedDMThreadId, onSelectChannel, onSelectDM, onCreateChannel, onNewDM, isAdmin, onDeleteChannel }) {
   
   const getDMName = (thread) => {
     if (!thread.participantNames) return 'Unknown';
@@ -27,16 +27,25 @@ export default function ChannelSidebar({ channels, dmThreads, currentUser, selec
             )}
           </div>
           {channels.map(channel => (
-            <button
-              key={channel.id}
-              onClick={() => onSelectChannel(channel)}
-              className={`w-full text-left px-4 py-1.5 text-sm flex items-center gap-2 rounded mx-1 hover:bg-gray-700 transition-colors ${
-                selectedChannelId === channel.id ? 'bg-blue-600 text-white' : ''
-              }`}
-            >
-              {channel.type === 'private' ? <Lock className="w-3.5 h-3.5 flex-shrink-0" /> : <Hash className="w-3.5 h-3.5 flex-shrink-0" />}
-              <span className="truncate">{channel.name}</span>
-            </button>
+            <div key={channel.id} className="flex items-center group">
+              <button
+                onClick={() => onSelectChannel(channel)}
+                className={`flex-1 text-left px-4 py-1.5 text-sm flex items-center gap-2 rounded mx-1 hover:bg-gray-700 transition-colors ${
+                  selectedChannelId === channel.id ? 'bg-blue-600 text-white' : ''
+                }`}
+              >
+                {channel.type === 'private' ? <Lock className="w-3.5 h-3.5 flex-shrink-0" /> : <Hash className="w-3.5 h-3.5 flex-shrink-0" />}
+                <span className="truncate">{channel.name}</span>
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => onDeleteChannel?.(channel.id)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-400 transition-opacity"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
 
@@ -56,16 +65,28 @@ export default function ChannelSidebar({ channels, dmThreads, currentUser, selec
                 selectedDMThreadId === thread.id ? 'bg-blue-600 text-white' : ''
               }`}
             >
-              <User className="w-3.5 h-3.5 flex-shrink-0" />
+              <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">{getDMName(thread)}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="p-3 border-t border-gray-700 text-xs text-gray-500">
-        <div className="font-medium text-gray-300">{currentUser.full_name || currentUser.email}</div>
-        <div className="truncate">{currentUser.email}</div>
+      {/* Current User */}
+      <div className="p-3 border-t border-gray-700 bg-gray-800">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+            <User className="w-4 h-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate">
+              {currentUser?.full_name || currentUser?.email || 'User'}
+            </p>
+            <p className="text-xs text-gray-400 truncate">
+              {currentUser?.role || 'member'}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

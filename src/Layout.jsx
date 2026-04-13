@@ -371,7 +371,7 @@ function PrivateLayout({ children, currentPageName }) {
     );
   }
 
-  const isAccessDeniedCandidate = isContractor && !isAdmin && !isQC && !isVeloPM;
+  const isAccessDeniedCandidate = !isAdmin && !isQC && !isVeloPM && !isM2PM; // SECURITY FIX: Unknown users denied from admin pages
   const isPageAdminRestricted = adminOnlyPages.includes(currentPageNameFromPath) || currentPageNameFromPath === '' || currentPageNameFromPath === 'AdminDashboard';
   const isPageAllowedByNav = allowedPaths.has(currentPathFull);
 
