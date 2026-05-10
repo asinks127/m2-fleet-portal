@@ -74,6 +74,11 @@ app.use("*", async (c, next) => {
   await next();
 });
 
+// Redirect favicon.ico to favicon.svg (browsers request this automatically)
+app.get("/favicon.ico", (c) => {
+  return c.redirect("/favicon.svg", 301);
+});
+
 // API routes - dynamically load handlers from /api folder
 app.all("/api/*", async (c) => {
   const apiPath = c.req.path.replace(/^\/api\//, "");
