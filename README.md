@@ -1,6 +1,6 @@
-# M2 Fleet Communications Portal
+# M2 Fleet Portal
 
-A comprehensive fleet management and contractor portal for managing technicians, invoices, compliance, safety, and communications.
+A comprehensive fleet management and contractor portal for M2 Communications, rebuilt for Zo Cloud hosting.
 
 ## Features
 
@@ -17,58 +17,58 @@ A comprehensive fleet management and contractor portal for managing technicians,
 
 ## Tech Stack
 
-- **Frontend**: React + Vite + Tailwind CSS + shadcn/ui
-- **Backend**: Supabase (PostgreSQL + Auth + Realtime)
+- **Frontend**: React 18 + Vite + Tailwind CSS + shadcn/ui
+- **Backend**: Bun + Hono server with API routes
+- **Database**: Supabase (PostgreSQL + Auth + Realtime)
 - **AI**: Gemini API integration
 - **Email**: Resend
 - **Storage**: Google Drive integration
 - **Document Signing**: DocuSign
 
-## Environment Variables
+## Supabase Tables
 
-Copy `.env.example` to `.env.local` and fill in your values:
-
-```bash
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-RESEND_API_KEY=your_resend_key
-GOOGLE_SERVICE_ACCOUNT_KEY=your_google_key
-DOCUSIGN_INTEGRATION_KEY=your_docusign_key
-GEMINI_API_KEY=your_gemini_key
-```
+The app uses these Supabase tables:
+- `User` - users, contractors, admins, PMs with performance fields
+- `Invoice` - invoice uploads, approval workflow, payment status
+- `Project` - project names/descriptions
+- `Channel`, `ChannelMember`, `ChatMessage`, `DirectMessageThread` - messaging
+- `SafetyCertification`, `WorkersCompRecord`, `SafetyMessage` - compliance
+- `QCInspection`, `CallLog`, `PerformanceScore` - QC/performance
+- `ContractorDocument`, `SignatureRequest`, `DocusignEnvelope` - documents
+- `VeloSurvey`, `VeloSurveyResponse` - surveys
+- And many more (see `src/lib/supabaseClient.js`)
 
 ## Development
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start dev server
-npm run dev
+bun run dev
 
 # Build for production
-npm run build
+bun run build
+```
+
+## Environment Variables
+
+Create a `.env.local` file with:
+
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_service_role_key
 ```
 
 ## Deployment
 
-This app is configured for deployment on Zo Space. The Supabase connection handles:
-- Authentication
-- Database (PostgreSQL)
-- Realtime subscriptions
-- Storage
+This app is configured for deployment on Zo Cloud. The site runs on a managed server with automatic reload.
 
-## Database Schema
+## GitHub Repository
 
-See `supabase_schema.sql` for the complete database schema including:
-- Users and roles
-- Contractors and technicians
-- Invoices and payments
-- QC tasks and call logs
-- Safety certifications
-- Messages and channels
-- Documents and signatures
+https://github.com/asinks127/m2-fleet-portal
 
 ## License
 
