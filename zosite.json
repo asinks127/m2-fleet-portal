@@ -1,0 +1,15 @@
+{
+  "name": "m2-fleet-portal",
+  "local_port": 57484,
+  "entrypoint": "bun run dev",
+  "publish": {
+    "label": "m2-fleet-portal",
+    "type": "http",
+    "entrypoint": "bun run prod",
+    "published_port": 58127,
+    "env": {
+      "NODE_ENV": "production",
+      "ZO_CLIENT_IDENTITY_TOKEN": "none"
+    }
+  }
+}
