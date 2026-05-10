@@ -434,10 +434,28 @@ export default function Messaging() {
     if (!compose.trim()) return;
     if (!selectedChannelId && !selectedDmId) return;
 
+    const messageContent = compose.trim();
+
+    // Parse @mentions from the message content
+    const mentionRegex = /@([a-zA-Z0-9\s]+?)(?=\s|$|[^a-zA-Z0-9\s])/g;
+    const mentionMatches = [...messageContent.matchAll(mentionRegex)];
+    const mentionedNames = [...new Set(mentionMatches.map(m => m[1]?.trim()).filter(Boolean))];
+
+    // Find mentioned users from the users list
+    const mentionedUsers = users.filter(user => {
+      const name = displayName(user);
+      return mentionedNames.some(mentioned => {
+        const mentionedLower = mentioned.toLowerCase();
+        const nameLower = name.toLowerCase();
+        // Match if the mentioned name matches full name or starts with it
+        return nameLower === mentionedLower || nameLower.startsWith(mentionedLower) || mentionedLower.startsWith(nameLower);
+      });
+    });
+
     const payload = {
       senderEmail: currentUser.email,
       senderName: displayName(currentUser),
-      content: compose.trim(),
+      content: messageContent,
       reactions: JSON.stringify([]),
       edited: false,
       deleted: false,
@@ -445,11 +463,37 @@ export default function Messaging() {
     if (selectedChannelId) payload.channelId = selectedChannelId;
     if (selectedDmId) payload.dmThreadId = selectedDmId;
 
-    const { error } = await supabase.from('ChatMessage').insert(payload);
+    const { data: insertedMessage, error } = await supabase.from('ChatMessage').insert(payload).select().single();
     if (error) throw error;
     setCompose('');
     setMentionOpen(false);
     await loadMessages();
+
+    // Send email notifications to mentioned users (fire and forget, don't block UI)
+    if (mentionedUsers.length > 0) {
+      const channelName = selectedChannel?.name || 'general';
+      
+      // Send notification for each mentioned user
+      mentionedUsers.forEach(async (mentionedUser) => {
+        try {
+          await fetch('/api/sendMentionNotification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mentionedEmail: mentionedUser.email,
+              mentionedName: displayName(mentionedUser),
+              senderName: displayName(currentUser),
+              messageContent,
+              channelName,
+              messageId: insertedMessage?.id,
+            }),
+          });
+        } catch (emailError) {
+          // Log but don't fail the message send
+          console.error('Failed to send mention notification:', emailError);
+        }
+      });
+    }
   };
 
   const toggleReaction = async (message, emoji) => {

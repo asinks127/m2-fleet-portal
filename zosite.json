@@ -6,7 +6,8 @@
     "VITE_SUPABASE_URL": "https://rrvvklsknrjzzfdhrrfo.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "sb_publishable_OclD3CCIJlmBHM-z72l5Wg_AXgHIaUV",
     "SUPABASE_URL": "https://rrvvklsknrjzzfdhrrfo.supabase.co",
-    "SUPABASE_KEY": "${SUPABASE_KEY}"
+    "SUPABASE_KEY": "${SUPABASE_KEY}",
+    "RESEND_API_KEY": "${RESEND_API_KEY}"
   },
   "publish": {
     "label": "m2-fleet-portal",
@@ -19,6 +20,7 @@
       "VITE_SUPABASE_ANON_KEY": "sb_publishable_OclD3CCIJlmBHM-z72l5Wg_AXgHIaUV",
       "SUPABASE_URL": "https://rrvvklsknrjzzfdhrrfo.supabase.co",
       "SUPABASE_KEY": "${SUPABASE_KEY}",
+      "RESEND_API_KEY": "${RESEND_API_KEY}",
       "ZO_CLIENT_IDENTITY_TOKEN": "none"
     }
   }
