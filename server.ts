@@ -1,132 +1,183 @@
-import { serveStatic } from "hono/bun";
-import type { ViteDevServer } from "vite";
-import { createServer as createViteServer } from "vite";
-import config from "./zosite.json";
 import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-// AI agents: read README.md for navigation and contribution guidance.
-type Mode = "development" | "production";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const root = __dirname;
+const port = Number(process.env.PORT || 57484);
+
+// Load environment variables from .env.local
+const envPath = path.join(root, ".env.local");
+try {
+  const envContent = await fs.readFile(envPath, "utf-8");
+  for (const line of envContent.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex === -1) continue;
+    const key = trimmed.substring(0, eqIndex).trim();
+    const value = trimmed.substring(eqIndex + 1).trim();
+    if (key && value && !process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+  console.log("Loaded environment from .env.local");
+} catch (e) {
+  console.warn("Could not load .env.local:", e);
+}
+
 const app = new Hono();
 
-const mode: Mode =
-  process.env.NODE_ENV === "production" ? "production" : "development";
+// Enable CORS for all routes
+app.use("*", cors());
+app.use("*", logger());
 
-/**
- * Add any API routes here.
- */
-app.get("/api/hello-zo", (c) => c.json({ msg: "Hello from Zo" }));
+// Rate limiting middleware
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 requests per minute per IP
 
-if (mode === "production") {
-  configureProduction(app);
-} else {
-  await configureDevelopment(app);
-}
+app.use("*", async (c, next) => {
+  const clientIP = c.req.header("x-forwarded-for")?.split(",")[0] || 
+                   c.req.header("x-real-ip") || 
+                   "unknown";
+  const now = Date.now();
+  const entry = rateLimitStore.get(clientIP) || { count: 0, resetAt: now + RATE_LIMIT_WINDOW };
+  
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + RATE_LIMIT_WINDOW;
+  }
+  
+  entry.count++;
+  rateLimitStore.set(clientIP, entry);
+  
+  if (entry.count > RATE_LIMIT_MAX) {
+    return c.json({ error: "Too many requests. Please try again later." }, 429);
+  }
+  
+  await next();
+});
 
-/**
- * Determine port based on mode. In production, use the published_port if available.
- * In development, always use the local_port.
- * Ports are managed by the system and injected via the PORT environment variable.
- */
-const port = process.env.PORT
-  ? parseInt(process.env.PORT, 10)
-  : mode === "production"
-    ? (config.publish?.published_port ?? config.local_port)
-    : config.local_port;
+// Security headers
+app.use("*", async (c, next) => {
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("X-Frame-Options", "DENY");
+  c.header("X-XSS-Protection", "1; mode=block");
+  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  await next();
+});
 
-export default { fetch: app.fetch, port, idleTimeout: 255 };
+// API routes - dynamically load handlers from /api folder
+app.all("/api/*", async (c) => {
+  const apiPath = c.req.path.replace(/^\/api\//, "");
+  const [handlerName, ...restPath] = apiPath.split("/");
+  
+  // Try to load the handler
+  const candidates = [
+    path.join(root, "api", `${handlerName}.ts`),
+    path.join(root, "api", `${handlerName}.js`),
+  ];
 
-/**
- * Configure routing for production builds.
- *
- * - Streams prebuilt assets from `dist`.
- * - Static files from `public/` are copied to `dist/` by Vite and served at root paths.
- * - Falls back to `index.html` for any other GET so the SPA router can resolve the request.
- */
-function configureProduction(app: Hono) {
-  app.use("/assets/*", serveStatic({ root: "./dist" }));
-  app.get("/favicon.ico", (c) => c.redirect("/favicon.svg", 302));
-  app.use(async (c, next) => {
-    if (c.req.method !== "GET") return next();
-
-    const path = c.req.path;
-    if (path.startsWith("/api/") || path.startsWith("/assets/")) return next();
-
-    const file = Bun.file(`./dist${path}`);
-    if (await file.exists()) {
-      const stat = await file.stat();
-      if (stat && !stat.isDirectory()) {
-        return new Response(file);
-      }
-    }
-
-    return serveStatic({ path: "./dist/index.html" })(c, next);
-  });
-}
-
-/**
- * Configure routing for development builds.
- *
- * - Boots Vite in middleware mode for transforms.
- * - Static files from `public/` are served at root paths (matching Vite convention).
- * - Mirrors production routing semantics so SPA routes behave consistently.
- */
-async function configureDevelopment(app: Hono): Promise<ViteDevServer> {
-  const vite = await createViteServer({
-    server: { middlewareMode: true, hmr: false, ws: false },
-    appType: "custom",
-  });
-
-  app.use("*", async (c, next) => {
-    if (c.req.path.startsWith("/api/")) return next();
-    if (c.req.path === "/favicon.ico") return c.redirect("/favicon.svg", 302);
-
-    const url = c.req.path;
+  let modPath: string | null = null;
+  for (const candidate of candidates) {
     try {
-      if (url === "/" || url === "/index.html") {
-        let template = await Bun.file("./index.html").text();
-        template = await vite.transformIndexHtml(url, template);
-        return c.html(template, {
-          headers: { "Cache-Control": "no-store, must-revalidate" },
-        });
-      }
+      await fs.access(candidate);
+      modPath = candidate;
+      break;
+    } catch {}
+  }
 
-      const publicFile = Bun.file(`./public${url}`);
-      if (await publicFile.exists()) {
-        const stat = await publicFile.stat();
-        if (stat && !stat.isDirectory()) {
-          return new Response(publicFile, {
-            headers: { "Cache-Control": "no-store, must-revalidate" },
-          });
-        }
-      }
+  if (!modPath) {
+    return c.json({ error: `API handler not found: ${handlerName}` }, 404);
+  }
 
-      let result;
-      try {
-        result = await vite.transformRequest(url);
-      } catch {
-        result = null;
-      }
-
-      if (result) {
-        return new Response(result.code, {
-          headers: {
-            "Content-Type": "application/javascript",
-            "Cache-Control": "no-store, must-revalidate",
-          },
-        });
-      }
-
-      let template = await Bun.file("./index.html").text();
-      template = await vite.transformIndexHtml("/", template);
-      return c.html(template, {
-        headers: { "Cache-Control": "no-store, must-revalidate" },
-      });
-    } catch (error) {
-      vite.ssrFixStacktrace(error as Error);
-      console.error(error);
-      return c.text("Internal Server Error", 500);
+  try {
+    const mod = await import(pathToFileURL(modPath).href + `?t=${Date.now()}`);
+    const handler = mod.default;
+    
+    if (typeof handler !== "function") {
+      return c.json({ error: `Invalid API handler: ${handlerName}` }, 500);
     }
-  });
 
-  return vite;
-}
+    // Create Express-like req/res objects for compatibility
+    const req: any = {
+      method: c.req.method,
+      url: c.req.url,
+      path: c.req.path,
+      headers: Object.fromEntries(c.req.raw.headers),
+      body: await c.req.json().catch(() => ({})),
+      query: Object.fromEntries(c.req.query()),
+      params: {},
+    };
+
+    const res: any = {
+      statusCode: 200,
+      headersSent: false,
+      _headers: {} as Record<string, string>,
+      status: function(code: number) {
+        this.statusCode = code;
+        return this;
+      },
+      json: function(payload: any) {
+        this._body = JSON.stringify(payload);
+        this._headers["Content-Type"] = "application/json";
+        return this;
+      },
+      send: function(payload: any) {
+        if (typeof payload === "object" && payload !== null) {
+          this._body = JSON.stringify(payload);
+          this._headers["Content-Type"] = "application/json";
+        } else {
+          this._body = payload ?? "";
+        }
+        return this;
+      },
+      setHeader: function(name: string, value: string) {
+        this._headers[name] = value;
+      },
+      end: function(data?: string) {
+        this._body = data ?? this._body ?? "";
+      },
+    };
+
+    await handler(req, res);
+    
+    // Return the response
+    return new Response(res._body, {
+      status: res.statusCode,
+      headers: res._headers,
+    });
+  } catch (error: any) {
+    console.error(`API ${handlerName} failed:`, error);
+    return c.json({ error: error?.message || "Internal server error" }, 500);
+  }
+});
+
+// Serve static files from dist folder (production build)
+const distPath = path.join(root, "dist");
+app.use("/*", serveStatic({ root: distPath }));
+
+// SPA fallback - serve index.html for client-side routing
+app.get("*", async (c) => {
+  const indexPath = path.join(distPath, "index.html");
+  try {
+    const indexContent = await fs.readFile(indexPath, "utf-8");
+    return c.html(indexContent);
+  } catch {
+    return c.text("Not found - please run `bun run build` first", 404);
+  }
+});
+
+// Start the server
+console.log(`M2 Fleet Portal running on port ${port}`);
+export default {
+  port,
+  fetch: app.fetch,
+};

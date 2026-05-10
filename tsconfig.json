@@ -1,30 +1,21 @@
 {
   "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "target": "ES2020",
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "module": "esnext",
-    "target": "esnext",
-    "lib": ["ESNext", "DOM"],
-    "types": ["bun-types", "vite/client"],
+    "jsx": "react-jsx",
+    "strict": false,
     "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx",
-    "src",
-    "zosite.json",
-    "vite.config.ts",
-    "types",
-    "**/*.d.ts"
-  ],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "api", "scripts", "tmp", "*.ts"]
 }
