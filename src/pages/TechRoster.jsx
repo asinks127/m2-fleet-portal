@@ -259,9 +259,10 @@ export default function TechRoster() {
     setIsSyncingDocuments(true);
     try {
       toast.info("Initiating document sync to Google Drive. This may take a moment.");
-      const response = await /* FIXME: Unconverted base44 call */ supabase.functions.invoke('syncContractorDocumentsToDrive');
-      if (response && response.data && response.data.success) {
-        toast.success(`Document sync completed. Processed ${response.data.count} documents.`);
+      const { data, error } = await supabase.functions.invoke('syncContractorDocumentsToDrive');
+      if (error) throw error;
+      if (data && data.success) {
+        toast.success(`Document sync completed. Processed ${data.count} documents.`);
       } else {
         toast.error("Document sync finished with potential issues.");
       }

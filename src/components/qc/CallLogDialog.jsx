@@ -39,10 +39,13 @@ export default function CallLogDialog({ technician, isOpen, onClose, onSuccess, 
       }
 
       // Step 1: Save the call log
-      const logEntity = /* FIXME: Unconverted base44 call */ supabase.entities[entityType];
-      if (!logEntity) throw new Error(`Entity ${entityType} not found`);
+      const { data: callLog, error } = await supabase
+        .from(entityType)
+        .insert(payload)
+        .select()
+        .single();
       
-      const callLog = await logEntity.create(payload);
+      if (error) throw error;
 
       console.log('Call log saved successfully');
 

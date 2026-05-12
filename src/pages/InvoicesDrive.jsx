@@ -127,8 +127,9 @@ export default function InvoicesDrive() {
   const checkDriveConnection = async () => {
     setIsCheckingDrive(true);
     try {
-      const response = await /* FIXME: Unconverted base44 call */ supabase.functions.invoke('testDriveConnection');
-      setDriveStatus(response.data);
+      const { data, error } = await supabase.functions.invoke('testDriveConnection');
+      if (error) throw error;
+      setDriveStatus(data);
     } catch (err) {
       console.error('Failed to check drive connection:', err);
     } finally {
@@ -140,8 +141,8 @@ export default function InvoicesDrive() {
     setIsSyncing(true);
     setSyncResult(null);
     try {
-      const response = await /* FIXME: Unconverted base44 call */ supabase.functions.invoke('syncInvoicesToDrive');
-      const data = response.data;
+      const { data, error } = await supabase.functions.invoke('syncInvoicesToDrive');
+      if (error) throw error;
       if (data.success) {
         setSyncResult({
           type: 'success',

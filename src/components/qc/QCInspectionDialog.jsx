@@ -45,17 +45,21 @@ export default function QCInspectionDialog({
 
       setIsLoadingHistory(true);
       try {
-        const user = await User.me();
+        const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);
         
         // Dynamically fetch inspections based on entity type
-        const InspectionEntity = /* FIXME: Unconverted base44 call */ supabase.entities[entityType];
-        if (InspectionEntity) {
-            const filter = {};
-            filter[idField] = technician.id;
-            const inspections = await InspectionEntity.filter(filter, '-inspectionDate', 5);
-            setPastInspections(inspections);
-        }
+        const filter = {};
+        filter[idField] = technician.id;
+        const { data: inspections, error } = await supabase
+          .from(entityType)
+          .select('*')
+          .match(filter)
+          .order('inspectionDate', { ascending: false })
+          .limit(5);
+        
+        if (error) throw error;
+        setPastInspections(inspections || []);
       } catch (err) {
         console.error("Error loading inspection data:", err);
       } finally {
@@ -86,14 +90,21 @@ export default function QCInspectionDialog({
       // Set ID field dynamically
       inspectionData[idField] = technician.id;
 
-      const InspectionEntity = /* FIXME: Unconverted base44 call */ supabase.entities[entityType];
-      if (!InspectionEntity) throw new Error(`Entity ${entityType} not found`);
-
+      let error;
       if (inspectionToEdit) {
-        await InspectionEntity.update(inspectionToEdit.id, inspectionData);
+        const result = await supabase
+          .from(entityType)
+          .update(inspectionData)
+          .eq('id', inspectionToEdit.id);
+        error = result.error;
       } else {
-        await InspectionEntity.create(inspectionData);
+        const result = await supabase
+          .from(entityType)
+          .insert(inspectionData);
+        error = result.error;
       }
+
+      if (error) throw error;
 
       // Update average score (User entity update)
       // For Technicians: User.avgQcScore
@@ -101,7 +112,9 @@ export default function QCInspectionDialog({
       // So we might skip updating User entity for managers if we don't store it there.
       
       if (entityType === 'QCInspection') {
-          const allInspections = await InspectionEntity.filter({ technicianId: technician.id });
+          const allInspections = await supabase
+            .from(entityType)
+            .select();
           const avgScore = allInspections.reduce((sum, insp) => sum + insp.score, 0) / allInspections.length;
           await User.update(technician.id, { avgQcScore: Math.round(avgScore) });
       }
