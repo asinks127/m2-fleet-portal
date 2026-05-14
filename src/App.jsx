@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import SignerPage from './pages/documentSigning/SignerPage';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -37,7 +38,8 @@ const AuthenticatedApp = () => {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
       const onPortalAccess = window.location.pathname === '/PortalAccess';
-      if (!onPortalAccess) {
+      const onSignerPage = window.location.pathname.startsWith('/sign/');
+      if (!onPortalAccess && !onSignerPage) {
         navigateToLogin();
         return null;
       }
@@ -46,6 +48,9 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+      {/* Public signer route - no auth required */}
+      <Route path="/sign/:requestId/:token" element={<SignerPage />} />
+      
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
           <MainPage />
