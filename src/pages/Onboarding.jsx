@@ -35,16 +35,33 @@ export default function Onboarding() {
     setIsSaving(true);
     setError(null);
 
+    const business = String(formData.business || '').trim();
+    if (!business) {
+      setError('Business Name is required.');
+      setIsSaving(false);
+      return;
+    }
+
     try {
       await User.updateMyUserData({
-        ...formData,
-        onboardingCompleted: true,
+        business,
+        phone: formData.phone,
+        ein: formData.ein,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        emergency_contact_name: formData.emergencyContactName,
+        emergency_contact_phone: formData.emergencyContactPhone,
+        onboarding_completed: true,
+        profile_complete: true,
       });
-      // Navigate to the main contractor dashboard after successful onboarding
       navigate(createPageUrl('ContractorDashboard'));
     } catch (err) {
       console.error('Error saving onboarding data:', err);
-      setError('Failed to save your information. Please check the details and try again.');
+      const message = err?.message || 'Unknown error';
+      const details = [err?.code, err?.details].filter(Boolean).join(' • ');
+      setError(details ? `Failed to save your information: ${message} (${details})` : `Failed to save your information: ${message}`);
       setIsSaving(false);
     }
   };

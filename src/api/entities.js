@@ -149,5 +149,43 @@ export const User = {
       console.error('Error in User.me():', err);
       return null;
     }
+  },
+  updateMyUserData: async (updates) => {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    if (!user?.email) throw new Error('You must be signed in to save your profile.');
+
+    const email = user.email.toLowerCase();
+    const payload = {
+      ...updates,
+      email,
+    };
+
+    const { data: existingUser, error: existingError } = await supabase
+      .from('User')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    if (existingUser?.id) {
+      const { data, error } = await supabase
+        .from('User')
+        .update(payload)
+        .eq('id', existingUser.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    const { data, error } = await supabase
+      .from('User')
+      .insert(payload)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 };
