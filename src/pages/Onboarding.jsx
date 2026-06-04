@@ -12,6 +12,7 @@ import { createPageUrl } from '@/utils/index.js';
 export default function Onboarding() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    displayName: '',
     business: '',
     ein: '',
     address: '',
@@ -35,16 +36,34 @@ export default function Onboarding() {
     setIsSaving(true);
     setError(null);
 
+    const business = String(formData.business || '').trim();
+    if (!business) {
+      setError('Business Name is required.');
+      setIsSaving(false);
+      return;
+    }
+
     try {
       await User.updateMyUserData({
-        ...formData,
-        onboardingCompleted: true,
+        displayName: formData.displayName,
+        business,
+        phone: formData.phone,
+        ein: formData.ein,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        emergencyContactName: formData.emergencyContactName,
+        emergencyContactPhone: formData.emergencyContactPhone,
+        onboarding_completed: true,
+        profile_complete: true,
       });
-      // Navigate to the main contractor dashboard after successful onboarding
       navigate(createPageUrl('ContractorDashboard'));
     } catch (err) {
       console.error('Error saving onboarding data:', err);
-      setError('Failed to save your information. Please check the details and try again.');
+      const message = err?.message || 'Unknown error';
+      const details = [err?.code, err?.details].filter(Boolean).join(' • ');
+      setError(details ? `Failed to save your information: ${message} (${details})` : `Failed to save your information: ${message}`);
       setIsSaving(false);
     }
   };
@@ -71,15 +90,19 @@ export default function Onboarding() {
                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Business Information</h3>
                  <div className="grid sm:grid-cols-2 gap-4">
                     <div>
+                        <Label htmlFor="displayName">Display / Full Name *</Label>
+                        <Input id="displayName" value={formData.displayName} onChange={handleInputChange} required />
+                    </div>
+                    <div>
                         <Label htmlFor="business">Business Name *</Label>
                         <Input id="business" value={formData.business} onChange={handleInputChange} required />
                     </div>
+                 </div>
+                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="phone">Phone Number *</Label>
                         <Input id="phone" type="tel" value={formData.phone} onChange={handleInputChange} required />
                     </div>
-                 </div>
-                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="ein">EIN (Employer ID Number) *</Label>
                         <Input id="ein" value={formData.ein} onChange={handleInputChange} required />
