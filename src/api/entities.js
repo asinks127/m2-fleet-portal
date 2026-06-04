@@ -3,6 +3,23 @@ import { supabase } from '@/lib/supabaseClient.js';
 // Entities helper - wraps Supabase table queries in a familiar interface
 // Each entity maps to a Supabase table of the same name
 
+// Recursively convert camelCase keys to snake_case so app code that still uses
+// camelCase (displayName, businessName, onboardingCompleted, etc.) writes to
+// the actual snake_case columns the tables have (display_name, business_name,
+// onboarding_completed, ...). Tables in Supabase are snake_case; converting at
+// the entity boundary keeps the rest of the app unchanged.
+const toDb = (value) => {
+  if (Array.isArray(value)) return value.map(toDb);
+  if (value && typeof value === 'object' && !(value instanceof Date) && !(value instanceof File) && !(value instanceof Blob)) {
+    return Object.keys(value).reduce((acc, key) => {
+      const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      acc[snake] = toDb(value[key]);
+      return acc;
+    }, {});
+  }
+  return value;
+};
+
 const createEntityProxy = (tableName) => ({
   list: async (orderBy, limit) => {
     let query = supabase.from(tableName).select('*');
@@ -18,7 +35,7 @@ const createEntityProxy = (tableName) => ({
   },
   filter: async (filters, orderBy, limit) => {
     let query = supabase.from(tableName).select('*');
-    if (filters) query = query.match(filters);
+    if (filters) query = query.match(toDb(filters));
     if (orderBy) {
       const desc = orderBy.startsWith('-');
       const col = desc ? orderBy.slice(1) : orderBy;
@@ -35,12 +52,12 @@ const createEntityProxy = (tableName) => ({
     return data;
   },
   create: async (record) => {
-    const { data, error } = await supabase.from(tableName).insert(record).select().single();
+    const { data, error } = await supabase.from(tableName).insert(toDb(record)).select().single();
     if (error) throw error;
     return data;
   },
   update: async (id, updates) => {
-    const { data, error } = await supabase.from(tableName).update(updates).eq('id', id).select().single();
+    const { data, error } = await supabase.from(tableName).update(toDb(updates)).eq('id', id).select().single();
     if (error) throw error;
     return data;
   },
@@ -172,7 +189,7 @@ export const User = {
     if (existingUser?.id) {
       const { data, error } = await supabase
         .from('User')
-        .update(payload)
+        .update(toDb(payload) || payload)
         .eq('id', existingUser.id)
         .select()
         .single();
@@ -182,7 +199,7 @@ export const User = {
 
     const { data, error } = await supabase
       .from('User')
-      .insert(payload)
+      .insert(toDb(payload) || payload)
       .select()
       .single();
     if (error) throw error;

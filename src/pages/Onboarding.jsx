@@ -12,6 +12,7 @@ import { createPageUrl } from '@/utils/index.js';
 export default function Onboarding() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    displayName: '',
     business: '',
     ein: '',
     address: '',
@@ -44,6 +45,7 @@ export default function Onboarding() {
 
     try {
       await User.updateMyUserData({
+        displayName: formData.displayName,
         business,
         phone: formData.phone,
         ein: formData.ein,
@@ -51,8 +53,8 @@ export default function Onboarding() {
         city: formData.city,
         state: formData.state,
         zip: formData.zip,
-        emergency_contact_name: formData.emergencyContactName,
-        emergency_contact_phone: formData.emergencyContactPhone,
+        emergencyContactName: formData.emergencyContactName,
+        emergencyContactPhone: formData.emergencyContactPhone,
         onboarding_completed: true,
         profile_complete: true,
       });
@@ -88,15 +90,19 @@ export default function Onboarding() {
                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Business Information</h3>
                  <div className="grid sm:grid-cols-2 gap-4">
                     <div>
+                        <Label htmlFor="displayName">Display / Full Name *</Label>
+                        <Input id="displayName" value={formData.displayName} onChange={handleInputChange} required />
+                    </div>
+                    <div>
                         <Label htmlFor="business">Business Name *</Label>
                         <Input id="business" value={formData.business} onChange={handleInputChange} required />
                     </div>
+                 </div>
+                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="phone">Phone Number *</Label>
                         <Input id="phone" type="tel" value={formData.phone} onChange={handleInputChange} required />
                     </div>
-                 </div>
-                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <Label htmlFor="ein">EIN (Employer ID Number) *</Label>
                         <Input id="ein" value={formData.ein} onChange={handleInputChange} required />
