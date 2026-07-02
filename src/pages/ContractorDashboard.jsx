@@ -82,19 +82,16 @@ export default function ContractorDashboard() {
       setUser(currentUser);
 
       console.log('Loading invoices for:', currentUser.email);
-      const contractorInvoices = await (await supabase.from('Invoice').select('*').match(
-        { contractorEmail: currentUser.email },
-        '-created_date',
-        100
-      )).data;
+      const { data: contractorInvoicesRaw = [] } = await supabase.from('Invoice').select('*').eq('contractorEmail', currentUser.email).order('created_at', { ascending: false }).limit(100);
+      const contractorInvoices = contractorInvoicesRaw || [];
 
       console.log('Loaded invoices:', contractorInvoices.length);
       setInvoices(contractorInvoices);
 
-      const pendingCount = contractorInvoices.filter(inv => inv.status === 'pending').length;
-      const approvedCount = contractorInvoices.filter(inv => inv.status === 'approved').length;
+      const pendingCount = contractorInvoices.filter(inv => (inv.status || '').toLowerCase() === 'pending').length;
+      const approvedCount = contractorInvoices.filter(inv => (inv.status || '').toLowerCase() === 'approved').length;
       const totalAmount = contractorInvoices
-        .filter(inv => inv.status === 'approved')
+        .filter(inv => (inv.status || '').toLowerCase() === 'approved')
         .reduce((sum, inv) => sum + (parseFloat(inv.totalAmount) || 0), 0);
 
       setStats({
@@ -105,18 +102,11 @@ export default function ContractorDashboard() {
       });
 
       try {
-        const latestMessages = await (await supabase.from('SafetyMessage').select('*').match(
-          { isActive: true },
-          '-publishDate',
-          1
-        )).data;
+        const { data: latestMessages = [] } = await supabase.from('SafetyMessage').select('*').eq('active', true).order('created_at', { ascending: false }).limit(1);
 
         if (latestMessages.length > 0) {
           const message = latestMessages[0];
-          const acks = await (await supabase.from('SafetyAcknowledgement').select('*').match({
-            messageId: message.id,
-            userId: currentUser.id
-          })).data;
+          const { data: acks = [] } = await supabase.from('SafetyAcknowledgement').select('*').match({ messageId: message.id, userId: currentUser.id });
 
           if (acks.length === 0) {
             setCurrentSafetyMessage(message);
@@ -139,13 +129,16 @@ export default function ContractorDashboard() {
     if (!currentSafetyMessage || !user) return;
 
     try {
-      await (await supabase.from('SafetyAcknowledgement').insert({
+      await supabase.from('SafetyAcknowledgement').insert({
         messageId: currentSafetyMessage.id,
         userId: user.id,
-        userEmail: user.email,
-        userName: user.displayName || user.full_name || user.email,
-          acknowledgedAt: new Date().toISOString()
-      }));
+        acknowledged_at: new Date().toISOString(),
+        metadata: {
+          userEmail: user.email || null,
+          userName: user.displayName || user.full_name || user.email || null,
+          acknowledgedFrom: 'ContractorDashboard'
+        }
+      });
 
       setShowSafetyModal(false);
       setCurrentSafetyMessage(null);
@@ -349,7 +342,7 @@ export default function ContractorDashboard() {
                             <p className="font-medium text-gray-900">{invoice.fileName}</p>
                             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mt-1">
                               <span>
-                                Week ending: {invoice.weekEndingDate ? new Date(invoice.weekEndingDate).toLocaleDateString() : 'N/A'}
+                                Week ending: {(() => { const d = invoice.weekEndingDate ? new Date(invoice.weekEndingDate) : null; return d && !isNaN(d.getTime()) ? d.toLocaleDateString() : 'N/A'; })()}
                               </span>
                               {invoice.totalAmount && (
                                 <span className="font-medium text-gray-700">
@@ -357,7 +350,7 @@ export default function ContractorDashboard() {
                                 </span>
                               )}
                               <span>
-                                Submitted: {formatCentralTime(invoice.created_date)}
+                                Submitted: {(() => { const d = invoice.created_at || invoice.invoiceDate; return d ? formatCentralTime(d) : 'N/A'; })()}
                               </span>
                             </div>
                           </div>

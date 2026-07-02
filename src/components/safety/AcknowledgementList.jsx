@@ -25,14 +25,14 @@ export default function AcknowledgementList({ isOpen, onClose, messageId, messag
   const loadAcknowledgements = useCallback(async () => {
     setIsLoading(true);
     try {
-      const acks = await SafetyAcknowledgement.filter({ messageId }, '-acknowledgedAt');
+      const acks = await SafetyAcknowledgement.filter({ messageId }, '-acknowledged_at');
       
       // Deduplicate by email - keep the most recent acknowledgement per person
       const uniqueAcks = [];
       const seenEmails = new Set();
       
       acks.forEach(ack => {
-        const email = ack.userEmail?.toLowerCase();
+        const email = ack.metadata?.userEmail?.toLowerCase();
         if (email && !seenEmails.has(email)) {
           seenEmails.add(email);
           uniqueAcks.push(ack);
@@ -72,10 +72,10 @@ export default function AcknowledgementList({ isOpen, onClose, messageId, messag
       messageSection,
       headers.join(','),
       ...list.map(ack => [
-        `"${ack.userName || ''}"`,
-        `"${ack.userEmail || ''}"`,
-        `"${format(new Date(ack.acknowledgedAt), 'MMM d, yyyy')}"`,
-        `"${format(new Date(ack.acknowledgedAt), 'h:mm a')}"`,
+        `"${ack.metadata?.userName || ''}"`,
+        `"${ack.metadata?.userEmail || ''}"`,
+        `"${format(new Date(ack.acknowledged_at), 'MMM d, yyyy')}"`,
+        `"${format(new Date(ack.acknowledged_at), 'h:mm a')}"`,
       ].join(','))
     ].join('\n');
 
@@ -156,10 +156,10 @@ export default function AcknowledgementList({ isOpen, onClose, messageId, messag
             <tbody>
               ${list.map(ack => `
                 <tr>
-                  <td>${ack.userName || ''}</td>
-                  <td>${ack.userEmail || ''}</td>
-                  <td>${format(new Date(ack.acknowledgedAt), 'MMM d, yyyy')}</td>
-                  <td>${format(new Date(ack.acknowledgedAt), 'h:mm a')}</td>
+                  <td>${ack.metadata?.userName || ''}</td>
+                  <td>${ack.metadata?.userEmail || ''}</td>
+                  <td>${format(new Date(ack.acknowledged_at), 'MMM d, yyyy')}</td>
+                  <td>${format(new Date(ack.acknowledged_at), 'h:mm a')}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -228,10 +228,10 @@ export default function AcknowledgementList({ isOpen, onClose, messageId, messag
                 <TableBody>
                   {list.map((ack) => (
                     <TableRow key={ack.id}>
-                      <TableCell className="font-medium">{ack.userName}</TableCell>
-                      <TableCell>{ack.userEmail}</TableCell>
-                      <TableCell>{format(new Date(ack.acknowledgedAt), 'MMM d, yyyy')}</TableCell>
-                      <TableCell>{format(new Date(ack.acknowledgedAt), 'h:mm a')}</TableCell>
+                      <TableCell className="font-medium">{ack.metadata?.userName}</TableCell>
+                      <TableCell>{ack.metadata?.userEmail}</TableCell>
+                      <TableCell>{format(new Date(ack.acknowledged_at), 'MMM d, yyyy')}</TableCell>
+                      <TableCell>{format(new Date(ack.acknowledged_at), 'h:mm a')}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
