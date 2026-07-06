@@ -11,10 +11,36 @@ import { supabase } from '@/lib/supabaseClient.js';
 const camelToSnake = (key) =>
   key.replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2').replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 
-// The User table in Supabase has a few oddly-named columns that don't follow
-// normal snake_case (m2pm instead of m2_pm, velopm instead of velo_pm). Map
-// those exceptions here so the rest of the app can use normal camelCase.
+// Some User table columns in Supabase are stored as camelCase (e.g. endDate,
+// startDate, businessName) or compressed forms (m2pm, velopm) instead of
+// the usual snake_case. Map those exceptions here so the rest of the app can
+// keep using normal camelCase keys (endDate -> endDate, m2PM -> m2pm).
 const COLUMN_ALIASES = {
+  end_date: 'endDate',
+  start_date: 'startDate',
+  full_name: 'fullName',
+  profile_complete: 'profileComplete',
+  business_name: 'businessName',
+  shadowing_end_date: 'shadowingEndDate',
+  shadowing_start_date: 'shadowingStartDate',
+  sunbelt_cert_end_date: 'sunbeltCertEndDate',
+  sunbelt_cert_start_date: 'sunbeltCertStartDate',
+  sunbelt_cert_status: 'sunbeltCertStatus',
+  sunbelt_cert_notes: 'sunbeltCertNotes',
+  emergency_contact_name: 'emergencyContactName',
+  emergency_contact_phone: 'emergencyContactPhone',
+  emergency_contact_email: 'emergencyContactEmail',
+  qc_assignment: 'qcAssignment',
+  invoice_review_reason: 'invoiceReviewReason',
+  inactive_reason: 'inactiveReason',
+  inactive_date: 'inactiveDate',
+  avg_qc_score: 'avgQcScore',
+  late_arrivals: 'lateArrivals',
+  needs_invoice_review: 'needsInvoiceReview',
+  velo_survey_feedback: 'veloSurveyFeedback',
+  velociti_score: 'velocitiScore',
+  onboarding_completed: 'onboardingCompleted',
+  weekly_pay: 'weeklyPay',
   m2_pm: 'm2pm',
   velo_pm: 'velopm',
 };
