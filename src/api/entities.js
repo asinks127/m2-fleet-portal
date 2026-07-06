@@ -153,7 +153,9 @@ const entityNames = [
   'AppLog', 'AppActivityLog',
   // Misc
   'DelayDetail', 'DailyActivityRecord', 'ManagerCallLog', 'ManagerQCInspection',
-  'Range', 'ReportHistory', 'SyncLog', 'TimeEntry'
+  'Range', 'ReportHistory', 'SyncLog', 'TimeEntry',
+  // Velo survey — outside PM directory (Supabase table velo_project_managers)
+  'velo_project_managers'
 ];
 
 const entities = {};
@@ -257,3 +259,7 @@ export const User = {
     return data;
   }
 };
+
+// Velo outside-PM directory (table is lowercase snake_case, so it can't be a
+// clean destructured identifier — export it explicitly).
+export const VeloPM = entities['velo_project_managers'];
