@@ -5,6 +5,7 @@ import { createPageUrl } from '@/utils/index.js';
 const AuthContext = createContext();
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+const DEBUG_USER_EMAIL = 'tjserota@gmail.com';
 
 const DEMO_USER = {
   id: '22222222-2222-4222-8222-222222222222',
@@ -20,6 +21,8 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(DEMO_MODE);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
+  // Debug role override for tjserota@gmail.com
+  const [roleOverride, setRoleOverride] = useState(null); // null = use real role, 'admin' = force admin, 'contractor' = force contractor
 
   useEffect(() => {
     const checkSession = async () => {
@@ -116,7 +119,10 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings: {},
       logout,
       navigateToLogin,
-      checkAppState
+      checkAppState,
+      roleOverride,
+      isDebugUser: user?.email === DEBUG_USER_EMAIL,
+      toggleDebugRole: () => setRoleOverride(prev => prev === 'admin' ? 'contractor' : prev === 'contractor' ? null : 'admin'),
     }}>
       {children}
     </AuthContext.Provider>

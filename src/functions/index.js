@@ -71,3 +71,5 @@ export const sendVeloSurvey = createFunctionProxy('sendVeloSurvey');
 export const cleanupProjectData = createFunctionProxy('cleanupProjectData');
 export const docusignWebhook = createFunctionProxy('docusignWebhook');
 export const sendToWebhook = createFunctionProxy('sendToWebhook');
+export const generateRecurringAudits = createFunctionProxy('generateRecurringAudits');
+export const escalateOverdueAudits = createFunctionProxy('escalateOverdueAudits');

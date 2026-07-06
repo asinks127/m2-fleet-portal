@@ -8,6 +8,11 @@ const getUserRole = (email) => {
   if (!email) return null;
   const emailLower = email.toLowerCase();
 
+  // Velo PM check - must be first since velo emails could also match .contractor@ patterns
+  if (emailLower.endsWith('@velociti.com') || emailLower === 'omcvay@gmail.com') {
+    return 'velo_pm';
+  }
+
   if (emailLower.includes('.contractor@')) {
     const qcUsers = [
       'rmiller.contractor@m2fleetcom.com',
@@ -21,7 +26,8 @@ const getUserRole = (email) => {
     return 'admin';
   }
 
-  return null;
+  // Fallback for any other email - send to contractor dashboard (lowest permission)
+  return 'contractor';
 };
 
 export default function PortalAccessPage() {
@@ -31,7 +37,7 @@ export default function PortalAccessPage() {
   const callbackUrl = useMemo(() => `${window.location.origin}${createPageUrl('PortalAccess')}`, []);
 
   useEffect(() => {
-    const handleLogin = async () => {
+    const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
@@ -47,18 +53,43 @@ export default function PortalAccessPage() {
 
         if (role === 'admin' || role === 'qc') {
           navigate(createPageUrl('AdminDashboard'), { replace: true });
+        } else if (role === 'velo_pm') {
+          navigate(createPageUrl('VeloSurveyPortal'), { replace: true });
         } else if (role === 'contractor') {
           navigate(createPageUrl('ContractorDashboard'), { replace: true });
         } else {
-          navigate(createPageUrl('AdminDashboard'), { replace: true });
+          navigate(createPageUrl('ContractorDashboard'), { replace: true });
         }
       } catch (error) {
+        console.error('Auth error:', error);
         setStatus('ready');
         setErrorMessage(error?.message || 'Unable to check your session.');
       }
     };
 
-    handleLogin();
+    checkSession();
+
+    // Listen for auth state changes (handles OAuth callbacks)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setStatus('redirecting');
+        const role = getUserRole(session.user.email);
+        
+        if (role === 'admin' || role === 'qc') {
+          navigate(createPageUrl('AdminDashboard'), { replace: true });
+        } else if (role === 'velo_pm') {
+          navigate(createPageUrl('VeloSurveyPortal'), { replace: true });
+        } else if (role === 'contractor') {
+          navigate(createPageUrl('ContractorDashboard'), { replace: true });
+        } else {
+          navigate(createPageUrl('ContractorDashboard'), { replace: true });
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleGoogleSignIn = async () => {

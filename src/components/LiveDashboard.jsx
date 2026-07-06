@@ -51,13 +51,22 @@ export function LiveDashboard({ children, refreshInterval = 30000 }) {
  * Metric card with trend indicator
  */
 export function MetricCard({ title, value, previousValue, icon: Icon, color = "blue" }) {
+  const asNumber = (v) => {
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const getTrend = () => {
-    if (!previousValue || previousValue === value) return 'stable';
-    return value > previousValue ? 'up' : 'down';
+    const current = asNumber(value);
+    const previous = asNumber(previousValue);
+    if (!previousValue || previous === current) return 'stable';
+    return current > previous ? 'up' : 'down';
   };
 
   const trend = getTrend();
-  const percentChange = previousValue ? ((value - previousValue) / previousValue * 100).toFixed(1) : 0;
+  const current = asNumber(value);
+  const previous = asNumber(previousValue);
+  const percentChange = previousValue ? ((current - previous) / previous * 100).toFixed(1) : 0;
 
   return (
     <Card>
@@ -65,7 +74,7 @@ export function MetricCard({ title, value, previousValue, icon: Icon, color = "b
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            <p className="text-3xl font-bold text-gray-900">{value ?? 0}</p>
             {previousValue !== undefined && (
               <div className="flex items-center mt-2 text-sm">
                 {trend === 'up' && <TrendingUp className="w-4 h-4 text-green-500 mr-1" />}

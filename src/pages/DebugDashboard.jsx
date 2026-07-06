@@ -199,8 +199,8 @@ export default function DebugDashboard() {
 
       try {
         const latestMessages = await (await supabase.from('SafetyMessage').select('*').match(
-          { isActive: true },
-          '-publishDate',
+          { active: true },
+          '-published_at',
           1
         )).data;
 

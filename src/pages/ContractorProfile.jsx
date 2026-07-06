@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabaseClient.js';
+import { useAuth } from '@/lib/AuthContext.jsx';
 import { User } from '@/api/entities.js';
 import { useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button.jsx';
@@ -25,6 +27,7 @@ const adminEmailsList = [
 
 export default function ContractorProfile() {
   const location = useLocation();
+  const { user: authUser } = useAuth(); // Get user from AuthContext (handles demo mode)
   const [user, setUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({});
@@ -36,6 +39,8 @@ export default function ContractorProfile() {
   const [showInspectionDialog, setShowInspectionDialog] = useState(false);
   const [showCallLogDialog, setShowCallLogDialog] = useState(false);
   const [activityKey, setActivityKey] = useState(0);
+
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
   // Get return path from URL to preserve filters when navigating back
   const params = new URLSearchParams(location.search);
@@ -54,10 +59,37 @@ export default function ContractorProfile() {
       
       try {
         const users = await User.filter({ id: userId });
-        userData = users[0];
+        if (users && users.length > 0) {
+          userData = users[0];
+        }
       } catch (listError) {
         console.error('Error loading user by ID:', listError);
+      }
+      
+      // Fallback if not found or error
+      if (!userData) {
+        // Fallback 1: if looking up self, use loggedInUser directly
         if (loggedInUser && userId === loggedInUser.id) {
+          userData = loggedInUser;
+        } else if (loggedInUser && userId === loggedInUser.id) {
+          // Fallback 2: if logged in and looking up self, use auth user data
+          userData = loggedInUser;
+        } else {
+          // Fallback 3: try querying by id directly via Supabase
+          const { data: sbUser, error: sbError } = await supabase
+            .from('User')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          if (sbUser && !sbError) {
+            userData = sbUser;
+          }
+        }
+      }
+      
+      if (!userData) {
+        // Fallback 4: use the logged-in user's data if nothing else worked
+        if (loggedInUser) {
           userData = loggedInUser;
         } else {
           throw new Error('Unable to load user data.');
@@ -69,7 +101,8 @@ export default function ContractorProfile() {
         setUser(userData);
 
         const email = (userData.email || '').toLowerCase();
-        const isContractor = email.includes('.contractor@');
+        const specialContractorEmails = ['tjserota@gmail.com'];
+        const isContractor = email.includes('.contractor@') || specialContractorEmails.includes(email);
         setIsContractorProfile(isContractor);
         
         setFormData({
@@ -107,7 +140,7 @@ export default function ContractorProfile() {
   useEffect(() => {
     const fetchAndSetUser = async () => {
       try {
-        const loggedInUser = await User.me();
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
         setCurrentUser(loggedInUser);
 
         const userIdFromUrl = getUserId();

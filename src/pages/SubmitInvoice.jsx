@@ -117,7 +117,7 @@ export default function SubmitInvoice() {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`Upload attempt ${attempt} for file: ${file.name}`);
-        const uploadResult = await supabase.storage.from('documents').upload( file .file.name,  file .file);
+        const uploadResult = await supabase.storage.from('documents').upload(file.name, file);
         console.log(`Upload successful on attempt ${attempt}`);
         return uploadResult.file_url;
       } catch (error) {
@@ -215,7 +215,17 @@ export default function SubmitInvoice() {
 
         let file_url;
         try {
-          file_url = await uploadFileWithRetry(file, 3);
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(`invoices/${Date.now()}_${file.name}`, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage
+            .from('documents')
+            .getPublicUrl(uploadData.path);
+          file_url = urlData.publicUrl;
         } catch (uploadError) {
           console.error('File Upload Error:', uploadError);
           let detail = 'Please check your internet connection and try again.';
@@ -236,37 +246,49 @@ export default function SubmitInvoice() {
 
         const contractorName = user?.displayName || user?.business || user?.full_name || user?.email;
 
-        const invoice = await supabase.from('Invoice').insert({
-          contractorName: contractorName,
-          contractorEmail: user?.email,
-          businessName: user?.business,
-          fileName: file.name,
-          fileUrl: file_url,
-          mimeType: file.type,
-          invoiceDate: getCurrentTimeInCT(),
-          weekEndingDate: formData.workPeriod,
-          totalAmount: formData.totalAmount ? parseFloat(formData.totalAmount) : undefined,
-          daysWorked: formData.daysWorked ? parseFloat(formData.daysWorked) : undefined,
-          status: status,
-          autoApproved: false,
-          approvedDate: undefined,
-          rejectionReason: undefined,
-          pendingReason: pendingReason,
-          notes: formData.notes
-        }).select().single();
+        const { data: invoice, error: invoiceError } = await supabase
+          .from('Invoice')
+          .insert({
+            contractorName: contractorName,
+            contractorEmail: user?.email,
+            businessName: user?.business,
+            fileName: file.name,
+            fileUrl: file_url,
+            mimeType: file.type,
+            invoiceDate: getCurrentTimeInCT(),
+            weekEndingDate: formData.workPeriod,
+            totalAmount: formData.totalAmount ? parseFloat(formData.totalAmount) : undefined,
+            daysWorked: formData.daysWorked ? parseFloat(formData.daysWorked) : undefined,
+            status: 'pending',
+            autoApproved: false,
+            approvedDate: null,
+            rejectionReason: null,
+            pendingReason: 'Awaiting manual review and approval',
+            notes: formData.notes
+          })
+          .select()
+          .single();
+
+        if (invoiceError) throw invoiceError;
 
         // Upload to Google Drive in the background
-        fetch('/api/uploadToDrive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-          fileUrl: file_url,
-          fileName: file.name,
-          documentType: 'invoice',
-          contractorName: contractorName,
-          invoiceId: invoice.id
-        }) }).then(res => res.json()).then(result => {
-          console.log('Invoice uploaded to Google Drive:', result);
-        }).catch(err => {
-          console.warn('Google Drive upload failed (non-blocking):', err);
-        });
+        if (invoice?.id) {
+          fetch('/api/uploadToDrive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileUrl: file_url,
+              fileName: file.name,
+              documentType: 'invoice',
+              contractorName: contractorName,
+              invoiceId: invoice.id
+            })
+          }).then(res => res.json()).then(result => {
+            console.log('Invoice uploaded to Google Drive:', result);
+          }).catch(err => {
+            console.warn('Google Drive upload failed (non-blocking):', err);
+          });
+        }
 
         setUploadProgress(((i + 1) / totalFiles) * 100);
       }

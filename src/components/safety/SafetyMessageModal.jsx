@@ -17,6 +17,11 @@ export default function SafetyMessageModal({ message, user, onAcknowledged }) {
       return;
     }
 
+    if (!message?.id || !user?.id) {
+      setError('Missing message or user information.');
+      return;
+    }
+
     setIsAcknowledging(true);
     setError(null);
 
@@ -24,20 +29,33 @@ export default function SafetyMessageModal({ message, user, onAcknowledged }) {
       await SafetyAcknowledgement.create({
         messageId: message.id,
         userId: user.id,
-        userEmail: user.email,
-        userName: user.full_name || user.email,
-        acknowledgedAt: new Date().toISOString(),
-        ipAddress: 'N/A', // Could be enhanced to capture actual IP
-        deviceInfo: navigator.userAgent
+        acknowledged_at: new Date().toISOString(),
+        metadata: {
+          userEmail: user.email || null,
+          userName: user.full_name || user.displayName || user.email || null,
+          deviceInfo: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+          acknowledgedFrom: 'SafetyMessageModal'
+        }
       });
 
-      onAcknowledged();
+      if (typeof onAcknowledged === 'function') {
+        onAcknowledged();
+      }
     } catch (err) {
       console.error('Error acknowledging safety message:', err);
-      setError('Failed to acknowledge message. Please try again.');
+      setError(err?.message || 'Failed to acknowledge message. Please try again.');
       setIsAcknowledging(false);
     }
   };
+
+  const publishedRaw = message?.published_at || message?.publishDate;
+  const publishedLabel = (() => {
+    if (!publishedRaw) return 'N/A';
+    const d = new Date(publishedRaw);
+    return !isNaN(d.getTime()) ? format(d, 'MMMM d, yyyy') : 'N/A';
+  })();
+
+  const bodyText = message?.message || message?.content || '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -47,17 +65,13 @@ export default function SafetyMessageModal({ message, user, onAcknowledged }) {
             <ShieldCheck className="w-6 h-6" />
             <span>Important Safety Message</span>
           </CardTitle>
-          <p className="text-sm text-red-600">
-            Published: {format(new Date(message.publishDate), 'MMMM d, yyyy')}
-          </p>
+          <p className="text-sm text-red-600">Published: {publishedLabel}</p>
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-3">{message.title}</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">{message?.title || 'Safety Message'}</h2>
             <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-gray-700">
-                {message.content}
-              </div>
+              <div className="whitespace-pre-wrap text-gray-700">{bodyText}</div>
             </div>
           </div>
 

@@ -48,9 +48,14 @@ export default function ClockInOut() {
   const loadUser = async () => {
     try {
       const currentUser = (await supabase.auth.getUser()).data.user;
+      if (!currentUser) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
       setUser(currentUser);
 
-      if (!AUTHORIZED_EMAILS.includes(currentUser.email.toLowerCase())) {
+      if (!currentUser?.email || !AUTHORIZED_EMAILS.includes(currentUser.email.toLowerCase())) {
         setIsLoading(false);
         return;
       }
@@ -59,6 +64,7 @@ export default function ClockInOut() {
       await loadRecentEntries(currentUser.email);
     } catch (error) {
       console.error('Error loading user:', error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -66,11 +72,8 @@ export default function ClockInOut() {
 
   const loadCurrentEntry = async (email) => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const entries = await (await supabase.from('TimeEntry').select('*').match({
-      userEmail: email,
-      date: today,
-      status: 'clocked_in'
-    })).data;
+    const { data } = await supabase.from('TimeEntry').select('*').eq('userEmail', email).eq('date', today).order('created_at', { ascending: false }).limit(10);
+    const entries = (data || []).filter(row => !row.end_time && !row.clockOutTime);
 
     if (entries.length > 0) {
       setCurrentEntry(entries[0]);
@@ -78,11 +81,8 @@ export default function ClockInOut() {
   };
 
   const loadRecentEntries = async (email) => {
-    const entries = await (await supabase.from('TimeEntry').select('*').match(
-      { userEmail: email },
-      '-date',
-      10
-    )).data;
+    const { data } = await supabase.from('TimeEntry').select('*').eq('userEmail', email).order('created_at', { ascending: false }).limit(10);
+    const entries = data || [];
     setRecentEntries(entries);
   };
 
@@ -92,13 +92,16 @@ export default function ClockInOut() {
       const now = getCurrentTimeISO();
       const today = format(new Date(), 'yyyy-MM-dd');
 
-      const entry = await (await supabase.from('TimeEntry').insert({
+      const { data: inserted, error } = await supabase.from('TimeEntry').insert({
         userEmail: user.email,
         userName: user.full_name || user.email,
+        start_time: now,
         clockInTime: now,
         date: today,
         status: 'clocked_in'
-      })).data;
+      }).select().single();
+      if (error) throw error;
+      const entry = inserted;
 
       setCurrentEntry(entry);
       await loadRecentEntries(user.email);
@@ -116,15 +119,19 @@ export default function ClockInOut() {
     setIsProcessing(true);
     try {
       const now = getCurrentTimeISO();
-      const clockIn = new Date(currentEntry.clockInTime);
+      const clockInRaw = currentEntry.start_time || currentEntry.clockInTime;
+      const clockIn = new Date(clockInRaw);
       const clockOut = new Date(now);
       const totalHours = (clockOut - clockIn) / (1000 * 60 * 60);
 
-      await supabase.from('TimeEntry').update({
+      const { error } = await supabase.from('TimeEntry').update({
+        end_time: now,
         clockOutTime: now,
+        hours: parseFloat(totalHours.toFixed(2)),
         totalHours: parseFloat(totalHours.toFixed(2)),
         status: 'clocked_out'
       }).eq('id', currentEntry.id);
+      if (error) throw error;
 
       setCurrentEntry(null);
       await loadRecentEntries(user.email);
@@ -181,7 +188,7 @@ export default function ClockInOut() {
                   Currently Clocked In
                 </div>
                 <p className="text-sm text-green-600">
-                  Since: {formatCentralTime(currentEntry.clockInTime)}
+                  Since: {formatCentralTime(currentEntry.start_time || currentEntry.clockInTime)}
                 </p>
               </div>
 
@@ -237,18 +244,18 @@ export default function ClockInOut() {
                       {format(new Date(entry.date), 'MMM d, yyyy')}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {formatCentralTime(entry.clockInTime)}
-                      {entry.clockOutTime && (
-                        <span> - {formatCentralTime(entry.clockOutTime)}</span>
+                      {formatCentralTime(entry.start_time || entry.clockInTime)}
+                      {(entry.end_time || entry.clockOutTime) && (
+                        <span> - {formatCentralTime(entry.end_time || entry.clockOutTime)}</span>
                       )}
                     </div>
                   </div>
-                  {entry.totalHours && (
+                  {(entry.hours || entry.totalHours) && (
                     <div className="text-sm font-semibold text-blue-600">
-                      {entry.totalHours.toFixed(2)} hrs
+                      {Number.isFinite(Number(entry.hours || entry.totalHours)) ? Number(entry.hours || entry.totalHours).toFixed(2) : (entry.hours || entry.totalHours)} hrs
                     </div>
                   )}
-                  {!entry.clockOutTime && (
+                  {!(entry.end_time || entry.clockOutTime) && (
                     <div className="text-xs text-orange-600 font-medium">
                       In Progress
                     </div>

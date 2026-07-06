@@ -25,6 +25,17 @@ import CriticalAlertsModal from '../components/dashboard/CriticalAlertsModal';
 
 export default function AdminDashboard() {
   const location = useLocation();
+  const safeDate = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const safeFormatDateTime = (value) => {
+    const d = safeDate(value);
+    return d ? format(d, 'MMM d, yyyy h:mm a') : 'Unknown';
+  };
+
   const [teamMetrics, setTeamMetrics] = useState({
     teamHealthScore: 0,
     atRiskCount: 0,
@@ -51,60 +62,88 @@ export default function AdminDashboard() {
 
   const { data: contractors = [] } = useQuery({
     queryKey: ['contractors'],
-    queryFn: async () => (await supabase.from('User').select('*') /* TODO: restore sorting/limit '-created_date', 1000 */).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('User').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: newUsers = [] } = useQuery({
     queryKey: ['newUsers'],
-    queryFn: async () => (await supabase.from('User').select('*') /* TODO: restore sorting/limit '-created_date', 50 */).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('User').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: wcRecords = [] } = useQuery({
     queryKey: ['wcRecords'],
-    queryFn: async () => (await supabase.from('WorkersCompRecord').select('*')).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('WorkersCompRecord').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: certRecords = [] } = useQuery({
     queryKey: ['certRecords'],
-    queryFn: async () => (await supabase.from('SafetyCertification').select('*')).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('SafetyCertification').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: inspections = [] } = useQuery({
     queryKey: ['inspections'],
-    queryFn: async () => (await supabase.from('QCInspection').select('*') /* TODO: restore sorting/limit '-inspectionDate', 100 */).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('QCInspection').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks'],
-    queryFn: async () => (await supabase.from('Task').select('*')).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('Task').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
   const { data: invoices = [] } = useQuery({
     queryKey: ['invoices'],
-    queryFn: async () => (await supabase.from('Invoice').select('*') /* TODO: restore sorting/limit '-created_date', 500 */).data,
+    queryFn: async () => {
+      const { data } = await supabase.from('Invoice').select('*');
+      return data || [];
+    },
     initialData: [],
     refetchInterval: 30000,
   });
 
+  const safeContractors = Array.isArray(contractors) ? contractors : [];
+  const safeWCRecords = Array.isArray(wcRecords) ? wcRecords : [];
+  const safeCertRecords = Array.isArray(certRecords) ? certRecords : [];
+  const safeInspections = Array.isArray(inspections) ? inspections : [];
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  const safeInvoices = Array.isArray(invoices) ? invoices : [];
+
   const activeContractors = useMemo(() =>
-    contractors.filter(c =>
+    safeContractors.filter(c =>
       c.active !== false &&
       c.email &&
       (c.email.toLowerCase().includes('.contractor@m2fleetcom.com') ||
        c.email.toLowerCase().includes('.contractor@smcinstallations.com'))
-    ), [contractors]
+    ), [safeContractors]
   );
 
   useEffect(() => {
@@ -120,8 +159,8 @@ export default function AdminDashboard() {
 
     // Calculate compliance expiring soon
     const expiringSoon = activeContractors.filter(contractor => {
-      const wc = wcRecords.find(r => r.userEmail === contractor.email);
-      const cert = certRecords.find(r => r.userEmail === contractor.email);
+      const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
+      const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
 
       if (!wc && !cert) return false; // Neither record exists, not expiring soon from compliance perspective
 
@@ -133,9 +172,9 @@ export default function AdminDashboard() {
     }).length;
 
     // Calculate average QC score
-    const recentInspections = inspections.filter(i => {
-      const inspDate = new Date(i.inspectionDate);
-      return differenceInDays(today, inspDate) <= 90;
+    const recentInspections = safeInspections.filter(i => {
+      const inspDate = safeDate(i.inspection_date || i.inspectionDate);
+      return inspDate ? differenceInDays(today, inspDate) <= 90 : false;
     });
     const avgQC = recentInspections.length > 0
       ? Math.round(recentInspections.reduce((sum, i) => sum + (i.score || 0), 0) / recentInspections.length)
@@ -148,12 +187,15 @@ export default function AdminDashboard() {
     const atRisk = activeContractors.filter(contractor => {
       const qcScore = contractor.avgQcScore || 0;
       const velocitiScore = contractor.velocitiScore || 100;
-      const wc = wcRecords.find(r => r.userEmail === contractor.email);
-      const cert = certRecords.find(r => r.userEmail === contractor.email);
+      const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
+      const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
+
+      const wcExpDate = safeDate(wc?.expirationDate);
+      const certExpDate = safeDate(cert?.expirationDate);
 
       const hasComplianceIssue =
-        (wc?.expirationDate && isBefore(new Date(wc.expirationDate), today)) ||
-        (cert?.expirationDate && isBefore(new Date(cert.expirationDate), today)) ||
+        (wcExpDate && isBefore(wcExpDate, today)) ||
+        (certExpDate && isBefore(certExpDate, today)) ||
         (!wc || !cert); // Also consider missing docs as an issue
 
       return qcScore < 80 || velocitiScore < 80 || hasComplianceIssue;
@@ -166,7 +208,7 @@ export default function AdminDashboard() {
     const teamHealth = Math.round((complianceRate + performanceRate) / 2);
 
     // Pending tasks
-    const pendingTasksCount = tasks.filter(t => t.status !== 'Done').length;
+    const pendingTasksCount = safeTasks.filter(t => !['done','completed','closed'].includes((t.status || '').toLowerCase())).length;
 
     // Critical alerts
     const criticalCount = atRisk + pendingTasksCount; // Sum of at-risk contractors and pending tasks
@@ -205,8 +247,8 @@ export default function AdminDashboard() {
       const rangeStart = addDays(today, i);
       const rangeEnd = addDays(today, i + 30);
       const expiringInRange = activeContractors.filter(contractor => {
-        const wc = wcRecords.find(r => r.userEmail === contractor.email);
-        const cert = certRecords.find(r => r.userEmail === contractor.email);
+        const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
+        const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
 
         const wcExpDate = wc?.expirationDate ? new Date(wc.expirationDate) : null;
         const certExpDate = cert?.expirationDate ? new Date(cert.expirationDate) : null;
@@ -228,11 +270,12 @@ export default function AdminDashboard() {
     // Recent inspections
     recentInspections.slice(0, 3).forEach(insp => {
       const tech = activeContractors.find(c => c.id === insp.technicianId);
-      if (tech) {
+      const inspDate = safeDate(insp.inspection_date || insp.inspectionDate);
+      if (tech && inspDate) {
         recent.push({
           type: 'inspection',
-          text: `QC Inspection: ${tech.displayName || tech.full_name} scored ${insp.score}`,
-          date: new Date(insp.inspectionDate),
+          text: `QC Inspection: ${tech.display_name || tech.full_name || tech.email} scored ${insp.score}`,
+          date: inspDate,
           score: insp.score
         });
       }
@@ -240,15 +283,21 @@ export default function AdminDashboard() {
 
     // Recent completions
     const recentCompletions = activeContractors
-      .filter(c => c.shadowingStatus === 'completed' && c.shadowingEndDate)
-      .sort((a, b) => new Date(b.shadowingEndDate) - new Date(a.shadowingEndDate))
+      .filter(c => c.shadowingStatus === 'completed')
+      .sort((a, b) => {
+        const aDate = safeDate(a.updated_at || a.created_at || a.shadowingEndDate);
+        const bDate = safeDate(b.updated_at || b.created_at || b.shadowingEndDate);
+        return (bDate?.getTime() || 0) - (aDate?.getTime() || 0);
+      })
       .slice(0, 2);
 
     recentCompletions.forEach(tech => {
+      const techDate = safeDate(tech.updated_at || tech.created_at || tech.shadowingEndDate);
+      if (!techDate) return;
       recent.push({
         type: 'completion',
-        text: `${tech.displayName || tech.full_name} completed shadowing`,
-        date: new Date(tech.shadowingEndDate)
+        text: `${tech.display_name || tech.full_name || tech.email} completed shadowing`,
+        date: techDate
       });
     });
 
@@ -275,8 +324,8 @@ export default function AdminDashboard() {
     const thirtyDaysOut = addDays(today, 30);
 
     return activeContractors.filter(contractor => {
-      const wc = wcRecords.find(r => r.userEmail === contractor.email);
-      const cert = certRecords.find(r => r.userEmail === contractor.email);
+      const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
+      const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
 
       // We only care about expiring, not missing (missing is handled by critical alerts)
       if (!wc && !cert) return false;
@@ -291,7 +340,7 @@ export default function AdminDashboard() {
   };
 
   const getPendingTasks = () => {
-    return tasks.filter(t => t.status !== 'Done');
+    return safeTasks.filter(t => !['done','completed','closed'].includes((t.status || '').toLowerCase()));
   };
 
   const getCriticalAlerts = () => {
@@ -300,8 +349,8 @@ export default function AdminDashboard() {
 
     // Compliance and Performance Alerts for Contractors
     activeContractors.forEach(contractor => {
-      const wc = wcRecords.find(r => r.userEmail === contractor.email);
-      const cert = certRecords.find(r => r.userEmail === contractor.email);
+      const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
+      const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
       const contractorDisplayName = contractor.displayName || contractor.full_name || contractor.email;
 
       // 1. Missing Compliance Documents
@@ -376,7 +425,7 @@ export default function AdminDashboard() {
     });
 
     // Overdue Urgent Tasks Alerts
-    tasks.filter(t => t.status !== 'Done').forEach(task => {
+    safeTasks.filter(t => !['done','completed','closed'].includes((t.status || '').toLowerCase())).forEach(task => {
       if (task.dueDate && isBefore(new Date(task.dueDate), today) && task.priority === 'Urgent') {
         // Find the technician name if available, otherwise use a generic label
         const taskTechnician = activeContractors.find(c => c.id === task.technicianId);
@@ -688,7 +737,7 @@ export default function AdminDashboard() {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{activity.text}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {format(activity.date, 'MMM d, yyyy h:mm a')}
+                        {safeFormatDateTime(activity.date)}
                       </p>
                     </div>
                   </div>

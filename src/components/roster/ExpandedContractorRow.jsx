@@ -40,7 +40,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
         WorkersCompRecord.filter({ userEmail: user.email }),
         SafetyCertification.filter({ userEmail: user.email }),
         CallLog.filter({ technicianId: user.id }, '-callDate', 5),
-        QCInspection.filter({ technicianId: user.id }, '-inspectionDate', 5)
+        QCInspection.filter({ technicianId: user.id }, '-inspection_date', 5)
       ]);
 
       setData({
@@ -82,7 +82,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
   const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
   const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
   const lastWeekInvoices = data.invoices.filter(inv => {
-    const createdDate = new Date(inv.created_date);
+    const createdDate = new Date(inv.created_at || inv.invoiceDate || inv.created_date);
     return createdDate >= lastWeekStart && createdDate <= lastWeekEnd;
   });
   const submittedLastWeek = lastWeekInvoices.length > 0;
@@ -141,16 +141,16 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Velociti Score:</span>
                 <Badge className={
-                  (user.velocitiScore || 0) >= 90 ? 'bg-green-100 text-green-800' :
-                  (user.velocitiScore || 0) >= 70 ? 'bg-yellow-100 text-yellow-800' :
+                  (Number(user.velocitiScore || 0)) >= 90 ? 'bg-green-100 text-green-800' :
+                  (Number(user.velocitiScore || 0)) >= 70 ? 'bg-yellow-100 text-yellow-800' :
                   'bg-red-100 text-red-800'
                 }>
-                  {user.velocitiScore || 0}
+                  {Number(Number(user.velocitiScore || 0))}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">QC Average:</span>
-                <Badge variant="outline">{user.avgQcScore || 0}</Badge>
+                <Badge variant="outline">{Number(Number(user.avgQcScore || 0))}</Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Velo Survey:</span>
@@ -184,7 +184,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Submission:</span>
                 <span className="text-xs text-gray-500">
-                  {data.invoices[0] ? format(new Date(data.invoices[0].created_date), 'MMM d') : 'Never'}
+                  {data.invoices[0] ? format(new Date(data.invoices[0].created_at || data.invoices[0].invoiceDate || data.invoices[0].created_date), 'MMM d') : 'Never'}
                 </span>
               </div>
             </div>
@@ -247,7 +247,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
               )}
               {data.inspections[0] && (
                 <div className="text-xs text-gray-500">
-                  Last inspection: {format(new Date(data.inspections[0].inspectionDate), 'MMM d')} - Score: {data.inspections[0].score}
+                  Last inspection: {format(new Date(data.inspections[0].inspection_date || data.inspections[0].inspectionDate), 'MMM d')} - Score: {data.inspections[0].score}
                 </div>
               )}
             </div>
@@ -266,7 +266,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
             {data.callLogs.map(log => (
               <div key={log.id} className="p-3 bg-gray-50 rounded-lg border text-sm">
                 <div className="flex justify-between items-start">
-                  <span className="font-medium">{format(new Date(log.callDate), 'MMM d, yyyy h:mm a')}</span>
+                  <span className="font-medium">{format(new Date(log.callDate || log.created_at), 'MMM d, yyyy h:mm a')}</span>
                   <span className="text-xs text-gray-500">by {log.loggedBy}</span>
                 </div>
                 {log.note && <p className="text-gray-600 mt-1">{log.note}</p>}
@@ -288,7 +288,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
               <div key={inspection.id} className="p-3 bg-gray-50 rounded-lg border text-sm">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-medium">{format(new Date(inspection.inspectionDate), 'MMM d, yyyy')}</span>
+                    <span className="font-medium">{format(new Date(inspection.inspection_date || inspection.inspectionDate), 'MMM d, yyyy')}</span>
                     <Badge className="ml-2">{inspection.score}/100</Badge>
                   </div>
                   <span className="text-xs text-gray-500">by {inspection.qcUserName}</span>

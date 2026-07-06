@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AutomationSetting } from '@/api/entities.js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card.jsx';
@@ -6,7 +5,7 @@ import { Label } from '@/components/ui/label.jsx';
 import { Input } from '@/components/ui/input.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx';
-import { Loader2, CheckCircle, Info, Copy, Settings } from 'lucide-react';
+import { Loader2, CheckCircle, Info, Copy, Settings, RefreshCw, CloudUpload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils/index.js';
 
@@ -18,6 +17,8 @@ export default function AutomationSettings() {
     const [isSaving, setIsSaving] = useState(false);
     const [settingId, setSettingId] = useState(null);
     const [status, setStatus] = useState({ message: '', type: '' });
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [syncResults, setSyncResults] = useState(null);
 
     useEffect(() => {
         loadSettings();
@@ -64,6 +65,30 @@ export default function AutomationSettings() {
         }
     };
 
+    const handleSyncToDrive = async () => {
+        setIsSyncing(true);
+        setSyncResults(null);
+        setStatus({ message: '', type: '' });
+        try {
+            const response = await fetch('/api/syncContractorDocumentsToDrive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                setSyncResults(result);
+                setStatus({ message: `Sync complete! ${result.success} documents uploaded, ${result.failed} failed.`, type: 'success' });
+            } else {
+                setStatus({ message: result.error || 'Sync failed', type: 'error' });
+            }
+        } catch (error) {
+            setStatus({ message: 'Failed to sync documents. Please try again.', type: 'error' });
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         setStatus({ message: 'Example JSON copied to clipboard!', type: 'info' });
@@ -93,6 +118,50 @@ export default function AutomationSettings() {
                     <p className="text-gray-600 mt-1">Connect the M2 Portal to other services like Google Drive via webhooks.</p>
                 </div>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CloudUpload className="w-5 h-5" />
+                        Google Drive Sync
+                    </CardTitle>
+                    <CardDescription>
+                        Manually sync all contractor documents to Google Drive. Documents are organized by contractor name and document type. 
+                        Automatic sync runs daily at 3:00 AM.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Button onClick={handleSyncToDrive} disabled={isSyncing} className="flex items-center gap-2">
+                            {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                            {isSyncing ? 'Syncing...' : 'Sync All Documents to Drive'}
+                        </Button>
+                        <span className="text-sm text-gray-500">
+                            This may take a few minutes depending on the number of documents.
+                        </span>
+                    </div>
+                    
+                    {syncResults && (
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <h4 className="font-semibold mb-2">Sync Results:</h4>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-green-600">{syncResults.success}</div>
+                                    <div className="text-gray-600">Uploaded</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-600">{syncResults.failed}</div>
+                                    <div className="text-gray-600">Failed</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-gray-400">{syncResults.skipped}</div>
+                                    <div className="text-gray-600">Skipped</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>

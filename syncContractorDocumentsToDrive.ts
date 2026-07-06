@@ -1,4 +1,4 @@
-import { supabase } from '../src/lib/supabaseClient';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Helper to determine document type from folder name, consistent with frontend logic
 const getDocumentType = (folderName) => {
@@ -18,10 +18,10 @@ const getDocumentType = (folderName) => {
   return 'initial_paperwork'; // Default for other document types
 };
 
-export default async function handler(req, res) {
-  if (req.method === "OPTIONS") return res.status(200).end();
-
-  try {    const user = await base44.auth.me();
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -90,4 +90,4 @@ export default async function handler(req, res) {
     console.error('Error in syncContractorDocumentsToDrive:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
-}
+});

@@ -110,7 +110,9 @@ export default function VeloSurveyDashboard() {
 
     try {
       // Generate unique survey token
-      const surveyToken = `survey_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const array = new Uint8Array(16);
+      crypto.getRandomValues(array);
+      const surveyToken = `survey_${Date.now()}_${Array.from(array, b => b.toString(16).padStart(2, '0')).join('')}`;
 
       // Create survey record first
       const survey = await VeloSurvey.create({

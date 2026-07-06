@@ -241,3 +241,228 @@ CREATE TABLE IF NOT EXISTS public."CallLog" (
 -- Enable Row Level Security (RLS) as a best practice, though the app uses Service Role for many operations
 -- ALTER TABLE public."User" ENABLE ROW LEVEL SECURITY;
 -- ... add policies as needed
+
+-- ============================================================
+-- TABLES ADDED FROM ZIP SYNC (missing from original schema)
+-- ============================================================
+
+-- CorrectiveAction (auditing module)
+CREATE TABLE IF NOT EXISTS public."CorrectiveAction" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "auditId" uuid,
+    "itemId" uuid,
+    title text,
+    description text,
+    "ownerEmail" text,
+    "assignedToEmail" text,
+    status text DEFAULT 'Open',
+    priority text DEFAULT 'Medium',
+    "dueDate" timestamp with time zone,
+    "completedDate" timestamp with time zone,
+    "completionNotes" text,
+    "createdByEmail" text,
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- SafetyHazardReport
+CREATE TABLE IF NOT EXISTS public."SafetyHazardReport" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "reportId" text,
+    "submittedByName" text,
+    "submittedByEmail" text,
+    "contractorId" uuid,
+    "assignedPmName" text,
+    "assignedPmEmail" text,
+    "projectName" text,
+    "siteLocation" text,
+    "hazardDate" date,
+    "hazardTime" text,
+    "hazardCategory" text,
+    "hazardSeverity" text,
+    "responseNeeded" text,
+    description text,
+    "activityAtTime" text,
+    "immediateActionTaken" text,
+    "workNeedsToStop" boolean DEFAULT false,
+    "immediateDanger" boolean DEFAULT false,
+    "workCanContinueSafely" text,
+    "siteLeadershipNotified" boolean DEFAULT false,
+    "whoWasNotified" text,
+    witnesses text,
+    "recommendedFix" text,
+    "photoUrls" text[],
+    "attachmentUrls" text[],
+    "contractorAcknowledged" boolean DEFAULT false,
+    "signatureName" text,
+    status text DEFAULT 'Open - Standard',
+    "adminNotes" text,
+    "qcNotes" text,
+    "followUpOwner" text,
+    "correctiveActionRequired" boolean DEFAULT false,
+    "correctiveActionDueDate" date,
+    "rootCauseSummary" text,
+    "resolutionSummary" text,
+    "finalClosedDate" timestamp with time zone,
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- SafetyInjuryReport
+CREATE TABLE IF NOT EXISTS public."SafetyInjuryReport" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "reportId" text,
+    "submittedByName" text,
+    "submittedByEmail" text,
+    "contractorId" uuid,
+    "assignedPmName" text,
+    "assignedPmEmail" text,
+    "projectName" text,
+    "siteLocation" text,
+    "incidentDate" date,
+    "incidentTime" text,
+    "incidentType" text,
+    injured boolean,
+    "injuryType" text,
+    "bodyPartAffected" text,
+    "medicalTreatmentNeeded" boolean DEFAULT false,
+    "emergencyCareNeeded" boolean DEFAULT false,
+    "workStopped" boolean DEFAULT false,
+    "incidentDescription" text,
+    "taskBeingPerformed" text,
+    "equipmentInvolved" text,
+    "ppeUsed" boolean DEFAULT false,
+    "ppeDetails" text,
+    witnesses text,
+    "supervisorNotified" boolean DEFAULT false,
+    "timeReported" text,
+    "immediateCorrectiveAction" text,
+    "anyoneElseInvolved" boolean DEFAULT false,
+    "propertyDamageInvolved" boolean DEFAULT false,
+    "lostTimeExpected" text,
+    "followUpNeeded" text,
+    "photoUrls" text[],
+    "attachmentUrls" text[],
+    "contractorAcknowledged" boolean DEFAULT false,
+    "signatureName" text,
+    status text DEFAULT 'Submitted - Needs Review',
+    "investigationNotes" text,
+    "followUpOwner" text,
+    "correctiveActionRequired" boolean DEFAULT false,
+    "correctiveActionDueDate" date,
+    "rootCauseSummary" text,
+    "resolutionSummary" text,
+    "finalClosedDate" timestamp with time zone,
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- SafetyLessonLearned
+CREATE TABLE IF NOT EXISTS public."SafetyLessonLearned" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "lessonId" text,
+    title text NOT NULL,
+    category text,
+    "relatedProject" text,
+    "relatedReportId" text,
+    "incidentDate" date,
+    "whatHappened" text,
+    "howItHappened" text,
+    "whatShouldHaveBeenDoneDifferently" text,
+    "preventiveAction" text,
+    "correctiveActionImplemented" text,
+    "requiredPpeOrTrainingReminder" text,
+    audience text DEFAULT 'All Contractors',
+    "specificProjectName" text,
+    status text DEFAULT 'Draft',
+    "acknowledgmentRequired" boolean DEFAULT false,
+    "addedBy" text,
+    "updatedBy" text,
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- SafetyLessonAcknowledgment
+CREATE TABLE IF NOT EXISTS public."SafetyLessonAcknowledgment" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "lessonId" uuid REFERENCES public."SafetyLessonLearned"(id) ON DELETE CASCADE,
+    "contractorId" uuid,
+    "contractorEmail" text,
+    "contractorName" text,
+    "acknowledgedAt" timestamp with time zone DEFAULT now(),
+    "createdAt" timestamp with time zone DEFAULT now()
+);
+
+-- SafetyCorrectiveAction
+CREATE TABLE IF NOT EXISTS public."SafetyCorrectiveAction" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "correctiveActionId" text,
+    "linkedReportId" uuid,
+    "linkedReportType" text,
+    "projectName" text,
+    "assignedTo" text,
+    "actionRequired" text,
+    "dueDate" date,
+    priority text DEFAULT 'Medium',
+    status text DEFAULT 'Open',
+    "completionNotes" text,
+    "completedDate" timestamp with time zone,
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- SafetySettings
+CREATE TABLE IF NOT EXISTS public."SafetySettings" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "qcUser1Email" text,
+    "qcUser2Email" text,
+    "adminNotificationEmail" text DEFAULT 'orville@m2fleetcom.com',
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- OnboardingCompletionRecord
+CREATE TABLE IF NOT EXISTS public."OnboardingCompletionRecord" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "contractorId" uuid REFERENCES public."User"(id),
+    "contractorEmail" text,
+    "documentId" uuid,
+    "documentTitle" text,
+    "acknowledgedAt" timestamp with time zone DEFAULT now(),
+    "createdAt" timestamp with time zone DEFAULT now()
+);
+
+-- OnboardingDocument
+CREATE TABLE IF NOT EXISTS public."OnboardingDocument" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    title text NOT NULL,
+    description text,
+    "fileUrl" text,
+    "fileName" text,
+    type text DEFAULT 'contractor_facing',
+    "isRequired" boolean DEFAULT true,
+    "sortOrder" numeric DEFAULT 0,
+    "uploadedBy" text,
+    "uploadDate" timestamp with time zone DEFAULT now(),
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- TechnicianMaster (aggregated view of User table for workforce)
+CREATE TABLE IF NOT EXISTS public."TechnicianMaster" (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "technicianId" uuid REFERENCES public."User"(id),
+    "technicianName" text,
+    "technicianEmail" text,
+    business text,
+    project text,
+    "qcAssignment" text,
+    active boolean DEFAULT true,
+    "createdAt" timestamp with time zone DEFAULT now(),
+    "updatedAt" timestamp with time zone DEFAULT now()
+);
+
+-- Insert default safety settings if not exists
+INSERT INTO public."SafetySettings" (id) 
+SELECT gen_random_uuid() 
+WHERE NOT EXISTS (SELECT 1 FROM public."SafetySettings" LIMIT 1);

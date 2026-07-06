@@ -226,12 +226,16 @@ export default function InvoiceManagement() {
       // Exclude inactive contractors
       if (user.active === false) return false;
 
-      const hasInvoices = invoices.some(inv => inv.contractorEmail === user.email);
+      const hasInvoices = invoices.some(inv => {
+        const invEmail = (inv.contractorEmail || '').toLowerCase();
+        const userEmail = (user.email || '').toLowerCase();
+        return invEmail === userEmail;
+      });
       if (!hasInvoices) return false;
 
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
-        const name = (user.displayName || user.full_name || '').toLowerCase();
+        const name = (user.displayName || user.full_name || user.email || '').toLowerCase();
         const email = (user.email || '').toLowerCase();
         const business = (user.business || '').toLowerCase();
         return name.includes(search) || email.includes(search) || business.includes(search);
@@ -249,15 +253,17 @@ export default function InvoiceManagement() {
   const selectedContractorInvoices = selectedContractor
     ? invoices
         .filter(inv => {
-          if (inv.contractorEmail !== selectedContractor.email) return false;
+          const invEmail = (inv.contractorEmail || '').toLowerCase();
+          const selectedEmail = (selectedContractor.email || '').toLowerCase();
+          if (invEmail !== selectedEmail) return false;
           if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
           return true;
         })
         .sort((a, b) => {
           if (sortBy === 'newest') {
-            return new Date(b.created_date) - new Date(a.created_date);
+            return new Date(b.created_at) - new Date(a.created_at);
           } else if (sortBy === 'oldest') {
-            return new Date(a.created_date) - new Date(b.created_date);
+            return new Date(a.created_at) - new Date(b.created_at);
           }
           return 0;
         })
@@ -265,11 +271,11 @@ export default function InvoiceManagement() {
 
   // Calculate stats for selected contractor
   const selectedStats = selectedContractor ? {
-    total: invoices.filter(inv => inv.contractorEmail === selectedContractor.email).length,
-    pending: invoices.filter(inv => inv.contractorEmail === selectedContractor.email && inv.status === 'pending').length,
-    approved: invoices.filter(inv => inv.contractorEmail === selectedContractor.email && inv.status === 'approved').length,
+    total: invoices.filter(inv => (inv.contractorEmail || '').toLowerCase() === (selectedContractor.email || '').toLowerCase()).length,
+    pending: invoices.filter(inv => (inv.contractorEmail || '').toLowerCase() === (selectedContractor.email || '').toLowerCase() && inv.status === 'pending').length,
+    approved: invoices.filter(inv => (inv.contractorEmail || '').toLowerCase() === (selectedContractor.email || '').toLowerCase() && inv.status === 'approved').length,
     totalAmount: invoices
-      .filter(inv => inv.contractorEmail === selectedContractor.email && inv.status === 'approved')
+      .filter(inv => (inv.contractorEmail || '').toLowerCase() === (selectedContractor.email || '').toLowerCase() && inv.status === 'approved')
       .reduce((sum, inv) => sum + (inv.totalAmount || 0), 0)
   } : null;
 
@@ -284,8 +290,8 @@ export default function InvoiceManagement() {
 
     // Get invoices submitted in the selected period
     const weeklyInvoices = invoices.filter(inv => {
-      if (!inv.created_date) return false;
-      const createdDate = new Date(inv.created_date);
+      if (!inv.created_at) return false;
+      const createdDate = new Date(inv.created_at);
       return createdDate >= complianceStart && createdDate <= complianceEnd;
     });
 
@@ -335,7 +341,7 @@ export default function InvoiceManagement() {
           inv.status || 'N/A',
           inv.notes || '',
           inv.approvalNotes || '',
-          format(new Date(inv.created_date), 'MM/dd/yyyy HH:mm')
+          format(new Date(inv.created_at), 'MM/dd/yyyy HH:mm')
         ]);
       });
     });
@@ -585,7 +591,7 @@ export default function InvoiceManagement() {
                                   {inv.daysWorked != null && (
                                     <div>Days: {inv.daysWorked}</div>
                                   )}
-                                  <div>Submitted: {format(new Date(inv.created_date), 'MM/dd/yyyy')}</div>
+                                  <div>Submitted: {format(new Date(inv.created_at), 'MM/dd/yyyy')}</div>
                                 </div>
 
                                 {inv.notes && (
@@ -820,7 +826,7 @@ export default function InvoiceManagement() {
                                 <div>
                                   <span className="font-medium">Submitted:</span>
                                   <br />
-                                  {format(new Date(invoice.created_date), 'MMM d, yyyy')}
+                                  {format(new Date(invoice.created_at), 'MMM d, yyyy')}
                                 </div>
                                 {invoice.weekEndingDate && (
                                   <div>

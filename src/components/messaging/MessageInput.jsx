@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
-import { base44 } from '@/lib/supabaseClient.js';
+import { supabase } from '@/lib/supabaseClient.js';
 
 export default function MessageInput({ onSend, users, placeholder }) {
   const [content, setContent] = useState('');
@@ -39,18 +39,27 @@ export default function MessageInput({ onSend, users, placeholder }) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await supabase.storage.from("documents").upload({ file });
-    setAttachment({ url: file_url, name: file.name });
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(`${Date.now()}_${file.name}`, file);
+    if (error) throw error;
+    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(data.path);
+    setAttachment({ url: urlData.publicUrl, name: file.name });
     setUploading(false);
   };
 
   const handleSend = async () => {
     if (!content.trim() && !attachment) return;
     setSending(true);
-    await onSend({ content: content.trim(), attachmentUrl: attachment?.url, attachmentName: attachment?.name });
-    setContent('');
-    setAttachment(null);
-    setSending(false);
+    try {
+      await onSend({ content: content.trim(), attachmentUrl: attachment?.url, attachmentName: attachment?.name });
+      setContent('');
+      setAttachment(null);
+    } catch (e) {
+      console.error('Send failed:', e);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {

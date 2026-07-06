@@ -20,7 +20,7 @@ export default function CreateChannelDialog({ open, onClose, onCreated, currentU
       name: name.toLowerCase().replace(/\s+/g, '-'),
       description,
       type,
-      createdBy: currentUser.id, // Assuming currentUser.id is the correct field for createdBy
+      createdByEmail: currentUser.email,
       isArchived: false,
     }).select().single(); // Use .select().single() to return the inserted row
 

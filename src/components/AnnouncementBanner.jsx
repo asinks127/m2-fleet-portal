@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Announcement, AnnouncementAcknowledgment, User } from '@/api/entities.js';
+import { supabase } from '@/lib/supabaseClient.js';
 import { Button } from '@/components/ui/button.jsx';
 import { X, AlertTriangle, Info, Megaphone, Zap } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx';
@@ -44,6 +44,11 @@ export default function AnnouncementBanner() {
   const loadAnnouncements = async () => {
     try {
       const currentUser = await User.me();
+      if (!currentUser) {
+        setUser(null);
+        setAnnouncements([]);
+        return;
+      }
       setUser(currentUser);
 
       // Determine user type
@@ -55,29 +60,28 @@ export default function AnnouncementBanner() {
       }
 
       // Get active announcements for this user type
-      const allAnnouncements = await Announcement.filter({ isActive: true }, '-publishDate');
+      const { data: allAnnouncementsRaw = [] } = await supabase.from('Announcement').select('*').limit(50);
+      const allAnnouncements = allAnnouncementsRaw || [];
       
       const relevantAnnouncements = allAnnouncements.filter(announcement => {
-        // Check if expired
-        if (announcement.expiryDate && new Date(announcement.expiryDate) < new Date()) {
-          return false;
+        const expiryValue = announcement.expiryDate || announcement.expirydate;
+        if (expiryValue) {
+          const d = new Date(expiryValue);
+          if (!isNaN(d.getTime()) && d < new Date()) return false;
         }
-        
-        // Check target audience
-        return announcement.targetAudience === 'all' || announcement.targetAudience === userType;
+
+        const targetAudience = announcement.targetAudience || announcement.targetaudience;
+        return targetAudience === 'all' || targetAudience === userType;
       });
 
-      // If announcements require acknowledgment, check if already acknowledged
       const announcementsToShow = [];
       for (const announcement of relevantAnnouncements) {
-        if (announcement.requiresAcknowledgment) {
+        if (announcement.requiresAcknowledgment || announcement.requiresacknowledgment) {
           const acks = await AnnouncementAcknowledgment.filter({
             announcementId: announcement.id,
             userId: currentUser.id
           });
-          if (acks.length === 0) {
-            announcementsToShow.push(announcement);
-          }
+          if (acks.length === 0) announcementsToShow.push(announcement);
         } else {
           announcementsToShow.push(announcement);
         }
@@ -86,11 +90,12 @@ export default function AnnouncementBanner() {
       setAnnouncements(announcementsToShow);
     } catch (error) {
       console.error('Error loading announcements:', error);
+      setAnnouncements([]);
     }
   };
 
   const handleDismiss = async (announcement) => {
-    if (announcement.requiresAcknowledgment) {
+    if (announcement.requiresAcknowledgment || announcement.requiresacknowledgment) {
       try {
         await AnnouncementAcknowledgment.create({
           announcementId: announcement.id,
@@ -149,9 +154,9 @@ export default function AnnouncementBanner() {
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-900 mb-1">{announcement.title}</h4>
                 <AlertDescription className="text-gray-700 whitespace-pre-wrap">
-                  {announcement.message}
+                  {announcement.message || announcement.content}
                 </AlertDescription>
-                {announcement.requiresAcknowledgment && (
+                {(announcement.requiresAcknowledgment || announcement.requiresacknowledgment) && (
                   <div className="mt-2">
                     <Button size="sm" onClick={() => handleDismiss(announcement)}>
                       I Acknowledge
@@ -160,7 +165,7 @@ export default function AnnouncementBanner() {
                 )}
               </div>
             </div>
-            {!announcement.requiresAcknowledgment && (
+            {!(announcement.requiresAcknowledgment || announcement.requiresacknowledgment) && (
               <Button
                 variant="ghost"
                 size="sm"

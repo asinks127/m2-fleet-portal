@@ -26,7 +26,12 @@ const createEntityProxy = (tableName) => ({
     if (orderBy) {
       const desc = orderBy.startsWith('-');
       const col = desc ? orderBy.slice(1) : orderBy;
-      query = query.order(col, { ascending: !desc });
+      // Graceful fallback: created_date → created_at if column doesn't exist
+      if (col === 'created_date') {
+        query = supabase.from(tableName).select('*').order('created_at', { ascending: !desc });
+      } else {
+        query = query.order(col, { ascending: !desc });
+      }
     }
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
@@ -39,7 +44,12 @@ const createEntityProxy = (tableName) => ({
     if (orderBy) {
       const desc = orderBy.startsWith('-');
       const col = desc ? orderBy.slice(1) : orderBy;
-      query = query.order(col, { ascending: !desc });
+      // Graceful fallback: created_date → created_at if column doesn't exist
+      if (col === 'created_date') {
+        query = supabase.from(tableName).select('*').match(filters).order('created_at', { ascending: !desc });
+      } else {
+        query = query.order(col, { ascending: !desc });
+      }
     }
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
@@ -95,6 +105,7 @@ const entityNames = [
   // Safety (from zip sync)
   'SafetyHazardReport', 'SafetyInjuryReport', 'SafetyLessonLearned',
   'SafetyLessonAcknowledgment', 'SafetyCorrectiveAction', 'SafetySettings',
+  'OnsiteSafetyCheck',
   // Onboarding (from zip sync)
   'OnboardingCompletionRecord', 'OnboardingDocument',
   // Workforce
@@ -130,6 +141,7 @@ export const {
   // Safety
   SafetyHazardReport, SafetyInjuryReport, SafetyLessonLearned,
   SafetyLessonAcknowledgment, SafetyCorrectiveAction, SafetySettings,
+  OnsiteSafetyCheck,
   // Onboarding
   OnboardingCompletionRecord, OnboardingDocument,
   // Workforce

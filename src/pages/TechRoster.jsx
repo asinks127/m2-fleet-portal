@@ -412,9 +412,9 @@ export default function TechRoster() {
     if (debouncedSearchTerm) {
       const lowercasedTerm = debouncedSearchTerm.toLowerCase();
       currentFilteredUsers = currentFilteredUsers.filter(user =>
-        (user.displayName?.toLowerCase() || '').includes(lowercasedTerm) ||
+        (user.display_name?.toLowerCase() || '').includes(lowercasedTerm) ||
         (user.full_name?.toLowerCase() || '').includes(lowercasedTerm) ||
-        (user.business?.toLowerCase() || '').includes(lowercasedTerm) ||
+        (user.project?.toLowerCase() || '').includes(lowercasedTerm) ||
         (user.email?.toLowerCase() || '').includes(lowercasedTerm)
       );
     }
@@ -430,7 +430,7 @@ export default function TechRoster() {
             return !user.lastInvoiceDate;
           case 'expiring_docs':
             if (user.endDate) {
-              const endDate = new Date(user.endDate);
+              const endDate = new Date(user.endDate || user.shadowingEndDate || user.updated_at || user.created_at);
               const daysUntilExpiry = Math.floor((endDate - today) / (1000 * 60 * 60 * 24));
               return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
             }
@@ -473,8 +473,8 @@ export default function TechRoster() {
         valA = a.displayName || a.full_name || a.email || '';
         valB = b.displayName || b.full_name || b.email || '';
       } else if (key === 'endDate') {
-        valA = a.endDate ? new Date(a.endDate).getTime() : 0;
-        valB = b.endDate ? new Date(b.endDate).getTime() : 0;
+        valA = a.endDate ? new Date(a.endDate || a.shadowingEndDate || a.updated_at || a.created_at).getTime() : 0;
+        valB = b.endDate ? new Date(b.endDate || b.shadowingEndDate || b.updated_at || b.created_at).getTime() : 0;
       } else if (key === 'startDate') {
         valA = a.startDate ? new Date(a.startDate).getTime() : 0;
         valB = b.startDate ? new Date(b.startDate).getTime() : 0;
@@ -835,20 +835,20 @@ export default function TechRoster() {
                                 to={`${createPageUrl('ContractorProfile')}?id=${user.id}&returnTo=${encodeURIComponent(location.pathname + location.search)}`}
                                 className="font-medium text-gray-900 hover:underline"
                             >
-                                {user.displayName || user.full_name || user.email || 'No Name'}
+                                {user.full_name || user.display_name || user.email || user.email || 'No Name'}
                             </Link>
                             <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
                               <div className="flex items-center gap-1">
                                 <Phone className="w-3 h-3" />
-                                {user.phone || 'N/A'}
+                                {user.phone || ''}
                               </div>
                               <div className="flex items-center gap-1">
                                 <MapPin className="w-3 h-3" />
-                                {user.location || 'N/A'}
+                                {user.location || user.business || 'N/A'}
                               </div>
                             </div>
                         </TableCell>
-                        <TableCell>{user.business || 'N/A'}</TableCell> {/* New cell */}
+                        <TableCell>{user.project || 'N/A'}</TableCell> {/* New cell */}
                         <TableCell>
                           <div>
                             <div className="font-medium">{user.project || 'N/A'}</div>
@@ -863,7 +863,7 @@ export default function TechRoster() {
                             </div>
                             <div className="text-xs text-gray-500 flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {user.startDate ? new Date(user.startDate).toLocaleDateString() : 'N/A'}
+                              {user.startDate ? new Date(user.startDate).toLocaleDateString() : (user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A')}
                             </div>
                           </div>
                         </TableCell>
@@ -871,10 +871,10 @@ export default function TechRoster() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {user.endDate ? new Date(user.endDate).toLocaleDateString() : 'N/A'}
+                              {user.endDate ? new Date(user.endDate).toLocaleDateString() : (user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'N/A')}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {user.endDate && (new Date(user.endDate) < new Date()) ? 'Contract Ended' : 'Contract Active'}
+                              {user.endDate && (new Date(user.endDate || user.shadowingEndDate || user.updated_at || user.created_at) < new Date()) ? 'Contract Ended' : 'Contract Active'}
                             </div>
                           </div>
                         </TableCell>
@@ -899,7 +899,7 @@ export default function TechRoster() {
                               QC Avg: {user.avgQcScore || 0}
                             </div>
                             <div className="text-xs text-gray-500">
-                              Velo Survey: {user.veloSurveyFeedback || 'N/A'}
+                              Velo Survey: {user.veloSurveyFeedback || 'Not rated'}
                             </div>
                           </div>
                         </TableCell>

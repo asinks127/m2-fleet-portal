@@ -7,7 +7,7 @@ import {
   LayoutDashboard, LogOut, FileText, Users, Briefcase, Shield, CheckSquare,
   Truck, UserCheck, FileSearch, DollarSign, BarChart3, ChevronDown,
   ChevronRight, Menu, X, Calendar, UserCog, AlertTriangle, Phone,
-  Star, TrendingUp, Megaphone, KanbanSquare, FileSignature, UserSquare, Settings, Zap, Home, Sparkles, UserX, MessageSquare
+  Star, TrendingUp, Megaphone, KanbanSquare, FileSignature, UserSquare, Settings, Zap, Home, Sparkles, UserX, MessageSquare, ShieldAlert, ClipboardList, ClipboardCheck, Play, Plus, Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 
@@ -65,6 +65,7 @@ const adminNavLinks = [
       { href: createPageUrl('Performance'), label: 'Performance Dashboard', icon: TrendingUp },
       { href: createPageUrl('VeloSurveyDashboard'), label: 'Velo Surveys', icon: Star },
       { href: createPageUrl('CallLogsReport'), label: 'Call Logs', icon: Phone },
+      { href: createPageUrl('WarrantyManagement'), label: 'Warranty Management', icon: ClipboardCheck },
     ],
   },
   {
@@ -73,8 +74,38 @@ const adminNavLinks = [
     children: [
       { href: createPageUrl('ComplianceDashboard'), label: 'Dashboard', icon: LayoutDashboard },
       { href: createPageUrl('SafetyAdmin'), label: 'Safety Admin', icon: Shield },
+      { href: createPageUrl('OnsiteSafetyCheckForm'), label: 'Safety Spot Check', icon: ShieldAlert },
+      { href: createPageUrl('OnsiteSafetyChecksDashboard'), label: 'Safety Checks Dashboard', icon: FileSearch },
       { href: createPageUrl('EmergencyContactReport'), label: 'Emergency Contacts', icon: AlertTriangle },
       { href: createPageUrl('MissingEmergencyContacts'), label: 'Missing Emergency Info', icon: UserX },
+    ],
+  },
+  {
+    title: 'Auditing',
+    icon: ClipboardList,
+    children: [
+      { href: createPageUrl('AuditingDashboard'), label: 'Auditing Dashboard', icon: LayoutDashboard },
+      { href: createPageUrl('AuditList'), label: 'All Audits', icon: ClipboardList },
+      { href: createPageUrl('AuditExecution'), label: 'Execute Audit', icon: Play },
+      { href: createPageUrl('AuditTemplates'), label: 'Templates', icon: FileText },
+      { href: createPageUrl('AuditTemplateBuilder'), label: 'Template Builder', icon: Plus },
+      { href: createPageUrl('AuditAnalyticsDashboard'), label: 'Analytics', icon: BarChart3 },
+      { href: createPageUrl('CorrectiveActions'), label: 'Corrective Actions', icon: AlertTriangle },
+      { href: createPageUrl('AuditSettings'), label: 'Audit Settings', icon: Settings },
+    ],
+  },
+  {
+    title: 'Resources',
+    icon: FileText,
+    children: [
+      { href: createPageUrl('ResourceBrowse'), label: 'Browse Resources', icon: FileText },
+      { href: createPageUrl('ResourceSearch'), label: 'Search', icon: Search },
+      { href: createPageUrl('ResourceTraining'), label: 'Training', icon: UserCheck },
+      { href: createPageUrl('ResourceSafety'), label: 'Safety Resources', icon: Shield },
+      { href: createPageUrl('ResourceInstallGuides'), label: 'Install Guides', icon: FileText },
+      { href: createPageUrl('ResourceContacts'), label: 'Contacts', icon: Phone },
+      { href: createPageUrl('ResourceInsights'), label: 'Insights', icon: BarChart3 },
+      { href: createPageUrl('ResourceAdmin'), label: 'Manage Resources', icon: Settings },
     ],
   },
   {
@@ -110,6 +141,8 @@ const contractorNavLinks = [
   { href: createPageUrl('ContractorDashboard') + '?v=2.4', label: 'Dashboard', icon: LayoutDashboard },
   { href: createPageUrl('SubmitInvoice'), label: 'Submit Invoice', icon: FileText },
   { href: createPageUrl('ContractorProfile'), label: 'My Profile', icon: UserCheck },
+  { href: createPageUrl('SafetyHome'), label: 'Safety Home', icon: Shield },
+  { href: createPageUrl('MySafetyReports'), label: 'My Safety Reports', icon: FileText },
 ];
 
 const qcNavLinks = [
@@ -143,7 +176,7 @@ const adminOnlyPages = [
   'WeeklyApprovedInvoices', 'AutoApprovedInvoices', 'InactiveTechs', 'Calendar',
   'Performance', 'BulkInvite', 'AlertLog', 'VeloSurveyDashboard',
   'ProjectKanbanBoard', 'AutomationSettings', 'DiagnosticReport',
-  'AnnouncementManager', 'InvoicesHub', 'MissingEmergencyContacts', 'Messaging'
+  'AnnouncementManager', 'InvoicesHub', 'MissingEmergencyContacts', 'Messaging', 'WarrantyManagement'
 ];
 
 const veloRestrictedPages = [
@@ -167,7 +200,7 @@ const isPublicPage = (pathname) => {
 };
 
 function PrivateLayout({ children, currentPageName }) {
-  const { user: contextUser } = useAuth();
+  const { user: contextUser, roleOverride, isDebugUser, toggleDebugRole } = useAuth();
   const [user, setUser] = useState(contextUser || null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -180,7 +213,13 @@ function PrivateLayout({ children, currentPageName }) {
         const { data: { user: currentUser }, error } = await supabase.auth.getUser();
         if (error) throw error;
         
-        const effectiveUser = currentUser || contextUser;
+        let effectiveUser = currentUser || contextUser;
+        const { data: userRow } = await supabase.from('User').select('*').eq('id', effectiveUser?.id).maybeSingle();
+        if (userRow) {
+          effectiveUser = { ...effectiveUser, ...userRow };
+        } else {
+          console.warn('User table fetch failed, keeping effectiveUser as-is');
+        }
         setUser(effectiveUser);
 
         if (!effectiveUser) {
@@ -197,7 +236,7 @@ function PrivateLayout({ children, currentPageName }) {
           const adminEmails = [
                     'lena@m2fleetcom.com', 'orville@m2fleetcom.com', 'steve@m2fleetcom.com',
                     'austin@m2fleetcom.com', 'adam@m2fleetcom.com', 'jason@m2fleetcom.com', 'erica@m2fleetcom.com',
-                    'lowell@m2fleetcom.com', 'secretary@m2fleetcom.com'
+                    'lowell@m2fleetcom.com', 'secretary@m2fleetcom.com', 'tjserota@gmail.com', 'zo-test@m2fleetcom.com'
                   ];
           const qcEmails = [ 'rmiller.contractor@m2fleetcom.com', 'choffman.contractor@m2fleetcom.com' ];
           const specialContractorEmails = ['tjserota@gmail.com'];
@@ -224,7 +263,7 @@ function PrivateLayout({ children, currentPageName }) {
           if (isContractor && !isAdmin && !isQC && !isVeloPM) {
             const hasRequiredFields = 
               effectiveUser.displayName && 
-              effectiveUser.business && 
+              (effectiveUser.business || effectiveUser.businessName) && 
               effectiveUser.phone &&
               effectiveUser.emergencyContactName &&
               effectiveUser.emergencyContactPhone;
@@ -306,7 +345,7 @@ function PrivateLayout({ children, currentPageName }) {
   const adminEmails = [
                 'lena@m2fleetcom.com', 'orville@m2fleetcom.com', 'steve@m2fleetcom.com',
                 'austin@m2fleetcom.com', 'adam@m2fleetcom.com', 'jason@m2fleetcom.com', 'erica@m2fleetcom.com',
-                'lowell@m2fleetcom.com', 'secretary@m2fleetcom.com'
+                'lowell@m2fleetcom.com', 'secretary@m2fleetcom.com', 'tjserota@gmail.com', 'zo-test@m2fleetcom.com'
               ];
   const qcEmails = [ 'rmiller.contractor@m2fleetcom.com', 'choffman.contractor@m2fleetcom.com' ];
   const specialContractorEmails = ['tjserota@gmail.com']; // Special case contractors
@@ -322,16 +361,24 @@ function PrivateLayout({ children, currentPageName }) {
   );
   const isM2PM = userEmail.endsWith('@m2fleetcom.com') && !isAdmin && !isQC && !isContractor && !isVeloPM;
 
+  // Apply role override for debug user
+  const isDebugMode = isDebugUser && roleOverride !== null;
+  const effectiveIsAdmin = isDebugMode ? roleOverride === 'admin' : isAdmin;
+  const effectiveIsContractor = isDebugMode ? roleOverride === 'contractor' : isContractor;
+  const effectiveIsM2PM = isDebugMode ? false : isM2PM;
+  const effectiveIsQC = isDebugMode ? false : isQC;
+  const effectiveIsVeloPM = isDebugMode ? false : isVeloPM;
+
   let navLinks;
-  if (isAdmin && !isVeloPM) {
+  if (effectiveIsAdmin && !effectiveIsVeloPM) {
     navLinks = adminNavLinks;
-  } else if (isVeloPM) {
+  } else if (effectiveIsVeloPM) {
     navLinks = veloNavLinks;
-  } else if (isM2PM) {
+  } else if (effectiveIsM2PM) {
     navLinks = pmNavLinks;
-  } else if (isQC) {
+  } else if (effectiveIsQC) {
     navLinks = qcNavLinks;
-  } else if (isContractor) {
+  } else if (effectiveIsContractor) {
     navLinks = contractorNavLinks;
   } else {
     navLinks = contractorNavLinks;
@@ -371,7 +418,7 @@ function PrivateLayout({ children, currentPageName }) {
     );
   }
 
-  const isAccessDeniedCandidate = !isAdmin && !isQC && !isVeloPM && !isM2PM; // SECURITY FIX: Unknown users denied from admin pages
+  const isAccessDeniedCandidate = !effectiveIsAdmin && !effectiveIsQC && !effectiveIsVeloPM && !effectiveIsM2PM; // SECURITY FIX: Unknown users denied from admin pages
   const isPageAdminRestricted = adminOnlyPages.includes(currentPageNameFromPath) || currentPageNameFromPath === '' || currentPageNameFromPath === 'AdminDashboard';
   const isPageAllowedByNav = allowedPaths.has(currentPathFull);
 
@@ -450,6 +497,25 @@ function PrivateLayout({ children, currentPageName }) {
       </nav>
       
       <div className="relative z-10 p-4 border-t border-white/10 bg-black/20 backdrop-blur-sm">
+        {isDebugUser && (
+          <div className="mb-3 p-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600">
+            <div className="flex items-center justify-between">
+              <div className="text-xs">
+                <ShieldAlert className="w-4 h-4 inline mr-1" />
+                <span className="font-semibold">DEBUG MODE</span>
+              </div>
+              <button
+                onClick={toggleDebugRole}
+                className="px-2 py-1 text-xs font-bold rounded bg-white/20 hover:bg-white/30 transition-colors"
+              >
+                {roleOverride === 'admin' ? 'Switch to Contractor' : roleOverride === 'contractor' ? 'Exit Debug' : 'Switch to Admin'}
+              </button>
+            </div>
+            <div className="text-xs mt-1 opacity-80">
+              Current: {roleOverride || 'Real Role'}
+            </div>
+          </div>
+        )}
         <div className="text-sm text-gray-300 mb-3">
             <div className="font-semibold text-white">{user?.user_metadata?.full_name || user.email}</div>
             <div className="text-xs text-blue-200 mt-1">
