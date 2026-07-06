@@ -73,3 +73,7 @@ export const docusignWebhook = createFunctionProxy('docusignWebhook');
 export const sendToWebhook = createFunctionProxy('sendToWebhook');
 export const generateRecurringAudits = createFunctionProxy('generateRecurringAudits');
 export const escalateOverdueAudits = createFunctionProxy('escalateOverdueAudits');
+export const getWorkforceActivity = createFunctionProxy('getWorkforceActivity');
+export const syncGoogleSheetData = createFunctionProxy('syncGoogleSheetData');
+export const sendDailyPMReports = createFunctionProxy('sendDailyPMReports');
+export const logActivity = createFunctionProxy('logActivity');
