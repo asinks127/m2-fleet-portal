@@ -23,6 +23,7 @@ const COLUMN_ALIASES = {
   business_name: 'businessName',
   shadowing_end_date: 'shadowingEndDate',
   shadowing_start_date: 'shadowingStartDate',
+  shadowing_status: 'shadowingStatus',
   sunbelt_cert_end_date: 'sunbeltCertEndDate',
   sunbelt_cert_start_date: 'sunbeltCertStartDate',
   sunbelt_cert_status: 'sunbeltCertStatus',
