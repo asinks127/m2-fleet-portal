@@ -4,18 +4,28 @@ import { supabase } from '@/lib/supabaseClient.js';
 // Each entity maps to a Supabase table of the same name
 
 // Recursively convert camelCase keys to snake_case so app code that still uses
-// camelCase (displayName, businessName, m2PM, onboardingCompleted, etc.) writes
-// to the actual snake_case columns the tables have (display_name, business_name,
-// m2_pm, onboarding_completed, ...). Tables in Supabase are snake_case;
-// converting at the entity boundary keeps the rest of the app unchanged.
+// camelCase (displayName, businessName, onboardingCompleted, etc.) writes to
+// the actual snake_case columns the tables have (display_name, business_name,
+// onboarding_completed, ...). Tables in Supabase are snake_case; converting at
+// the entity boundary keeps the rest of the app unchanged.
 const camelToSnake = (key) =>
   key.replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2').replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+
+// The User table in Supabase has a few oddly-named columns that don't follow
+// normal snake_case (m2pm instead of m2_pm, velopm instead of velo_pm). Map
+// those exceptions here so the rest of the app can use normal camelCase.
+const COLUMN_ALIASES = {
+  m2_pm: 'm2pm',
+  velo_pm: 'velopm',
+};
+
+const toDbKey = (key) => COLUMN_ALIASES[camelToSnake(key)] || camelToSnake(key);
 
 const toDb = (value) => {
   if (Array.isArray(value)) return value.map(toDb);
   if (value && typeof value === 'object' && !(value instanceof Date) && !(value instanceof File) && !(value instanceof Blob)) {
     return Object.keys(value).reduce((acc, key) => {
-      acc[camelToSnake(key)] = toDb(value[key]);
+      acc[toDbKey(key)] = toDb(value[key]);
       return acc;
     }, {});
   }
