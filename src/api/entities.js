@@ -154,8 +154,8 @@ const entityNames = [
   // Misc
   'DelayDetail', 'DailyActivityRecord', 'ManagerCallLog', 'ManagerQCInspection',
   'Range', 'ReportHistory', 'SyncLog', 'TimeEntry',
-  // Velo survey — outside PM directory (Supabase table velo_project_managers)
-  'velo_project_managers'
+  // Tech Schedule Parser & Service Map
+  'tech_schedule_uploads', 'tech_schedule_rows'
 ];
 
 const entities = {};
@@ -191,7 +191,9 @@ export const {
   AppLog, AppActivityLog,
   // Misc
   DelayDetail, DailyActivityRecord, ManagerCallLog, ManagerQCInspection,
-  Range, ReportHistory, SyncLog, TimeEntry
+  Range, ReportHistory, SyncLog, TimeEntry,
+  // Tech Schedule Parser & Service Map
+  TechScheduleUpload, TechScheduleRow
 } = entities;
 
 // Custom User entity with me() function

@@ -62,6 +62,11 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/admin/tech-schedule-map" element={
+        <LayoutWrapper currentPageName="TechScheduleMap">
+          {Pages.TechScheduleMap ? <Pages.TechScheduleMap /> : null}
+        </LayoutWrapper>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

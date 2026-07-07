@@ -103,6 +103,7 @@ import TechnicianMasterList from './pages/TechnicianMasterList';
 import TechnicianReportingDashboard from './pages/TechnicianReportingDashboard';
 import VeloSurveyDashboard from './pages/VeloSurveyDashboard';
 import VeloSurveyPortal from './pages/VeloSurveyPortal';
+import TechScheduleMap from './pages/TechScheduleMap';
 import WarrantyManagement from './pages/WarrantyManagement';
 import WeeklyApprovedInvoices from './pages/WeeklyApprovedInvoices';
 import __Layout from './Layout.jsx';
@@ -203,6 +204,7 @@ export const PAGES = {
     "TechnicianReportingDashboard": TechnicianReportingDashboard,
     "VeloSurveyDashboard": VeloSurveyDashboard,
     "VeloSurveyPortal": VeloSurveyPortal,
+    "TechScheduleMap": TechScheduleMap,
     "WarrantyManagement": WarrantyManagement,
     "WeeklyApprovedInvoices": WeeklyApprovedInvoices
 };
