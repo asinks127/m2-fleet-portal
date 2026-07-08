@@ -223,9 +223,51 @@ export default function ContractorProfile() {
       
       console.log('Clean update data:', updateData);
       
-      await User.update(userIdToUpdate, updateData);
+      let updatedUser;
+      try {
+        const { data, error } = await supabase
+          .from('User')
+          .update(updateData)
+          .eq('id', userIdToUpdate)
+          .select();
+        if (error) throw error;
+        if (data && data.length > 0) {
+          updatedUser = data[0];
+        }
+      } catch (updateError) {
+        console.error('Error updating user by ID:', updateError);
+        try {
+          const { data: sbUser, error: sbError } = await supabase
+            .from('User')
+            .update(updateData)
+            .eq('email', currentUser?.email)
+            .select();
+          if (sbError) throw sbError;
+          if (sbUser && sbUser.length > 0) {
+            updatedUser = sbUser[0];
+          }
+        } catch (emailError) {
+          console.error('Error updating user by email:', emailError);
+          try {
+            const { data: newUser, error: newUserError } = await supabase
+              .from('User')
+              .insert({ ...updateData, id: userIdToUpdate })
+              .select();
+            if (newUserError) throw newUserError;
+            updatedUser = newUser[0];
+          } catch (insertError) {
+            console.error('Error creating user:', insertError);
+            throw new Error('Unable to update profile.');
+          }
+        }
+      }
       
-      setSuccess("Profile updated successfully!");
+      if (updatedUser) {
+        setUser(updatedUser);
+        setSuccess("Profile updated successfully!");
+      } else {
+        throw new Error('Unable to update profile.');
+      }
       
       await loadUser(userIdToUpdate, currentUser);
     } catch (err) {

@@ -214,11 +214,22 @@ function PrivateLayout({ children, currentPageName }) {
         if (error) throw error;
         
         let effectiveUser = currentUser || contextUser;
-        const { data: userRow } = await supabase.from('User').select('*').eq('id', effectiveUser?.id).maybeSingle();
+        // The Supabase auth user id often does NOT match the User table row id
+        // (Google OAuth users get a brand-new auth uuid). Look up by id first,
+        // then fall back to email so we hydrate the real profile row.
+        let userRow = null;
+        if (effectiveUser?.id) {
+          const { data } = await supabase.from('User').select('*').eq('id', effectiveUser.id).maybeSingle();
+          userRow = data;
+        }
+        if (!userRow && effectiveUser?.email) {
+          const { data } = await supabase.from('User').select('*').eq('email', effectiveUser.email).maybeSingle();
+          userRow = data;
+        }
         if (userRow) {
           effectiveUser = { ...effectiveUser, ...userRow };
-        } else {
-          console.warn('User table fetch failed, keeping effectiveUser as-is');
+        } else if (effectiveUser) {
+          console.warn('User table fetch failed for', effectiveUser.email, '- keeping effectiveUser as-is');
         }
         setUser(effectiveUser);
 
@@ -261,16 +272,28 @@ function PrivateLayout({ children, currentPageName }) {
           }
 
           if (isContractor && !isAdmin && !isQC && !isVeloPM) {
-            const hasRequiredFields = 
-              effectiveUser.displayName && 
-              (effectiveUser.business || effectiveUser.businessName) && 
-              effectiveUser.phone &&
-              effectiveUser.emergencyContactName &&
-              effectiveUser.emergencyContactPhone;
-            
+            // A contractor is "new" only if no User table row was found. Legacy
+            // contractors who already have all their data in the User table
+            // (even if profileComplete is "No" / null) should not be forced
+            // through the questionnaire — they just sign in and use the app.
+            const hasUserRow = !!userRow;
+            const hasRequiredFields = hasUserRow && (
+              effectiveUser.displayName || effectiveUser.display_name
+            ) && (
+              effectiveUser.business || effectiveUser.businessName
+            ) && effectiveUser.phone && (
+              effectiveUser.emergencyContactName || effectiveUser.emergency_contact_name
+            ) && (
+              effectiveUser.emergencyContactPhone || effectiveUser.emergency_contact_phone
+            );
+
             const isOnProfilePage = currentPath === profilePageUrl;
-            
-            if (!hasRequiredFields && !isOnProfilePage) {
+
+            if (!hasUserRow && !isOnProfilePage) {
+              navigate(profilePageUrl, { replace: true });
+              return;
+            }
+            if (hasUserRow && !hasRequiredFields && !isOnProfilePage) {
               navigate(profilePageUrl, { replace: true });
               return;
             }

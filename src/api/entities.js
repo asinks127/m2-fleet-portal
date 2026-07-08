@@ -6,57 +6,81 @@ import { supabase } from '@/lib/supabaseClient.js';
 // Recursively convert camelCase keys to snake_case so app code that still uses
 // camelCase (displayName, businessName, onboardingCompleted, etc.) writes to
 // the actual snake_case columns the tables have (display_name, business_name,
-// onboarding_completed, ...). Tables in Supabase are snake_case; converting at
-// the entity boundary keeps the rest of the app unchanged.
+// onboarding_completed, ...). Most tables use snake_case, but the User table
+// mixes snake_case and camelCase depending on the column. Convert at the entity
+// boundary so the rest of the app can keep using camelCase keys.
 const camelToSnake = (key) =>
   key.replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2').replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 
-// Some User table columns in Supabase are stored as camelCase (e.g. endDate,
-// startDate, businessName) or compressed forms (m2pm, velopm) instead of
-// the usual snake_case. Map those exceptions here so the rest of the app can
-// keep using normal camelCase keys (endDate -> endDate, m2PM -> m2pm).
-const COLUMN_ALIASES = {
-  end_date: 'endDate',
-  start_date: 'startDate',
-  full_name: 'fullName',
-  profile_complete: 'profileComplete',
-  business_name: 'businessName',
-  shadowing_end_date: 'shadowingEndDate',
-  shadowing_start_date: 'shadowingStartDate',
-  shadowing_status: 'shadowingStatus',
-  sunbelt_cert_end_date: 'sunbeltCertEndDate',
-  sunbelt_cert_start_date: 'sunbeltCertStartDate',
-  sunbelt_cert_status: 'sunbeltCertStatus',
-  sunbelt_cert_notes: 'sunbeltCertNotes',
-  emergency_contact_name: 'emergencyContactName',
-  emergency_contact_phone: 'emergencyContactPhone',
-  emergency_contact_email: 'emergencyContactEmail',
-  qc_assignment: 'qcAssignment',
-  invoice_review_reason: 'invoiceReviewReason',
-  inactive_reason: 'inactiveReason',
-  inactive_date: 'inactiveDate',
-  avg_qc_score: 'avgQcScore',
-  late_arrivals: 'lateArrivals',
-  needs_invoice_review: 'needsInvoiceReview',
-  velo_survey_feedback: 'veloSurveyFeedback',
-  velociti_score: 'velocitiScore',
-  onboarding_completed: 'onboardingCompleted',
-  weekly_pay: 'weeklyPay',
-  m2_pm: 'm2pm',
-  velo_pm: 'velopm',
+// Table-specific column overrides. The User table has a mix of snake_case and
+// camelCase columns (display_name is snake_case, but businessName, endDate,
+// startDate, m2pm, velopm, fullName are camelCase or compressed forms).
+// Override the default snake_case conversion for those.
+const TABLE_COLUMN_OVERRIDES = {
+  User: {
+    // app camelCase -> actual DB column
+    displayName: 'display_name',
+    businessName: 'businessName',
+    endDate: 'endDate',
+    startDate: 'startDate',
+    fullName: 'fullName',
+    m2PM: 'm2pm',
+    veloPM: 'velopm',
+    qcAssignment: 'qcAssignment',
+    shadowingStatus: 'shadowingStatus',
+    shadowingStartDate: 'shadowingStartDate',
+    shadowingEndDate: 'shadowingEndDate',
+    sunbeltCertStatus: 'sunbeltCertStatus',
+    sunbeltCertStartDate: 'sunbeltCertStartDate',
+    sunbeltCertEndDate: 'sunbeltCertEndDate',
+    sunbeltCertNotes: 'sunbeltCertNotes',
+    emergencyContactName: 'emergencyContactName',
+    emergencyContactPhone: 'emergencyContactPhone',
+    emergencyContactEmail: 'emergencyContactEmail',
+    profileComplete: 'profileComplete',
+    invoiceReviewReason: 'invoiceReviewReason',
+    inactiveReason: 'inactiveReason',
+    inactiveDate: 'inactiveDate',
+    avgQcScore: 'avgQcScore',
+    lateArrivals: 'lateArrivals',
+    needsInvoiceReview: 'needsInvoiceReview',
+    veloSurveyFeedback: 'veloSurveyFeedback',
+    velocitiScore: 'velocitiScore',
+    onboardingCompleted: 'onboardingCompleted',
+    weeklyPay: 'weeklyPay',
+  },
 };
 
-const toDbKey = (key) => COLUMN_ALIASES[camelToSnake(key)] || camelToSnake(key);
+const toDbKey = (key, tableName) => {
+  if (tableName && TABLE_COLUMN_OVERRIDES[tableName] && TABLE_COLUMN_OVERRIDES[tableName][key] !== undefined) {
+    return TABLE_COLUMN_OVERRIDES[tableName][key];
+  }
+  return camelToSnake(key);
+};
 
-const toDb = (value) => {
-  if (Array.isArray(value)) return value.map(toDb);
+const toDb = (value, tableName) => {
+  if (Array.isArray(value)) return value.map(v => toDb(v, tableName));
   if (value && typeof value === 'object' && !(value instanceof Date) && !(value instanceof File) && !(value instanceof Blob)) {
     return Object.keys(value).reduce((acc, key) => {
-      acc[toDbKey(key)] = toDb(value[key]);
+      acc[toDbKey(key, tableName)] = toDb(value[key], tableName);
       return acc;
     }, {});
   }
   return value;
+};
+
+const fromDbKey = (key) => {
+  // The User table returns camelCase columns (businessName, endDate). Keep
+  // them as-is when reading — most of the app already uses these names.
+  return key;
+};
+
+const fromDb = (row) => {
+  if (!row || typeof row !== 'object') return row;
+  return Object.keys(row).reduce((acc, key) => {
+    acc[fromDbKey(key)] = row[key];
+    return acc;
+  }, {});
 };
 
 const createEntityProxy = (tableName) => ({
@@ -65,7 +89,6 @@ const createEntityProxy = (tableName) => ({
     if (orderBy) {
       const desc = orderBy.startsWith('-');
       const col = desc ? orderBy.slice(1) : orderBy;
-      // Graceful fallback: created_date → created_at if column doesn't exist
       if (col === 'created_date') {
         query = supabase.from(tableName).select('*').order('created_at', { ascending: !desc });
       } else {
@@ -75,17 +98,16 @@ const createEntityProxy = (tableName) => ({
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    return (data || []).map(fromDb);
   },
   filter: async (filters, orderBy, limit) => {
     let query = supabase.from(tableName).select('*');
-    if (filters) query = query.match(toDb(filters));
+    if (filters) query = query.match(toDb(filters, tableName));
     if (orderBy) {
       const desc = orderBy.startsWith('-');
       const col = desc ? orderBy.slice(1) : orderBy;
-      // Graceful fallback: created_date → created_at if column doesn't exist
       if (col === 'created_date') {
-        query = supabase.from(tableName).select('*').match(filters).order('created_at', { ascending: !desc });
+        query = supabase.from(tableName).select('*').match(toDb(filters, tableName)).order('created_at', { ascending: !desc });
       } else {
         query = query.order(col, { ascending: !desc });
       }
@@ -93,22 +115,37 @@ const createEntityProxy = (tableName) => ({
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    return (data || []).map(fromDb);
   },
   get: async (id) => {
     const { data, error } = await supabase.from(tableName).select('*').eq('id', id).single();
     if (error) throw error;
-    return data;
+    return fromDb(data);
   },
   create: async (record) => {
-    const { data, error } = await supabase.from(tableName).insert(toDb(record)).select().single();
+    const { data, error } = await supabase.from(tableName).insert(toDb(record, tableName)).select().single();
     if (error) throw error;
-    return data;
+    return fromDb(data);
   },
   update: async (id, updates) => {
-    const { data, error } = await supabase.from(tableName).update(toDb(updates)).eq('id', id).select().single();
+    const { data, error } = await supabase.from(tableName).update(toDb(updates, tableName)).eq('id', id).select();
     if (error) throw error;
-    return data;
+    if (data && data.length > 0) return fromDb(data[0]);
+    // No row matched by id. Try matching by email if the caller passed one —
+    // common case: Supabase auth user id != User table row id (the two are
+    // generated independently for Google OAuth sign-ups).
+    if (updates && updates.email) {
+      const { data: byEmail, error: emailErr } = await supabase
+        .from(tableName)
+        .update(toDb(updates, tableName))
+        .eq('email', updates.email)
+        .select();
+      if (emailErr) throw emailErr;
+      if (byEmail && byEmail.length > 0) return fromDb(byEmail[0]);
+    }
+    // Still nothing — treat as success no-op rather than "Cannot coerce the
+    // result to a single JSON object" so the UI doesn't get stuck.
+    return null;
   },
   delete: async (id) => {
     const { error } = await supabase.from(tableName).delete().eq('id', id);
