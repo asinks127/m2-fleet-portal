@@ -49,6 +49,22 @@ const TABLE_COLUMN_OVERRIDES = {
     onboardingCompleted: 'onboardingCompleted',
     weeklyPay: 'weeklyPay',
   },
+  // SafetyAcknowledgement uses camelCase column names (messageId, userId)
+  // despite the table name being one word — keep the keys as-is.
+  SafetyAcknowledgement: {
+    messageId: 'messageId',
+    userId: 'userId',
+  },
+  // AnnouncementAcknowledgment follows the same camelCase pattern.
+  AnnouncementAcknowledgment: {
+    messageId: 'messageId',
+    userId: 'userId',
+  },
+  // SafetyLessonAcknowledgment too.
+  SafetyLessonAcknowledgment: {
+    messageId: 'messageId',
+    userId: 'userId',
+  },
 };
 
 const toDbKey = (key, tableName) => {
