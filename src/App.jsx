@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import SignerPage from './pages/documentSigning/SignerPage';
+import SignDocument from './pages/documentSigning/SignDocument';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -49,7 +49,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Public signer route - no auth required */}
-      <Route path="/sign/:requestId/:token" element={<SignerPage />} />
+      <Route path="/sign/:requestId/:token" element={<SignDocument />} />
       
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>

@@ -68,6 +68,8 @@
     "input-otp": "^1.4.2",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.2",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
     "lodash": "^4.17.21",
     "lucide-react": "^0.475.0",
     "marked": "^17.0.1",
@@ -96,6 +98,7 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.171.0",
     "vaul": "^1.1.2",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {

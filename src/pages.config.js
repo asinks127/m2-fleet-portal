@@ -58,7 +58,7 @@ import Calendar from './pages/Calendar';
 import CallLogsReport from './pages/CallLogsReport';
 import ComplianceDashboard from './pages/ComplianceDashboard';
 import ContractorAccounting from './pages/ContractorAccounting';
-import ContractorDashboard from './pages/ContractorDashboard';
+import ContractorDashboard from './pages/ContractorDashboard';import DocumentsAdmin from './pages/documentSigning/DocumentsAdmin';
 import ContractorProfile from './pages/ContractorProfile';
 import DebugDashboard from './pages/DebugDashboard';
 import DiagnosticReport from './pages/DiagnosticReport';
@@ -94,6 +94,7 @@ import SignDocument from './pages/SignDocument';
 import SubmitInvoice from './pages/SubmitInvoice';
 import Survey from './pages/Survey';
 import TechRoster from './pages/TechRoster';
+import TechScheduleMap from './pages/TechScheduleMap';
 import VeloSurveyDashboard from './pages/VeloSurveyDashboard';
 import VeloSurveyPortal from './pages/VeloSurveyPortal';
 import WeeklyApprovedInvoices from './pages/WeeklyApprovedInvoices';
@@ -112,7 +113,7 @@ export const PAGES = {
     "CallLogsReport": CallLogsReport,
     "ComplianceDashboard": ComplianceDashboard,
     "ContractorAccounting": ContractorAccounting,
-    "ContractorDashboard": ContractorDashboard,
+    "ContractorDashboard": ContractorDashboard,    "DocumentsAdmin": DocumentsAdmin,
     "ContractorProfile": ContractorProfile,
     "DebugDashboard": DebugDashboard,
     "DiagnosticReport": DiagnosticReport,
@@ -148,6 +149,7 @@ export const PAGES = {
     "SubmitInvoice": SubmitInvoice,
     "Survey": Survey,
     "TechRoster": TechRoster,
+    "TechScheduleMap": TechScheduleMap,
     "VeloSurveyDashboard": VeloSurveyDashboard,
     "VeloSurveyPortal": VeloSurveyPortal,
     "WeeklyApprovedInvoices": WeeklyApprovedInvoices,
