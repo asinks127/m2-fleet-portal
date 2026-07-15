@@ -86,7 +86,7 @@ const adminNavLinks = [
       { href: createPageUrl('ShadowingDashboard'), label: 'Shadowing Dashboard', icon: UserCheck },
       { href: createPageUrl('RecruitingDashboard'), label: 'Recruiting', icon: Briefcase },
       { href: createPageUrl('InactiveTechs'), label: 'Inactive Techs', icon: UserCog },
-      { href: createPageUrl('DocumentSigningDashboard'), label: 'E-Signatures', icon: FileSignature },
+      { href: createPageUrl('DocumentsAdmin'), label: 'E-Signatures', icon: FileSignature },
       { href: createPageUrl('PaymentLedger'), label: 'Payment Ledger', icon: DollarSign },
       { href: createPageUrl('AnnouncementManager'), label: 'Announcements', icon: Megaphone },
       { href: createPageUrl('AutomationSettings'), label: 'Automation', icon: Settings },
