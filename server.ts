@@ -11,6 +11,14 @@ const __dirname = path.dirname(__filename);
 const root = __dirname;
 const port = Number(process.env.PORT || 57484);
 
+// Prevent the server from crashing on unhandled errors from API handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[server] Unhandled promise rejection (caught — server kept alive):', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[server] Uncaught exception (caught — server kept alive):', err);
+});
+
 // Load environment variables from .env.local
 const envPath = path.join(root, ".env.local");
 try {
@@ -32,6 +40,12 @@ try {
 }
 
 const app = new Hono();
+
+// Global error handler — catches any error that bubbles up through Hono
+app.onError((err, c) => {
+  console.error('[server] Hono error:', err);
+  return c.json({ error: 'Internal server error' }, 500);
+});
 
 // Enable CORS for all routes
 app.use("*", cors());
@@ -118,7 +132,7 @@ app.all("/api/*", async (c) => {
       path: c.req.path,
       headers: Object.fromEntries(c.req.raw.headers),
       body: await c.req.json().catch(() => ({})),
-      query: Object.fromEntries(c.req.query()),
+      query: c.req.query(),
       params: {},
     };
 
