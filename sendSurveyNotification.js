@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 </html>`;
 
     await transporter.sendMail({
-      from: `"M2 Fleet Scheduling" <${process.env.GMAIL_USER}>`,
+      from: '"M2 Fleet Scheduling" <scheduling@m2fleetcom.com>',
       to,
       subject: `Technician Performance Survey — ${projectName}`,
       html,
