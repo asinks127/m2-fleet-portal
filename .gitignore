@@ -9,3 +9,4 @@ node_modules/
 .dev/
 supabase/.temp/
 test_*.mjs
+node_modules/
