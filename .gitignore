@@ -1,2 +1,9 @@
 
 dist/
+node_modules/
+.env
+.env.local
+.env.*.local
+.supabase_token
+*.log
+.dev/
