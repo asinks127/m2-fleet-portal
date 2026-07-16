@@ -1,820 +1,449 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient.js';
-import { db, storage } from '@/config/firebase.js';
-import { 
-  doc, 
-  getDoc, 
-  updateDoc, 
-  Timestamp,
-  collection,
-  addDoc,
-} from 'firebase/firestore';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { 
-  PenTool, Type, Calendar, Check, ChevronLeft, ChevronRight,
-  Loader2, AlertCircle, CheckCircle, Clock, FileText, User,
-  Building, Mail, Phone, List, CheckSquare,
-} from 'lucide-react';
+import SignatureCanvas from 'react-signature-canvas';
 import { Button } from '@/components/ui/button.jsx';
-import { Input } from '@/components/ui/input.jsx';
-import { Label } from '@/components/ui/label.jsx';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx';
-import { Alert, AlertDescription } from '@/components/ui/alert.jsx';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.jsx';
-import { Progress } from '@/components/ui/progress.jsx';
-import { toast } from 'sonner';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
+import { Loader2, FileText, PenTool, CheckCircle2, AlertCircle, XCircle, ArrowLeft } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-import { 
-  FIELD_TYPES, 
-  DOCUMENT_STATUS,
-  SIGNER_STATUS,
-  AUDIT_EVENTS,
-  createAuditEntry,
-} from '@/lib/documentSigning/models.js';
-
-const FIELD_COLORS = {
-  [FIELD_TYPES.SIGNATURE]: '#3b82f6',
-  [FIELD_TYPES.INITIALS]: '#8b5cf6',
-  [FIELD_TYPES.TEXT]: '#10b981',
-  [FIELD_TYPES.DATE]: '#f59e0b',
-  [FIELD_TYPES.CHECKBOX]: '#ef4444',
-  [FIELD_TYPES.DROPDOWN]: '#ec4899',
-  [FIELD_TYPES.FULL_NAME]: '#06b6d4',
-  [FIELD_TYPES.EMAIL]: '#84cc16',
-  [FIELD_TYPES.COMPANY]: '#f97316',
+const FIELD_TYPES = {
+  SIGNATURE: 'signature',
+  TEXT: 'text',
+  DATE: 'date',
+  CHECKBOX: 'checkbox',
+  EMAIL: 'email',
+  COMPANY: 'company',
+  NAME: 'name',
 };
 
 export default function SignerPage() {
   const { requestId, token } = useParams();
-  const navigate = useNavigate();
-  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [request, setRequest] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [scale, setScale] = useState(1.0);
-  const [saving, setSaving] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  
-  // Field values
+  const [session, setSession] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [pdfError, setPdfError] = useState(null);
   const [fieldValues, setFieldValues] = useState({});
-  const [signatures, setSignatures] = useState({}); // Signature pad data
-  const [initials, setInitials] = useState({}); // Initials data
-  
-  // Signature pad
-  const [activeSignatureField, setActiveSignatureField] = useState(null);
-  const [activeInitialField, setActiveInitialField] = useState(null);
-  const signatureCanvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  
-  // Audit
-  const [auditEntries, setAuditEntries] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitResult, setSubmitResult] = useState(null);
+  const [showDecline, setShowDecline] = useState(false);
+  const [declining, setDeclining] = useState(false);
+  const sigRefs = useRef({});
+  const containerRef = useRef(null);
+  const [pageWidth, setPageWidth] = useState(612);
 
-  // Load document request
+  // Load signing session via RPC
   useEffect(() => {
-    async function loadDocument() {
-      if (!db) {
-        setError('Document signing system not configured');
-        setLoading(false);
-        return;
-      }
-
+    (async () => {
       try {
-        // Get the request
-        const requestRef = doc(db, 'documentRequests', requestId);
-        const requestSnap = await getDoc(requestRef);
-        
-        if (!requestSnap.exists()) {
-          setError('Document not found');
-          setLoading(false);
-          return;
+        const { data, error: rpcError } = await supabase.rpc('esign_load_signing_session', {
+          p_token: token,
+        });
+
+        if (rpcError) throw new Error(rpcError.message);
+        if (!data || data.success === false) {
+          throw new Error(data?.error || 'Failed to load signing session');
         }
 
-        const requestData = requestSnap.data();
-        
-        // Find the signer with matching token
-        const matchingSigner = requestData.signers.find(s => s.signingToken === token);
-        
-        if (!matchingSigner) {
-          setError('Invalid signing link');
-          setLoading(false);
-          return;
-        }
+        setSession(data);
 
-        // Check if already signed
-        if (matchingSigner.status === 'signed') {
-          setCompleted(true);
-        }
+        // Generate signed URL for the PDF
+        if (data.document?.sourcePdfPath) {
+          const { data: urlData, error: urlErr } = await supabase.storage
+            .from('esign-documents')
+            .createSignedUrl(data.document.sourcePdfPath, 3600);
 
-        // Check if expired
-        if (requestData.expiresAt && requestData.expiresAt.toDate() < new Date()) {
-          setError('This document has expired');
-          setLoading(false);
-          return;
-        }
-
-        // Check if voided
-        if (requestData.status === DOCUMENT_STATUS.VOIDED) {
-          setError('This document has been voided');
-          setLoading(false);
-          return;
-        }
-
-        // Update signer status to viewed if pending
-        if (matchingSigner.status === SIGNER_STATUS.PENDING || matchingSigner.status === SIGNER_STATUS.SENT) {
-          const updatedSigners = requestData.signers.map(s => 
-            s.id === matchingSigner.id 
-              ? { ...s, status: SIGNER_STATUS.VIEWED, viewedAt: Timestamp.now() }
-              : s
-          );
-          
-          await updateDoc(requestRef, { 
-            signers: updatedSigners,
-            status: DOCUMENT_STATUS.VIEWED,
-            updatedAt: Timestamp.now(),
-          });
-          
-          matchingSigner.status = SIGNER_STATUS.VIEWED;
-          matchingSigner.viewedAt = new Date();
-        }
-
-        setRequest(requestData);
-        setSigner(matchingSigner);
-
-        // Initialize field values with prefilled values
-        const initialValues = {};
-        requestData.fields.forEach(field => {
-          if (field.prefilledValue) {
-            initialValues[field.id] = field.prefilledValue;
+          if (urlErr) {
+            setPdfError('Could not load the document PDF.');
+          } else if (urlData?.signedUrl) {
+            setPdfUrl(urlData.signedUrl);
           }
-        });
-        setFieldValues(initialValues);
+        }
 
-        // Add audit entry
-        await addAuditEntry(requestId, {
-          event: AUDIT_EVENTS.DOCUMENT_VIEWED,
-          signerId: matchingSigner.id,
-          signerEmail: matchingSigner.email,
-          signerName: matchingSigner.name,
+        // Initialize field values with defaults
+        const initial = {};
+        (data.fields || []).forEach(f => {
+          initial[f.id] = f.defaultValue || '';
         });
-
-      } catch (err) {
-        console.error('Error loading document:', err);
-        setError('Failed to load document');
+        setFieldValues(initial);
+      } catch (e) {
+        setError(e.message || 'An error occurred while loading your signing session.');
       } finally {
         setLoading(false);
       }
-    }
+    })();
+  }, [token]);
 
-    loadDocument();
-  }, [requestId, token]);
-
-  // Field handling
-  function getFieldsForCurrentSigner() {
-    if (!request || !signer) return [];
-    return request.fields.filter(f => f.signerId === signer.id);
-  }
-
-  function getFieldsForPage(pageNum) {
-    return getFieldsForCurrentSigner().filter(f => f.pageNumber === pageNum);
-  }
-
-  function isFieldCompleted(field) {
-    if (field.type === FIELD_TYPES.SIGNATURE || field.type === FIELD_TYPES.INITIALS) {
-      return !!(signatures[field.id] || initials[field.id]);
-    }
-    return fieldValues[field.id] !== undefined && fieldValues[field.id] !== '';
-  }
-
-  function getCompletedFieldCount() {
-    const fields = getFieldsForCurrentSigner();
-    return fields.filter(isFieldCompleted).length;
-  }
-
-  function getTotalFieldCount() {
-    return getFieldsForCurrentSigner().length;
-  }
-
-  function getProgressPercentage() {
-    const total = getTotalFieldCount();
-    if (total === 0) return 100;
-    return Math.round((getCompletedFieldCount() / total) * 100);
-  }
-
-  function canSubmit() {
-    const fields = getFieldsForCurrentSigner();
-    const requiredFields = fields.filter(f => f.required);
-    return requiredFields.every(isFieldCompleted);
-  }
-
-  // Signature pad drawing
+  // Track container width for responsive PDF scaling
   useEffect(() => {
-    if (!activeSignatureField && !activeInitialField) return;
-
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#1e40af';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    let lastX = 0;
-    let lastY = 0;
-
-    function startDrawing(e) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-      const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-      setIsDrawing(true);
-      [lastX, lastY] = [x, y];
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-      const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-      
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      [lastX, lastY] = [x, y];
-    }
-
-    function stopDrawing() {
-      setIsDrawing(false);
-    }
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-    canvas.addEventListener('touchstart', startDrawing);
-    canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('touchend', stopDrawing);
-
-    return () => {
-      canvas.removeEventListener('mousedown', startDrawing);
-      canvas.removeEventListener('mousemove', draw);
-      canvas.removeEventListener('mouseup', stopDrawing);
-      canvas.removeEventListener('mouseout', stopDrawing);
-      canvas.removeEventListener('touchstart', startDrawing);
-      canvas.removeEventListener('touchmove', draw);
-      canvas.removeEventListener('touchend', stopDrawing);
+    if (!containerRef.current) return;
+    const update = () => {
+      if (containerRef.current) {
+        const w = Math.min(containerRef.current.clientWidth - 32, 850);
+        setPageWidth(Math.max(w, 300));
+      }
     };
-  }, [activeSignatureField, activeInitialField, isDrawing]);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
-  function clearSignature() {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
+  const handleFieldChange = useCallback((fieldId, value) => {
+    setFieldValues(prev => ({ ...prev, [fieldId]: value }));
+  }, []);
 
-  function saveSignature() {
-    const canvas = signatureCanvasRef.current;
-    if (!canvas) return;
-    
-    const dataUrl = canvas.toDataURL('image/png');
-    
-    if (activeSignatureField) {
-      setSignatures({ ...signatures, [activeSignatureField.id]: dataUrl });
-      setActiveSignatureField(null);
-    } else if (activeInitialField) {
-      setInitials({ ...initials, [activeInitialField.id]: dataUrl });
-      setActiveInitialField(null);
+  const clearSignature = useCallback((fieldId) => {
+    if (sigRefs.current[fieldId]) {
+      sigRefs.current[fieldId].clear();
     }
-    
-    clearSignature();
-    toast.success('Signature saved');
-  }
+    handleFieldChange(fieldId, '');
+  }, [handleFieldChange]);
 
-  // Typed signature
-  function useTypedSignature(field) {
-    const name = signer?.name || 'Your Name';
-    setSignatures({ ...signatures, [field.id]: name });
-    toast.success('Signature added');
-  }
-
-  function useTypedInitials(field) {
-    const name = signer?.name || 'Name';
-    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-    setInitials({ ...initials, [field.id]: initials });
-    toast.success('Initials added');
-  }
-
-  // Update field value
-  function updateFieldValue(fieldId, value) {
-    setFieldValues({ ...fieldValues, [fieldId]: value });
-  }
-
-  // Submit signed document
-  async function handleSubmit() {
-    if (!canSubmit()) {
-      toast.error('Please complete all required fields');
-      return;
+  const handleSubmit = async () => {
+    // Validate required fields
+    const fields = session?.fields || [];
+    for (const f of fields) {
+      if (f.required) {
+        const val = fieldValues[f.id];
+        if (f.type === FIELD_TYPES.SIGNATURE) {
+          if (sigRefs.current[f.id] && sigRefs.current[f.id].isEmpty()) {
+            setError(`Please complete the required field: ${f.label || 'Signature'}`);
+            return;
+          }
+        } else if (!val || val.trim() === '') {
+          setError(`Please fill in the required field: ${f.label || f.fieldName}`);
+          return;
+        }
+      }
     }
-
-    setSaving(true);
+    setError(null);
+    setSubmitting(true);
 
     try {
-      const requestRef = doc(db, 'documentRequests', request.id);
-      
-      // Update field values in request
-      const updatedFields = request.fields.map(field => {
-        const value = fieldValues[field.id] || '';
-        const signature = signatures[field.id] || null;
-        const initial = initials[field.id] || null;
-        
+      // Build field values array for the RPC
+      const valuesArray = fields.map(f => {
+        let value = fieldValues[f.id] || '';
+        let signatureImage = null;
+
+        if (f.type === FIELD_TYPES.SIGNATURE && sigRefs.current[f.id]) {
+          const sig = sigRefs.current[f.id];
+          if (!sig.isEmpty()) {
+            signatureImage = sig.toDataURL('image/png');
+            value = 'Signed';
+          }
+        }
+
         return {
-          ...field,
+          fieldId: f.id,
           value,
-          signature,
-          initial,
-          completedAt: Timestamp.now(),
+          signatureImage,
         };
       });
 
-      // Update signer status
-      const updatedSigners = request.signers.map(s => 
-        s.id === signer.id 
-          ? { 
-              ...s, 
-              status: SIGNER_STATUS.SIGNED, 
-              signedAt: Timestamp.now() 
-            }
-          : s
-      );
-
-      // Check if all signers have signed
-      const allSigned = updatedSigners.every(s => s.status === SIGNER_STATUS.SIGNED);
-      const nextSignerIndex = request.signers.findIndex(s => s.status !== SIGNER_STATUS.SIGNED);
-
-      await updateDoc(requestRef, {
-        fields: updatedFields,
-        signers: updatedSigners,
-        status: allSigned ? DOCUMENT_STATUS.COMPLETED : DOCUMENT_STATUS.SIGNED,
-        currentSignerOrder: nextSignerIndex === -1 ? request.signers.length : nextSignerIndex,
-        updatedAt: Timestamp.now(),
-        ...(allSigned && { completedAt: Timestamp.now() }),
+      const { data, error: rpcError } = await supabase.rpc('esign_submit_signing', {
+        p_token: token,
+        p_field_values: valuesArray,
       });
 
-      // Add audit entry
-      await addAuditEntry(requestId, {
-        event: AUDIT_EVENTS.DOCUMENT_SIGNED,
-        signerId: signer.id,
-        signerEmail: signer.email,
-        signerName: signer.name,
-      });
-
-      if (allSigned) {
-        // TODO: Generate signed PDF and send completion emails
-        await addAuditEntry(requestId, {
-          event: AUDIT_EVENTS.DOCUMENT_COMPLETED,
-        });
-      } else {
-        // Send email to next signer
-        const nextSigner = updatedSigners[nextSignerIndex];
-        if (nextSigner) {
-          // TODO: Send email notification
-        }
+      if (rpcError) throw new Error(rpcError.message);
+      if (!data || data.success === false) {
+        throw new Error(data?.error || 'Failed to submit signature');
       }
 
-      setCompleted(true);
-      toast.success('Document signed successfully!');
-
-    } catch (err) {
-      console.error('Error submitting document:', err);
-      toast.error('Failed to submit document');
+      setSubmitResult(data);
+      setSubmitted(true);
+    } catch (e) {
+      setError(e.message || 'An error occurred while submitting your signature.');
     } finally {
-      setSaving(false);
+      setSubmitting(false);
     }
-  }
+  };
 
-  // Loading state
+  const handleDecline = async () => {
+    setDeclining(true);
+    try {
+      const { data, error: rpcError } = await supabase.rpc('esign_decline_document', {
+        p_token: token,
+        p_reason: 'Declined by signer',
+      });
+
+      if (rpcError) throw new Error(rpcError.message);
+      if (!data || data.success === false) {
+        throw new Error(data?.error || 'Failed to decline document');
+      }
+
+      setSubmitted(true);
+      setSubmitResult({ documentStatus: 'declined' });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setDeclining(false);
+      setShowDecline(false);
+    }
+  };
+
+  // --- Loading state ---
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading document...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-slate-700 mx-auto mb-4" />
+          <p className="text-slate-600 text-lg">Loading your document…</p>
         </div>
       </div>
     );
   }
 
-  // Error state
-  if (error) {
+  // --- Error state ---
+  if (error && !submitted) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertCircle className="w-4 h-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Unable to Load Document</h2>
+            <p className="text-slate-600 mb-4">{error}</p>
+            <p className="text-sm text-slate-400">
+              If you believe this is an error, please contact M2 Fleet Communications.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Completed state
-  if (completed) {
+  // --- Submitted / completed state ---
+  if (submitted) {
+    const isCompleted = submitResult?.documentStatus === 'completed';
+    const isDeclined = submitResult?.documentStatus === 'declined';
+    const awaiting = submitResult?.documentStatus === 'awaiting_others';
+
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Document Signed</h1>
-          <p className="text-gray-600 mb-6">
-            You have successfully signed "{request?.name}". A copy will be sent to your email.
-          </p>
-          <div className="bg-white rounded-lg border p-4 text-left">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">Document</span>
-              <span className="font-medium">{request?.name}</span>
-            </div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">Signed</span>
-              <span className="font-medium">{new Date().toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Status</span>
-              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Completed</span>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            {isDeclined ? (
+              <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            ) : (
+              <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+            )}
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
+              {isDeclined ? 'Document Declined' : 'Signature Submitted!'}
+            </h2>
+            <p className="text-slate-600 mb-4">
+              {isDeclined
+                ? 'You have declined to sign this document.'
+                : isCompleted
+                ? 'All parties have signed. The document is now complete.'
+                : awaiting
+                ? 'Your signature has been recorded. We are waiting for other recipients to sign.'
+                : 'Your signature has been submitted successfully.'}
+            </p>
+            {!isDeclined && (
+              <p className="text-sm text-slate-400">
+                You will receive a copy of the completed document via email once all parties have signed.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const signerFields = getFieldsForCurrentSigner();
-  const pageFields = getFieldsForPage(currentPage);
+  // --- Signing form ---
+  const fields = session?.fields || [];
+  const doc = session?.document;
+  const recip = session?.recipient;
+
+  // Group fields by page
+  const fieldsByPage = {};
+  fields.forEach(f => {
+    const p = f.pageNumber || 1;
+    if (!fieldsByPage[p]) fieldsByPage[p] = [];
+    fieldsByPage[p].push(f);
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <FileText className="w-5 h-5 text-gray-400" />
-              <div>
-                <h1 className="font-semibold text-gray-900">{request?.name}</h1>
-                <p className="text-sm text-gray-500">
-                  Signing as: {signer?.name} ({signer?.role || 'Signer'})
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-sm text-gray-500">Progress</div>
-                <div className="font-medium">{getCompletedFieldCount()} / {getTotalFieldCount()} fields</div>
-              </div>
-              <div className="w-24">
-                <Progress value={getProgressPercentage()} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <PenTool className="w-5 h-5 text-blue-600 mt-0.5" />
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FileText className="w-6 h-6 text-slate-700" />
             <div>
-              <h3 className="font-medium text-blue-900">Please complete the following fields</h3>
-              <p className="text-sm text-blue-700 mt-1">
-                Fill in all required fields (marked with *) and click Submit when done.
-                Required fields are highlighted.
+              <h1 className="text-lg font-semibold text-slate-900">{doc?.name || 'Document'}</h1>
+              <p className="text-xs text-slate-500">
+                For: {recip?.name || 'You'} {recip?.email ? `(${recip.email})` : ''}
               </p>
             </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDecline(true)}
+            disabled={submitting}
+          >
+            Decline
+          </Button>
         </div>
+      </header>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* PDF Viewer */}
-          <div className="flex-1">
-            <div className="bg-white rounded-lg border shadow-sm">
-              {/* Page navigation */}
-              <div className="flex items-center justify-between px-4 py-3 border-b">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm text-gray-600">
-                  Page {currentPage} of {request?.pdfPageCount || 1}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(request?.pdfPageCount || 1, currentPage + 1))}
-                  disabled={currentPage === (request?.pdfPageCount || 1)}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* PDF content */}
-              <div className="p-4 overflow-auto" style={{ maxHeight: '70vh' }}>
-                <div className="relative inline-block mx-auto">
-                  <Document file={request?.originalPdfUrl}>
-                    <Page
-                      pageNumber={currentPage}
-                      scale={scale}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                    />
-                  </Document>
-
-                  {/* Render clickable fields */}
-                  {pageFields.map(field => {
-                    const isCompleted = isFieldCompleted(field);
-                    const isRequired = field.required;
-                    
-                    return (
-                      <div
-                        key={field.id}
-                        className={`absolute cursor-pointer transition-all ${
-                          isCompleted ? 'ring-2 ring-green-500' : isRequired ? 'ring-2 ring-orange-400' : ''
-                        }`}
-                        style={{
-                          left: field.position.x * scale,
-                          top: field.position.y * scale,
-                          width: field.width * scale,
-                          height: field.height * scale,
-                          backgroundColor: isCompleted ? '#10b98120' : FIELD_COLORS[field.type] + '30',
-                          borderColor: isCompleted ? '#10b981' : FIELD_COLORS[field.type],
-                          borderWidth: 2,
-                          borderStyle: 'solid',
-                          borderRadius: 4,
-                        }}
-                        onClick={() => {
-                          if (field.type === FIELD_TYPES.SIGNATURE) {
-                            setActiveSignatureField(field);
-                          } else if (field.type === FIELD_TYPES.INITIALS) {
-                            setActiveInitialField(field);
-                          }
-                        }}
-                      >
-                        {/* Show value or placeholder */}
-                        {field.type === FIELD_TYPES.SIGNATURE && signatures[field.id] ? (
-                          <img 
-                            src={signatures[field.id]} 
-                            alt="Signature" 
-                            className="w-full h-full object-contain p-1"
-                          />
-                        ) : field.type === FIELD_TYPES.INITIALS && initials[field.id] ? (
-                          <div className="w-full h-full flex items-center justify-center text-xs font-bold p-1">
-                            {initials[field.id]}
-                          </div>
-                        ) : fieldValues[field.id] ? (
-                          <div className="w-full h-full flex items-center justify-center text-xs p-1 truncate">
-                            {fieldValues[field.id]}
-                          </div>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs p-1 text-gray-600">
-                            {field.label}
-                            {isRequired && '*'}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+      {error && (
+        <div className="max-w-5xl mx-auto px-4 pt-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 text-red-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{error}</span>
           </div>
+        </div>
+      )}
 
-          {/* Fields panel */}
-          <div className="w-full lg:w-80 space-y-4">
-            <div className="bg-white rounded-lg border shadow-sm p-4">
-              <h3 className="font-medium mb-4">Your Fields</h3>
-              <div className="space-y-3">
-                {signerFields.map(field => (
-                  <div
-                    key={field.id}
-                    className={`p-3 rounded-lg border ${
-                      isFieldCompleted(field) 
-                        ? 'border-green-300 bg-green-50' 
-                        : field.required 
-                          ? 'border-orange-300 bg-orange-50' 
-                          : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </span>
-                      <span className="text-xs text-gray-400">P{field.pageNumber}</span>
-                    </div>
-
-                    {/* Signature field */}
-                    {field.type === FIELD_TYPES.SIGNATURE && (
-                      <div className="space-y-2">
-                        {signatures[field.id] ? (
-                          <img 
-                            src={signatures[field.id]} 
-                            alt="Signature" 
-                            className="h-12 w-full border rounded bg-white p-1"
-                          />
-                        ) : (
-                          <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => setActiveSignatureField(field)}
-                            >
-                              <PenTool className="w-3 h-3 mr-1" />
-                              Draw
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="flex-1"
-                              onClick={() => useTypedSignature(field)}
-                            >
-                              <Type className="w-3 h-3 mr-1" />
-                              Type
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Initials field */}
-                    {field.type === FIELD_TYPES.INITIALS && (
-                      <div className="space-y-2">
-                        {initials[field.id] ? (
-                          <div className="h-8 w-full border rounded bg-white flex items-center justify-center font-bold">
-                            {initials[field.id]}
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => setActiveInitialField(field)}
-                            >
-                              <PenTool className="w-3 h-3 mr-1" />
-                              Draw
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="flex-1"
-                              onClick={() => useTypedInitials(field)}
-                            >
-                              <Type className="w-3 h-3 mr-1" />
-                              Type
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Text fields */}
-                    {[FIELD_TYPES.TEXT, FIELD_TYPES.FULL_NAME, FIELD_TYPES.COMPANY, FIELD_TYPES.TITLE, FIELD_TYPES.PHONE, FIELD_TYPES.CUSTOM].includes(field.type) && (
-                      <Input
-                        value={fieldValues[field.id] || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
-                        placeholder={field.label}
-                        className="h-8"
-                      />
-                    )}
-
-                    {/* Email field */}
-                    {field.type === FIELD_TYPES.EMAIL && (
-                      <Input
-                        type="email"
-                        value={fieldValues[field.id] || ''}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
-                        placeholder="email@example.com"
-                        className="h-8"
-                      />
-                    )}
-
-                    {/* Date field */}
-                    {field.type === FIELD_TYPES.DATE && (
-                      <Input
-                        type="date"
-                        value={fieldValues[field.id] || new Date().toISOString().split('T')[0]}
-                        onChange={(e) => updateFieldValue(field.id, e.target.value)}
-                        className="h-8"
-                      />
-                    )}
-
-                    {/* Checkbox field */}
-                    {field.type === FIELD_TYPES.CHECKBOX && (
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={fieldValues[field.id] === true}
-                          onChange={(e) => updateFieldValue(field.id, e.target.checked)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-gray-600">Checked</span>
-                      </label>
-                    )}
-
-                    {/* Dropdown field */}
-                    {field.type === FIELD_TYPES.DROPDOWN && field.options && (
-                      <Select
-                        value={fieldValues[field.id] || ''}
-                        onValueChange={(v) => updateFieldValue(field.id, v)}
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.options.map((option, i) => (
-                            <SelectItem key={i} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Submit button */}
-            <Button
-              className="w-full h-12 text-lg"
-              onClick={handleSubmit}
-              disabled={!canSubmit() || saving}
+      <div ref={containerRef} className="max-w-5xl mx-auto px-4 py-6">
+        {/* PDF Document */}
+        {pdfUrl ? (
+          <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-6 overflow-hidden">
+            <Document
+              file={pdfUrl}
+              loading={<div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>}
+              error={<div className="flex items-center justify-center py-20 text-red-500"><AlertCircle className="w-5 h-5 mr-2" /> Could not load PDF.</div>}
             >
-              {saving ? (
+              {Object.keys(fieldsByPage).sort((a, b) => a - b).map(pageNum => (
+                <div key={pageNum} className="relative border-b border-slate-100 last:border-b-0">
+                  <Page pageNumber={parseInt(pageNum)} width={pageWidth} renderTextLayer={false} renderAnnotationLayer={false} />
+                  {/* Field overlays */}
+                  {fieldsByPage[pageNum].map(field => (
+                    <FieldOverlay
+                      key={field.id}
+                      field={field}
+                      value={fieldValues[field.id]}
+                      sigRef={el => { if (el) sigRefs.current[field.id] = el; }}
+                      onChange={v => handleFieldChange(field.id, v)}
+                      onClear={() => clearSignature(field.id)}
+                      pageWidth={pageWidth}
+                      originalWidth={doc?.pageWidth || 612}
+                      originalHeight={doc?.pageHeight || 792}
+                    />
+                  ))}
+                </div>
+              ))}
+            </Document>
+          </div>
+        ) : pdfError ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center text-red-600 mb-6">
+            {pdfError} Please contact M2 Fleet to request a new signing link.
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+          </div>
+        )}
+
+        {/* Submit button */}
+        {pdfUrl && (
+          <div className="flex items-center justify-end gap-3 pb-8">
+            <Button
+              size="lg"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="bg-slate-900 hover:bg-slate-800 text-white"
+            >
+              {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting...
+                  Submitting…
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Submit Signature
+                  <PenTool className="w-4 h-4 mr-2" />
+                  Sign & Submit
                 </>
               )}
             </Button>
-
-            {!canSubmit() && (
-              <p className="text-sm text-center text-orange-600">
-                Please complete all required fields
-              </p>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Signature pad modal */}
-      <Dialog 
-        open={!!activeSignatureField || !!activeInitialField} 
-        onOpenChange={() => {
-          setActiveSignatureField(null);
-          setActiveInitialField(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {activeSignatureField ? 'Add Your Signature' : 'Add Your Initials'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <canvas
-              ref={signatureCanvasRef}
-              width={400}
-              height={activeSignatureField ? 150 : 80}
-              className="w-full border-2 border-gray-300 rounded-lg bg-white cursor-crosshair touch-none"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={clearSignature}>
+      {/* Decline confirmation */}
+      {showDecline && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowDecline(false)}>
+          <Card className="max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Decline to Sign?</h3>
+              <p className="text-sm text-slate-600 mb-4">
+                This will mark the document as declined. The sender will be notified. This action cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowDecline(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleDecline} disabled={declining}>
+                  {declining ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Yes, Decline'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Field overlay component ---
+function FieldOverlay({ field, value, sigRef, onChange, onClear, pageWidth, originalWidth, originalHeight }) {
+  const scaleX = pageWidth / originalWidth;
+  const scaleY = scaleX; // assume uniform scale
+  const left = (field.x || 50) * scaleX;
+  const top = (field.y || 50) * scaleY;
+  const width = (field.width || 200) * scaleX;
+  const height = (field.height || 40) * scaleY;
+
+  const isSignature = field.type === FIELD_TYPES.SIGNATURE;
+
+  return (
+    <div
+      className="absolute"
+      style={{ left, top, width, height }}
+    >
+      {field.label && (
+        <span className="absolute -top-5 left-0 text-xs text-slate-500 whitespace-nowrap">
+          {field.label}{field.required && <span className="text-red-500"> *</span>}
+        </span>
+      )}
+      {isSignature ? (
+        <div className="w-full h-full border-2 border-dashed border-slate-300 rounded bg-white relative">
+          <SignatureCanvas
+            ref={sigRef}
+            canvasProps={{ className: 'w-full h-full', style: { width: '100%', height: '100%' } }}
+            onEnd={() => onChange('Signed')}
+          />
+          {value && (
+            <button
+              onClick={onClear}
+              className="absolute top-0 right-0 text-xs text-red-500 hover:text-red-700 px-1"
+            >
               Clear
-            </Button>
-            <Button onClick={saveSignature}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </button>
+          )}
+        </div>
+      ) : field.type === FIELD_TYPES.CHECKBOX ? (
+        <input
+          type="checkbox"
+          checked={value === true || value === 'true' || value === 'on'}
+          onChange={e => onChange(e.target.checked)}
+          className="w-5 h-5 mt-1"
+        />
+      ) : (
+        <input
+          type={field.type === FIELD_TYPES.DATE ? 'date' : field.type === FIELD_TYPES.EMAIL ? 'email' : 'text'}
+          value={value || ''}
+          onChange={e => onChange(e.target.value)}
+          placeholder={field.label || field.fieldName}
+          className="w-full h-full border-2 border-dashed border-slate-300 rounded bg-white/90 px-2 text-sm focus:border-slate-500 focus:outline-none"
+        />
+      )}
     </div>
   );
 }

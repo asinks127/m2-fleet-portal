@@ -7,3 +7,5 @@ node_modules/
 .supabase_token
 *.log
 .dev/
+supabase/.temp/
+test_*.mjs

@@ -54,7 +54,9 @@ const techName = (u) => u?.full_name || u?.displayName || u?.fullName || u?.disp
 
 const callWebhook = async (record) => {
   try {
+    await fetch('https://austin1.zo.space/api/velo-survey-webhook', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: record.id,
         veloPM: record.pmName,
