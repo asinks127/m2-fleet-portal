@@ -18,8 +18,6 @@ import { format } from 'date-fns';
 
 // Public survey page (PM-facing). The scheduled Zo agent emails this link from scheduling@m2fleetcom.com.
 const SURVEY_PAGE_URL = 'https://austin1.zo.space/velo-survey';
-const WEBHOOK_URL = 'https://survey-webhook-austin1.zocomputer.io/hook';
-const WEBHOOK_SECRET = 'm2-survey-wh-2026';
 
 // ---- helpers ----
 const parseTechIds = (ti) => {
@@ -56,9 +54,7 @@ const techName = (u) => u?.full_name || u?.displayName || u?.fullName || u?.disp
 
 const callWebhook = async (record) => {
   try {
-    await fetch(WEBHOOK_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WEBHOOK_SECRET}` },
       body: JSON.stringify({
         id: record.id,
         veloPM: record.pmName,
