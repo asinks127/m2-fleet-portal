@@ -1,20 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient.js';
-import { db, storage } from '@/config/firebase.js';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  Timestamp,
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { createTemplate, getTemplate } from '@/lib/documentSigning/esignService.js';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { 
   PenTool, Type, Calendar, CheckSquare, List, User, Mail, Building, 
@@ -44,7 +30,6 @@ import {
   DOCUMENT_STATUS,
   createTemplateField,
   createSigner,
-  createTemplate,
   DEFAULT_FIELD_CONFIG,
 } from '@/lib/documentSigning/models.js';
 
@@ -133,7 +118,7 @@ export default function TemplateBuilder({ onSave, onCancel, editTemplateId = nul
 
   // Load template if editing
   useEffect(() => {
-    if (editTemplateId && db) {
+    if (editTemplateId) {
       loadTemplate(editTemplateId);
     }
   }, [editTemplateId]);
@@ -141,18 +126,15 @@ export default function TemplateBuilder({ onSave, onCancel, editTemplateId = nul
   async function loadTemplate(templateId) {
     try {
       setLoading(true);
-      const docRef = doc(db, 'documentTemplates', templateId);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setName(data.name);
-        setDescription(data.description || '');
-        setDocumentType(data.documentType);
-        setPdfUrl(data.originalPdfUrl);
-        setFields(data.fields || []);
-        setSigners(data.signers || []);
-        setSettings(data.settings || settings);
+      const tmpl = await getTemplate(templateId);
+      if (tmpl) {
+        setName(tmpl.name);
+        setDescription(tmpl.description || '');
+        setDocumentType(tmpl.documentType || DOCUMENT_TYPES.CUSTOM);
+        setPdfUrl(tmpl.originalPdfUrl);
+        setFields(tmpl.fields || []);
+        setSigners(tmpl.signers || []);
+        setSettings(tmpl.settings || settings);
       }
     } catch (error) {
       console.error('Error loading template:', error);
@@ -323,55 +305,25 @@ export default function TemplateBuilder({ onSave, onCancel, editTemplateId = nul
     setErrors({});
 
     try {
-      if (!db) {
-        throw new Error('Firebase not initialized');
-      }
-
-      let uploadedPdfUrl = pdfUrl;
-      let storagePath = null;
-
-      // Upload PDF if it's a new file
-      if (pdfFile) {
-        storagePath = `templates/${Date.now()}_${pdfFile.name}`;
-        const storageRef = ref(storage, storagePath);
-        await uploadBytes(storageRef, pdfFile, { contentType: 'application/pdf' });
-        uploadedPdfUrl = await getDownloadURL(storageRef);
-      }
-
       const templateData = {
         name,
         description,
         documentType,
-        originalPdfUrl: uploadedPdfUrl,
-        storagePath,
+        originalPdfUrl: pdfUrl,
         pdfPageCount,
         fields,
-        signers: signers.map(s => ({ ...s })), // Clean copy
+        signers: signers.map(s => ({ ...s })),
         settings,
         createdBy: currentUser?.id,
         isActive: true,
       };
 
       let savedTemplate;
-      
+
       if (editTemplateId) {
-        // Update existing
-        const docRef = doc(db, 'documentTemplates', editTemplateId);
-        await updateDoc(docRef, {
-          ...templateData,
-          updatedAt: Timestamp.now(),
-        });
-        savedTemplate = { id: editTemplateId, ...templateData };
+        savedTemplate = await createTemplate(templateData, pdfFile, editTemplateId);
       } else {
-        // Create new
-        const docRef = doc(collection(db, 'documentTemplates'));
-        await setDoc(docRef, {
-          ...templateData,
-          id: docRef.id,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        });
-        savedTemplate = { id: docRef.id, ...templateData };
+        savedTemplate = await createTemplate(templateData, pdfFile);
       }
 
       toast.success('Template saved successfully');
