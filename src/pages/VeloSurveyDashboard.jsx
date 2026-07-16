@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 
 // Public survey page (PM-facing). The scheduled Zo agent emails this link from scheduling@m2fleetcom.com.
 const SURVEY_PAGE_URL = 'https://austin1.zo.space/velo-survey';
+const WEBHOOK_URL = 'https://survey-webhook-austin1.zocomputer.io/hook';
+const WEBHOOK_SECRET = 'm2-survey-wh-2026';
 
 // ---- helpers ----
 const parseTechIds = (ti) => {
@@ -51,6 +53,24 @@ const StatusBadge = ({ status }) => {
 };
 
 const techName = (u) => u?.full_name || u?.displayName || u?.fullName || u?.display_name || u?.email || 'Unknown';
+
+const callWebhook = async (record) => {
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WEBHOOK_SECRET}` },
+      body: JSON.stringify({
+        id: record.id,
+        veloPM: record.pmName,
+        veloPMEmail: record.pmEmail,
+        projectName: record.projectName,
+        surveyLink: record.surveyLink,
+      }),
+    });
+  } catch (e) {
+    console.warn('Webhook call failed, automation will retry:', e);
+  }
+};
 
 export default function VeloSurveyDashboard() {
   const [tab, setTab] = useState('surveys'); // surveys | ranking | pms
@@ -150,8 +170,13 @@ export default function VeloSurveyDashboard() {
     if (!pm) { setActionStatus({ type: 'error', message: 'Select a valid Project Manager.' }); return; }
     setIsWorking(true);
     try {
-      await VeloSurvey.create(buildSurveyRow(newSurvey.projectName, pm, newSurvey.selectedTechIds, 'manual'));
-      setActionStatus({ type: 'success', message: `Survey queued for ${pm.name} (${pm.email}). Sent from scheduling@m2fleetcom.com within 5 min.` });
+      const created = await VeloSurvey.create(buildSurveyRow(newSurvey.projectName, pm, newSurvey.selectedTechIds, 'manual'));
+      if (!created) throw new Error('Create failed');
+
+      await callWebhook({ id: created.id, pmName: pm.name, pmEmail: pm.email, projectName: newSurvey.projectName, surveyLink: created.surveyLink });
+      await VeloSurvey.update(created.id, { status: 'sent', sentDate: new Date().toISOString() });
+
+      setActionStatus({ type: 'success', message: `Survey sent to ${pm.name} (${pm.email}).` });
       setShowCreate(false);
       setNewSurvey({ projectName: '', pmId: '', selectedTechIds: [] });
       loadData();
@@ -170,7 +195,12 @@ export default function VeloSurveyDashboard() {
       let ok = 0;
       for (const pm of selectedPms) {
         try {
-          await VeloSurvey.create(buildSurveyRow(bulk.projectName, pm, bulk.selectedTechIds, 'manual')); ok++;
+          const created = await VeloSurvey.create(buildSurveyRow(bulk.projectName, pm, bulk.selectedTechIds, 'manual'));
+          if (!created) throw new Error('Create failed');
+
+          await callWebhook({ id: created.id, pmName: pm.name, pmEmail: pm.email, projectName: bulk.projectName, surveyLink: created.surveyLink });
+          await VeloSurvey.update(created.id, { status: 'sent', sentDate: new Date().toISOString() });
+          ok++;
         }
         catch (e) { console.warn('bulk row failed', pm, e); }
       }
