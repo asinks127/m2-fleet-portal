@@ -157,7 +157,6 @@ export default function VeloSurveyDashboard() {
       status: 'pending_send',
       surveyType,
       autoTriggered: surveyType === 'auto',
-      sentDate: new Date().toISOString(),
     };
   };
 
