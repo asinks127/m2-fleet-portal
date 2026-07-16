@@ -150,23 +150,8 @@ export default function VeloSurveyDashboard() {
     if (!pm) { setActionStatus({ type: 'error', message: 'Select a valid Project Manager.' }); return; }
     setIsWorking(true);
     try {
-      const row = buildSurveyRow(newSurvey.projectName, pm, newSurvey.selectedTechIds, 'manual');
-      const created = await VeloSurvey.create(row);
-
-      try {
-        const resp = await fetch('/api/sendSurveyNotification', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: pm.email, pmName: pm.name, projectName: newSurvey.projectName, surveyLink: row.surveyLink }),
-        });
-        if (resp.ok) {
-          await VeloSurvey.update(created.id, { status: 'sent', sentDate: new Date().toISOString() });
-        }
-      } catch (emailErr) {
-        console.warn('Email send failed, survey left as pending_send for retry:', emailErr);
-      }
-
-      setActionStatus({ type: 'success', message: `Survey sent to ${pm.name} (${pm.email}).` });
+      await VeloSurvey.create(buildSurveyRow(newSurvey.projectName, pm, newSurvey.selectedTechIds, 'manual'));
+      setActionStatus({ type: 'success', message: `Survey queued for ${pm.name} (${pm.email}). It will be sent from scheduling@m2fleetcom.com shortly.` });
       setShowCreate(false);
       setNewSurvey({ projectName: '', pmId: '', selectedTechIds: [] });
       loadData();
@@ -185,24 +170,11 @@ export default function VeloSurveyDashboard() {
       let ok = 0;
       for (const pm of selectedPms) {
         try {
-          const row = buildSurveyRow(bulk.projectName, pm, bulk.selectedTechIds, 'manual');
-          const created = await VeloSurvey.create(row); ok++;
-          try {
-            const resp = await fetch('/api/sendSurveyNotification', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ to: pm.email, pmName: pm.name, projectName: bulk.projectName, surveyLink: row.surveyLink }),
-            });
-            if (resp.ok) {
-              await VeloSurvey.update(created.id, { status: 'sent', sentDate: new Date().toISOString() });
-            }
-          } catch (emailErr) {
-            console.warn('Bulk email send failed for', pm.email, emailErr);
-          }
+          await VeloSurvey.create(buildSurveyRow(bulk.projectName, pm, bulk.selectedTechIds, 'manual')); ok++;
         }
         catch (e) { console.warn('bulk row failed', pm, e); }
       }
-      setActionStatus({ type: 'success', message: `Sent ${ok} of ${selectedPms.length} surveys via scheduling@m2fleetcom.com.` });
+      setActionStatus({ type: 'success', message: `Queued ${ok} of ${selectedPms.length} surveys. They will be sent from scheduling@m2fleetcom.com shortly.` });
       setShowBulk(false);
       setBulk({ projectName: '', pmIds: [], selectedTechIds: [] });
       loadData();
