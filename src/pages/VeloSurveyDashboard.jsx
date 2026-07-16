@@ -150,9 +150,8 @@ export default function VeloSurveyDashboard() {
     if (!pm) { setActionStatus({ type: 'error', message: 'Select a valid Project Manager.' }); return; }
     setIsWorking(true);
     try {
-      const created = await VeloSurvey.create(buildSurveyRow(newSurvey.projectName, pm, newSurvey.selectedTechIds, 'manual'));
-      await fetch('/api/sendSurveyNotification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: pm.email, pmName: pm.name, projectName: newSurvey.projectName, surveyLink: created.surveyLink, surveyId: created.id }) });
-      setActionStatus({ type: 'success', message: `Survey sent to ${pm.name} (${pm.email}) from scheduling@m2fleetcom.com.` });
+      await VeloSurvey.create(buildSurveyRow(newSurvey.projectName, pm, newSurvey.selectedTechIds, 'manual'));
+      setActionStatus({ type: 'success', message: `Survey queued for ${pm.name} (${pm.email}). Sent from scheduling@m2fleetcom.com within 5 min.` });
       setShowCreate(false);
       setNewSurvey({ projectName: '', pmId: '', selectedTechIds: [] });
       loadData();
@@ -171,9 +170,7 @@ export default function VeloSurveyDashboard() {
       let ok = 0;
       for (const pm of selectedPms) {
         try {
-          const created = await VeloSurvey.create(buildSurveyRow(bulk.projectName, pm, bulk.selectedTechIds, 'manual'));
-          await fetch('/api/sendSurveyNotification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: pm.email, pmName: pm.name, projectName: bulk.projectName, surveyLink: created.surveyLink, surveyId: created.id }) });
-          ok++;
+          await VeloSurvey.create(buildSurveyRow(bulk.projectName, pm, bulk.selectedTechIds, 'manual')); ok++;
         }
         catch (e) { console.warn('bulk row failed', pm, e); }
       }
