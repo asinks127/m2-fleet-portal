@@ -108,6 +108,8 @@ async function runApiHandler(name, req, res, body) {
     const candidates = [
       path.join(root, `${name}.js`),
       path.join(root, `${name}.ts`),
+      path.join(root, 'api', `${name}.js`),
+      path.join(root, 'api', `${name}.ts`),
     ];
 
     let modPath = null;
@@ -139,8 +141,11 @@ async function runApiHandler(name, req, res, body) {
       return json(res, 500, { error: `Invalid API handler: ${name}` });
     }
 
-    req.body = body;
+    req.body = body?.body || body;
     req.query = Object.fromEntries(new URL(req.url, `http://${req.headers.host}`).searchParams.entries());
+    if (body?.method) {
+      req.method = body.method;
+    }
 
     res.status = (code) => {
       res.statusCode = code;
@@ -201,7 +206,8 @@ const server = http.createServer(async (req, res) => {
       if (raw) {
         try { body = JSON.parse(raw); } catch { body = raw; }
       }
-      await runApiHandler(name, req, res, body);
+      const handlerReq = { method: req.method, body, query: {}, url: req.url, headers: req.headers };
+      await runApiHandler(name, req, res, handlerReq);
     });
     return;
   }
