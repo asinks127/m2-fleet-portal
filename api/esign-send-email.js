@@ -1,20 +1,19 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+let _transporter = null;
 
-transporter.verify((error) => {
-  if (error) {
-    console.error('SMTP connection error:', error.message);
-  } else {
-    console.log('SMTP server ready for esign emails');
-  }
-});
+function getTransporter() {
+  if (_transporter) return _transporter;
+  _transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+  console.log('SMTP transporter created for', process.env.GMAIL_USER);
+  return _transporter;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,15 +23,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = await new Promise((resolve, reject) => {
-      let data = '';
-      req.on('data', chunk => { data += chunk; });
-      req.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch (e) { reject(e); }
-      });
-      req.on('error', reject);
-    });
+    const body = req.body || {};
 
     const { to, subject, signingUrl, recipientName, message, documentName } = body;
 
@@ -42,18 +33,15 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'GMAIL_USER or GMAIL_APP_PASSWORD environment variable not set' }));
+      return;
+    }
+
     const name = recipientName || 'there';
     const doc = documentName || 'a document';
-    const bodyText = message || `Hello ${name},
-
-You have been asked to sign ${doc}.
-
-Please review and sign the document at your earliest convenience using the link below:
-
-${signingUrl}
-
-Thank you,
-M2 Fleet Communications`;
+    const bodyText = message || `Hello ${name},\n\nYou have been asked to sign ${doc}.\n\nPlease review and sign the document at your earliest convenience using the link below:\n\n${signingUrl}\n\nThank you,\nM2 Fleet Communications`;
 
     const htmlBody = message ? message : `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -70,6 +58,7 @@ M2 Fleet Communications`;
         <p style="color: #9ca3af; font-size: 12px;">This is an automated message from M2 Fleet Communications. Please do not reply to this email.</p>
       </div>`;
 
+    const transporter = getTransporter();
     const mailOptions = {
       from: `"M2 Fleet Communications" <${process.env.GMAIL_USER}>`,
       to,

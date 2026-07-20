@@ -105,7 +105,7 @@ export default function DocumentsAdmin() {
     try {
       const recip = await resendToRecipient(recipientId);
       const signingUrl = `${SIGNING_PAGE_BASE}/${recip.document_id}/${recip.token_hash}`;
-      const resp = await fetch('/api/esign-send-email', {
+      const resp = await fetch('https://m23for3-15-portal-live-austin1.zocomputer.io/api/esign-send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
@@ -840,7 +840,7 @@ function SendModal({ templates, contractors, settings, onClose, onSent, showToas
       for (const recip of (fullDoc.esign_recipients || [])) {
         const signingUrl = `${signingBase}/${doc.id}/${recip.token_hash}`;
         try {
-          await fetch('/api/esign-send-email', {
+          await fetch('https://m23for3-15-portal-live-austin1.zocomputer.io/api/esign-send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({
