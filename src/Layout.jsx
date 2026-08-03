@@ -19,7 +19,7 @@ const NavLink = ({ href, children, icon: Icon }) => {
       to={href}
       className={`flex items-center px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
         isActive
-          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+          ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md'
           : 'text-gray-200 hover:bg-white/10 hover:text-white'
       }`}
     >
@@ -274,16 +274,16 @@ function PrivateLayout({ children, currentPageName }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-50 via-green-50 to-purple-50">
         <div className="text-center">
            <div className="relative">
-             <Truck className="w-16 h-16 text-blue-600 animate-bounce mx-auto mb-4" />
-             <Sparkles className="w-8 h-8 text-indigo-500 absolute -top-2 -right-2 animate-pulse" />
+             <Truck className="w-16 h-16 text-green-600 animate-bounce mx-auto mb-4" />
+             <Sparkles className="w-8 h-8 text-emerald-500 absolute -top-2 -right-2 animate-pulse" />
            </div>
            <span className="text-xl font-semibold text-gray-700">Loading M2 Fleet Portal...</span>
            <div className="mt-4 h-2 w-48 bg-gray-200 rounded-full overflow-hidden mx-auto">
              {/* The 'loading' animation must be defined in tailwind.config.js or a global CSS file for this to work */}
-             <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 animate-[loading_1.5s_ease-in-out_infinite]"></div>
+             <div className="h-full bg-gradient-to-r from-green-600 to-emerald-600 animate-[loading_1.5s_ease-in-out_infinite]"></div>
            </div>
         </div>
       </div>
@@ -292,9 +292,9 @@ function PrivateLayout({ children, currentPageName }) {
 
   if (!user) {
     return (
-        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-50 via-green-50 to-purple-50">
              <div className="flex items-center space-x-2">
-                <Truck className="w-8 h-8 text-blue-600 animate-pulse" />
+                <Truck className="w-8 h-8 text-green-600 animate-pulse" />
                 <span className="text-xl font-semibold text-gray-700">Redirecting to sign in...</span>
              </div>
         </div>
@@ -359,10 +359,10 @@ function PrivateLayout({ children, currentPageName }) {
 
   if (isVeloPM && veloRestrictedPages.includes(currentPageNameFromPath)) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-green-50 via-green-50 to-purple-50">
         <div className="text-center p-8 bg-white rounded-2xl shadow-2xl max-w-md animate-scale-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <Star className="w-8 h-8 text-blue-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+            <Star className="w-8 h-8 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
           <p className="text-gray-600 mb-6">
@@ -415,20 +415,20 @@ function PrivateLayout({ children, currentPageName }) {
   }
 
   const Sidebar = () => (
-    <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-green-900 to-green-900 text-white relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-dots opacity-10"></div>
       
       <div className="relative z-10 p-4 border-b border-white/10 flex items-center justify-between">
          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-lg">
+            <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg">
               <Truck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-lg font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              <span className="text-lg font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
                 M2 Fleet Portal
               </span>
-              <div className="flex items-center gap-1 text-xs text-blue-200">
+              <div className="flex items-center gap-1 text-xs text-green-200">
                 <Sparkles className="w-3 h-3" />
                 <span>v2.0</span>
               </div>
@@ -479,7 +479,7 @@ function PrivateLayout({ children, currentPageName }) {
         )}
         <div className="text-sm text-gray-300 mb-3">
             <div className="font-semibold text-white">{user?.user_metadata?.full_name || user.email}</div>
-            <div className="text-xs text-blue-200 mt-1">
+            <div className="text-xs text-green-200 mt-1">
               {isVeloPM && "Velo PM Survey Portal"}
               {isM2PM && "Project Manager Portal"}
               {isContractor && !isAdmin && !isQC && !isVeloPM && "Contractor Portal"}
@@ -513,7 +513,7 @@ function PrivateLayout({ children, currentPageName }) {
             </Button>
             <h1 className="text-lg font-semibold ml-4">{currentPageName}</h1>
         </header>
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-gray-50 via-green-50/30 to-green-50/30">
           {children}
         </main>
       </div>
@@ -527,7 +527,7 @@ export default function Layout({ children, currentPageName }) {
 
   if (isCurrentPagePublic) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-green-50/30">
         {children}
       </div>
     );
