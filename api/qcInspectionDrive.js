@@ -9,6 +9,7 @@
 // GET                                        -> { pending: [...], failed: [...], filed: n }
 import { supabase, getAuthUser } from '../_lib/supabaseServer.js';
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const ROOT_FOLDER_ID = '0AG5XubOTYKLFUk9PVA';
@@ -229,7 +230,7 @@ async function fileInspection(inspectionId) {
 
   const pdfUpload = await drive.files.create({
     requestBody: { name: `${baseName}.pdf`, parents: [reportsFolderId] },
-    media: { mimeType: 'application/pdf', body: Buffer.from(pdfBytes) },
+    media: { mimeType: 'application/pdf', body: Readable.from(Buffer.from(pdfBytes)) },
     fields: 'id, webViewLink',
     supportsAllDrives: true,
   });
@@ -241,7 +242,7 @@ async function fileInspection(inspectionId) {
     try {
       const up = await drive.files.create({
         requestBody: { name: `${baseName} - photo-${i + 1}.${ext}`, parents: [reportsFolderId] },
-        media: { mimeType: photo.mimeType, body: photo.buffer },
+        media: { mimeType: photo.mimeType, body: Readable.from(photo.buffer) },
         fields: 'id, webViewLink',
         supportsAllDrives: true,
       });
@@ -260,7 +261,6 @@ async function fileInspection(inspectionId) {
       driveFolderId: reportsFolderId,
       driveError: null,
       driveFiledAt: new Date().toISOString(),
-      drivePhotoIds: photoUploads.map((p) => p.id),
     })
     .eq('id', inspectionId);
   if (updError) throw new Error(`Filed to Drive but could not update record: ${updError.message}`);
