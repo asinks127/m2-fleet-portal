@@ -193,7 +193,7 @@ async function buildInspectionPdf(inspection, tech, photoBuffers) {
   return pdf.save();
 }
 
-async function fileInspection(inspectionId) {
+export async function fileInspection(inspectionId) {
   const { data: inspection, error } = await supabase.from('QCInspection').select('*').eq('id', inspectionId).single();
   if (error || !inspection) throw new Error(`Inspection ${inspectionId} not found`);
 

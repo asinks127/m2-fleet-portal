@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     let refiled = false;
     if (current.driveStatus === 'filed') {
       try {
-        const { default: fileInspection } = await import('./qcInspectionDrive.js');
+        const { fileInspection } = await import('./qcInspectionDrive.js');
         await fileInspection(inspectionId);
         refiled = true;
       } catch (e) {
