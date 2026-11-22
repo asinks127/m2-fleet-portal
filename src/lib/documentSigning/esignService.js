@@ -394,3 +394,36 @@ export async function getContractors() {
   }
   return data || [];
 }
+
+export async function getCompletedSignatureRequests() {
+  const { data: sigReqs, error } = await supabase
+    .from('SignatureRequest')
+    .select('id, documentid, documenttitle, technitianname, technitianemail, completedat, createdat, status')
+    .eq('status', 'Completed')
+    .order('completedat', { ascending: false })
+    .limit(100);
+
+  if (error || !sigReqs?.length) return [];
+
+  const docIds = [...new Set(sigReqs.map(r => r.documentid).filter(Boolean))];
+  let docMap = {};
+  if (docIds.length) {
+    const { data: docs } = await supabase
+      .from('SignableDocument')
+      .select('id, title, fileUrl')
+      .in('id', docIds);
+    (docs || []).forEach(d => { docMap[d.id] = d; });
+  }
+
+  return sigReqs.map(r => ({
+    id: `legacy_${r.id}`,
+    title: r.documenttitle || (docMap[r.documentid]?.title || 'Untitled Document'),
+    status: 'completed',
+    contractor_name: r.technitianname || 'Unknown',
+    contractor_email: r.technitianemail || '',
+    completed_at: r.completedat,
+    created_at: r.createdat,
+    fileUrl: docMap[r.documentid]?.fileUrl || null,
+    _isLegacy: true,
+  }));
+}

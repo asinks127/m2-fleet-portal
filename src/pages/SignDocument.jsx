@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label.jsx';
 import { Checkbox } from '@/components/ui/checkbox.jsx';
 import { Loader2, CheckCircle, XCircle, FileSignature, Download, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, MousePointer } from 'lucide-react';
 import { format } from 'date-fns';
-import * as pdfjsLib from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs';
 
 // Set up PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -183,6 +183,7 @@ export default function SignDocument() {
     const [totalPages, setTotalPages] = useState(0);
     const [scale, setScale] = useState(1.2);
     const [pdfLoading, setPdfLoading] = useState(true);
+    const [pdfUrl, setPdfUrl] = useState('');
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
 
@@ -212,7 +213,7 @@ export default function SignDocument() {
 
             try {
                 const payload = token ? { signatureToken: token } : { signatureRequestId: id };
-                const { data } = await getSignatureRequestData(payload);
+                const data = await getSignatureRequestData(payload);
 
                 if (data.success) {
                     setSignatureRequest(data.signatureRequest);
@@ -232,42 +233,12 @@ export default function SignDocument() {
         loadData();
     }, []);
 
-    // Load PDF document via proxy to avoid CORS
+    // Load PDF via direct proxy URL (avoids base64 conversion issues)
     useEffect(() => {
         if (!document?.originalFileUrl) return;
-
-        const loadPdf = async () => {
-            setPdfLoading(true);
-            try {
-                // Use our proxy to fetch PDF with proper CORS headers
-                const response = await proxyPdf({ fileUrl: document.originalFileUrl });
-                
-                if (!response.data?.success || !response.data?.data) {
-                    throw new Error('Failed to load PDF via proxy');
-                }
-                
-                // Convert base64 back to ArrayBuffer
-                const binaryString = atob(response.data.data);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                
-                const loadingTask = pdfjsLib.getDocument({ data: bytes.buffer });
-                const pdf = await loadingTask.promise;
-                setPdfDoc(pdf);
-                setTotalPages(pdf.numPages);
-                setCurrentPage(1);
-            } catch (err) {
-                console.error('Error loading PDF:', err);
-                // Don't set error - we'll fall back to iframe
-                setPdfDoc(null);
-            } finally {
-                setPdfLoading(false);
-            }
-        };
-
-        loadPdf();
+        setPdfLoading(false);
+        const proxyUrl = `/api/proxyPdf?fileUrl=${encodeURIComponent(document.originalFileUrl)}`;
+        setPdfUrl(proxyUrl);
     }, [document?.originalFileUrl]);
 
     // Render current page
@@ -391,11 +362,11 @@ export default function SignDocument() {
                 signerIpAddress: ''
             });
 
-            if (response.data?.success) {
-                setFinalPdfUrl(response.data.pdfUrl);
+            if (response?.success) {
+                setFinalPdfUrl(response.pdfUrl);
                 setIsSigned(true);
             } else {
-                setError(response.data?.error || 'Failed to complete signature.');
+                setError(response?.error || 'Failed to complete signature.');
             }
         } catch (err) {
             console.error('Error submitting signature:', err);
@@ -410,7 +381,7 @@ export default function SignDocument() {
     if (error && !document) return <ErrorScreen message={error} />;
     if (isSigned) return <SuccessScreen pdfUrl={finalPdfUrl} />;
 
-    const isPdf = document?.documentType === 'pdf' && document?.originalFileUrl;
+    const isPdf = (document?.documentType === 'pdf' && document?.originalFileUrl?.toLowerCase().endsWith('.pdf'));
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -484,7 +455,7 @@ export default function SignDocument() {
                                                 // Fallback to iframe if PDF.js fails - show signature will be placed at default location
                                                 <div className="relative">
                                                     <iframe
-                                                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(document.originalFileUrl)}&embedded=true`}
+                                                        src={pdfUrl}
                                                         className="w-full rounded-lg border-0"
                                                         style={{ height: '70vh' }}
                                                         title={document?.title}
@@ -526,6 +497,22 @@ export default function SignDocument() {
                                         <div className="p-8 prose max-w-none bg-white rounded-lg border" style={{ minHeight: '400px' }}>
                                             {document?.content ? (
                                                 <div dangerouslySetInnerHTML={{ __html: document.content }} />
+                                            ) : document?.originalFileUrl ? (
+                                                document?.originalFileUrl?.toLowerCase().endsWith('.pdf') ? (
+                                                    <iframe
+                                                        src={pdfUrl}
+                                                        className="w-full rounded-lg border-0"
+                                                        style={{ height: '70vh' }}
+                                                        title={document?.title}
+                                                    />
+                                                ) : (
+                                                    <iframe
+                                                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(document.originalFileUrl)}&embedded=true`}
+                                                        className="w-full rounded-lg border-0"
+                                                        style={{ height: '70vh' }}
+                                                        title={document?.title}
+                                                    />
+                                                )
                                             ) : (
                                                 <p className="text-gray-500">No document content available.</p>
                                             )}

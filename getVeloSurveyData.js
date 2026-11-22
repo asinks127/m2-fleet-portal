@@ -38,7 +38,7 @@ export default async function handler(req, res) {
 
     const { data: technicians, error: techErr } = await supabase
       .from('User')
-      .select('id,email,full_name,displayName')
+      .select('id,email,full_name,display_name')
       .in('id', techIds);
 
     if (techErr) throw techErr;
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         id: tech.id,
         full_name: tech.full_name,
         email: tech.email,
-        displayName: tech.displayName || tech.full_name || tech.email,
+        displayName: tech.display_name || tech.full_name || tech.email,
       })),
     });
   } catch (error) {

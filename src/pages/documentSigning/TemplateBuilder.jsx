@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient.js';
 import { createTemplate, getTemplate } from '@/lib/documentSigning/esignService.js';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { 
-  PenTool, Type, Calendar, CheckSquare, List, User, Mail, Building, 
+  PenTool, Type, Calendar, CheckSquare, List, User, Mail, Building, Hash, DollarSign, 
   ChevronDown, Move, Trash2, Save, Plus, X, Eye, Download,
   Loader2, AlertCircle, FileText, Users, Settings, ArrowLeft,
 } from 'lucide-react';
@@ -46,6 +46,9 @@ const FIELD_ICONS = {
   [FIELD_TYPES.TITLE]: Type,
   [FIELD_TYPES.PHONE]: Type,
   [FIELD_TYPES.CUSTOM]: Type,
+  [FIELD_TYPES.EIN]: Hash,
+  [FIELD_TYPES.NUMBER]: Hash,
+  [FIELD_TYPES.AMOUNT]: DollarSign,
 };
 
 const FIELD_COLORS = {
@@ -58,6 +61,9 @@ const FIELD_COLORS = {
   [FIELD_TYPES.FULL_NAME]: '#06b6d4',
   [FIELD_TYPES.EMAIL]: '#84cc16',
   [FIELD_TYPES.COMPANY]: '#f97316',
+  [FIELD_TYPES.EIN]: '#6366f1',
+  [FIELD_TYPES.NUMBER]: '#14b8a6',
+  [FIELD_TYPES.AMOUNT]: '#f43f5e',
 };
 
 export default function TemplateBuilder({ onSave, onCancel, editTemplateId = null }) {

@@ -103,8 +103,55 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    // Skip duplicate uploads: if this invoice already has a Drive file, return the existing link.
+    if (invoiceId) {
+      const { data: existing } = await supabase
+        .from('Invoice')
+        .select('driveFileId, driveLink')
+        .eq('id', invoiceId)
+        .maybeSingle();
+      if (existing?.driveFileId) {
+        return res.status(200).json({
+          success: true,
+          skipped: true,
+          fileId: existing.driveFileId,
+          webViewLink: existing.driveLink,
+          folderPath: `${contractorName}/${DOCUMENT_TYPE_FOLDERS[documentType] || documentType}`,
+        });
+      }
+    }
+
     const typeFolderName = DOCUMENT_TYPE_FOLDERS[documentType];
     if (!typeFolderName) return res.status(400).json({ error: `Invalid documentType: ${documentType}` });
+
+    // Skip if this invoice was already uploaded (prevents duplicate Drive copies
+    // when both the submit flow and the approval flow trigger an upload)
+    if (invoiceId) {
+      const { data: existingInv } = await supabase.from('Invoice').select('driveFileId, driveLink').eq('id', invoiceId).maybeSingle();
+      if (existingInv?.driveFileId) {
+        return res.status(200).json({
+          success: true,
+          skipped: true,
+          fileId: existingInv.driveFileId,
+          webViewLink: existingInv.driveLink,
+          folderPath: `${contractorName}/${typeFolderName}`,
+        });
+      }
+    }
+
+    // Skip re-upload if this invoice already has a Drive copy (prevents duplicates on re-approval)
+    if (invoiceId) {
+      const { data: existing } = await supabase.from('Invoice').select('driveFileId, driveLink').eq('id', invoiceId).maybeSingle();
+      if (existing?.driveFileId) {
+        return res.status(200).json({
+          success: true,
+          skipped: true,
+          fileId: existing.driveFileId,
+          webViewLink: existing.driveLink,
+          folderPath: `${contractorName}/${typeFolderName}`,
+        });
+      }
+    }
 
     const drive = getDriveClient();
     const contractorFolderId = await getOrCreateFolder(drive, contractorName, ROOT_FOLDER_ID);

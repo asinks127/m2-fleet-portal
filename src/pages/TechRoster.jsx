@@ -193,6 +193,15 @@ export default function TechRoster() {
     try {
       const allUsers = await User.list();
       setUsers(allUsers || []);
+      // Merge admin-only private info (DOB/EIN/phone/address) for search + admin views
+      try {
+        const privRes = await fetch('/api/rosterPrivateAll', { credentials: 'include' });
+        if (privRes.ok) {
+          const privData = await privRes.json();
+          const byId = new Map((privData.rows || []).map(r => [r.user_id, r]));
+          setUsers((allUsers || []).map(u => ({ ...u, privateInfo: byId.get(u.id) || null })));
+        }
+      } catch { /* non-admins: skip silently */ }
     } catch (err) {
       console.error('Error loading users:', err);
       setError('Failed to load the tech roster.');
@@ -259,11 +268,12 @@ export default function TechRoster() {
     setIsSyncingDocuments(true);
     try {
       toast.info("Initiating document sync to Google Drive. This may take a moment.");
-      const response = await /* FIXME: Unconverted base44 call */ supabase.functions.invoke('syncContractorDocumentsToDrive');
-      if (response && response.data && response.data.success) {
-        toast.success(`Document sync completed. Processed ${response.data.count} documents.`);
+      const response = await fetch('/api/syncContractorDocumentsToDrive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const data = await response.json();
+      if (data && data.success) {
+        toast.success(`Document sync completed. Uploaded ${data.synced ?? 0} of ${data.total ?? 0} documents${data.failed ? `, ${data.failed} failed` : ''}.`);
       } else {
-        toast.error("Document sync finished with potential issues.");
+        toast.error(data?.error || "Document sync finished with potential issues.");
       }
     } catch (error) {
       console.error('Sync error:', error);
@@ -415,7 +425,12 @@ export default function TechRoster() {
         (user.display_name?.toLowerCase() || '').includes(lowercasedTerm) ||
         (user.full_name?.toLowerCase() || '').includes(lowercasedTerm) ||
         (user.project?.toLowerCase() || '').includes(lowercasedTerm) ||
-        (user.email?.toLowerCase() || '').includes(lowercasedTerm)
+        (user.email?.toLowerCase() || '').includes(lowercasedTerm) ||
+        (user.privateInfo?.phone || '').toLowerCase().includes(lowercasedTerm) ||
+        (user.privateInfo?.city || '').toLowerCase().includes(lowercasedTerm) ||
+        (user.privateInfo?.state || '').toLowerCase().includes(lowercasedTerm) ||
+        (user.privateInfo?.address_street || '').toLowerCase().includes(lowercasedTerm) ||
+        (user.privateInfo?.ein || '').toLowerCase().includes(lowercasedTerm)
       );
     }
 
@@ -824,19 +839,30 @@ export default function TechRoster() {
                   
                   return (
                     <React.Fragment key={user.id}>
-                      <TableRow className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleRowExpansion(user.id)}>
+                      <TableRow
+                        className="hover:bg-blue-50 cursor-pointer transition-colors"
+                        onClick={() => toggleRowExpansion(user.id)}
+                        aria-expanded={isExpanded}
+                        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} quick details for ${user.full_name || user.display_name || user.email}`}
+                      >
                         <TableCell>
-                          <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-0 h-8 w-8 text-blue-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRowExpansion(user.id);
+                            }}
+                            aria-label={isExpanded ? 'Collapse quick details' : 'Expand quick details'}
+                          >
                             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           </Button>
                         </TableCell>
                         <TableCell>
-                            <Link
-                                to={`${createPageUrl('ContractorProfile')}?id=${user.id}&returnTo=${encodeURIComponent(location.pathname + location.search)}`}
-                                className="font-medium text-gray-900 hover:underline"
-                            >
-                                {user.full_name || user.display_name || user.email || user.email || 'No Name'}
-                            </Link>
+                            <span className="font-medium text-gray-900 group-hover:text-blue-700">
+                                {user.full_name || user.display_name || user.email || 'No Name'}
+                            </span>
                             <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
                               <div className="flex items-center gap-1">
                                 <Phone className="w-3 h-3" />
@@ -945,7 +971,7 @@ export default function TechRoster() {
                       </TableRow>
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={9} className="bg-gray-50 p-0"> {/* colSpan adjusted to 9 */}
+                          <TableCell colSpan={10} className="bg-gray-50 p-0">
                             <ExpandedContractorRow user={user} onUpdate={loadUsers} />
                           </TableCell>
                         </TableRow>
@@ -954,7 +980,7 @@ export default function TechRoster() {
                   );
                 }) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center h-24 text-gray-500"> {/* colSpan adjusted to 9 */}
+                    <TableCell colSpan={10} className="text-center h-24 text-gray-500">
                       No contractors found matching your filters.
                     </TableCell>
                   </TableRow>

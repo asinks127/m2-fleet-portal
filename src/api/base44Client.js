@@ -13,6 +13,20 @@ export const base44 = {
     me: async () => {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) throw error;
+      if (!user) return null;
+      // Merge the User table row (role, display_name, etc.) on top of the raw
+      // auth user, matching the User.me() entity behavior. The auth user is
+      // spread last so id/email always stay the Supabase auth values.
+      try {
+        const { data: userData } = await supabase
+          .from('User')
+          .select('*')
+          .eq('email', user.email.toLowerCase())
+          .maybeSingle();
+        if (userData) return { ...userData, ...user };
+      } catch (e) {
+        console.warn('base44.auth.me: User row merge failed', e);
+      }
       return user;
     },
     logout: (redirectUrl) => {
@@ -27,13 +41,21 @@ export const base44 = {
   integrations: { Core },
   functions: {
     invoke: async (funcName, data) => {
+      // Attach the Supabase session token so server handlers can auth the user.
+      const headers = { 'Content-Type': 'application/json' };
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+      } catch (e) { console.warn('invoke: no session token', e); }
       const res = await fetch(`/api/${funcName}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data)
       });
       if (!res.ok) throw new Error(`Function ${funcName} failed`);
-      return res.json();
+      const result = await res.json();
+      const warrantyFunctions = new Set(['getAllSessions', 'logSession', 'mergeTechnicians', 'warrantySync', 'warrantyQuickAction', 'updateTechnicianStats', 'bulkRecalcTechStats', 'backfillAllWarrantyEmails', 'backfillQCEmails', 'backfillWarrantyClaims', 'backfillClassification', 'backfillCustomerProject', 'backfillProjects', 'backfillQCEventDate', 'fixExistingWarrantyRecords', 'fixPlaceholderTechNames', 'markOldWarrantiesRepaired']);
+      return warrantyFunctions.has(funcName) ? { ...result, data: result?.data ?? result } : result;
     }
   },
   appLogs: {

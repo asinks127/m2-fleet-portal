@@ -157,13 +157,17 @@ async function runApiHandler(name, req, res, body) {
       return res;
     };
     res.send = (payload) => {
-      if (typeof payload === 'object' && payload !== null) {
+      if (Buffer.isBuffer(payload)) {
+        if (!res.headersSent) res.setHeader('Content-Type', res.getHeader('Content-Type') || 'application/octet-stream');
+        res.end(payload);
+      } else if (typeof payload === 'object' && payload !== null) {
         if (!res.headersSent) res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(payload));
       } else {
         res.end(payload ?? '');
       }
       return res;
+    console.log(`[API] ${req.method} ${req.url} body=`, JSON.stringify(req.body).substring(0, 200));
     };
 
     try {
@@ -206,7 +210,9 @@ const server = http.createServer(async (req, res) => {
       if (raw) {
         try { body = JSON.parse(raw); } catch { body = raw; }
       }
-      const handlerReq = { method: req.method, body, query: {}, url: req.url, headers: req.headers };
+      const parsedUrl = new URL(req.url, "http://localhost");
+      const query = Object.fromEntries(parsedUrl.searchParams.entries());
+      const handlerReq = { method: req.method, body, query, url: req.url, headers: req.headers };
       await runApiHandler(name, req, res, handlerReq);
     });
     return;
@@ -240,6 +246,16 @@ server.on('error', (error) => {
   console.error('HTTP server error:', error);
 });
 
+// Start warranty email sync loop (no-ops without Gmail creds)
+try {
+  const { startWarrantySyncLoop } = await import('./api/_warranty/warrantyService.js');
+  startWarrantySyncLoop();
+} catch (e) {
+  console.warn('warranty sync loop failed to start:', e?.message);
+}
+
 server.listen(port, '0.0.0.0', () => {
   console.log(`M23 production server running on ${port}`);
 });
+
+

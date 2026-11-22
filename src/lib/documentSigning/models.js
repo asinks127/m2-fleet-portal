@@ -12,6 +12,9 @@ export const FIELD_TYPES = {
   COMPANY: 'company',
   TITLE: 'title',
   PHONE: 'phone',
+  EIN: 'ein',
+  NUMBER: 'number',
+  AMOUNT: 'amount',
   CUSTOM: 'custom',
 };
 
@@ -118,6 +121,27 @@ export const DEFAULT_FIELD_CONFIG = {
     height: 30,
     required: false,
     validation: 'phone',
+  },
+  [FIELD_TYPES.EIN]: {
+    label: "EIN",
+    width: 150,
+    height: 30,
+    required: false,
+    validation: "ein",
+  },
+  [FIELD_TYPES.NUMBER]: {
+    label: "Number",
+    width: 120,
+    height: 30,
+    required: false,
+    validation: "number",
+  },
+  [FIELD_TYPES.AMOUNT]: {
+    label: "Amount",
+    width: 120,
+    height: 30,
+    required: false,
+    validation: "currency",
   },
   [FIELD_TYPES.CUSTOM]: {
     label: 'Custom Field',

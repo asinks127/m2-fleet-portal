@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient.js';
 import { Card, CardContent } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
@@ -7,6 +8,11 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button.jsx';
 
 export default function AlertLogPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const severityFilter = params.get('severity') || 'all';
+  const statusFilter = params.get('status') || 'all';
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,12 +34,28 @@ export default function AlertLogPage() {
     }
   };
 
+  const visibleLogs = useMemo(() => logs.filter(log => {
+    const severity = String(log.severity || '').toLowerCase();
+    const status = String(log.status || '').toLowerCase();
+    const unresolved = !['resolved', 'closed', 'dismissed'].includes(status) && log.resolved !== true;
+    return (severityFilter === 'all' || severity === severityFilter) &&
+      (statusFilter !== 'unresolved' || unresolved);
+  }), [logs, severityFilter, statusFilter]);
+
+  const clearFilters = () => navigate(location.pathname, { replace: true });
+
   useEffect(() => {
     fetchLogs();
   }, []);
 
   return (
     <div className="p-6">
+      {(severityFilter !== 'all' || statusFilter !== 'all') && (
+        <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <span>Showing {severityFilter !== 'all' ? `${severityFilter} ` : ''}{statusFilter === 'unresolved' ? 'unresolved ' : ''}alerts ({visibleLogs.length}).</span>
+          <Button variant="outline" size="sm" onClick={clearFilters}>Show all alerts</Button>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">System Alert Log</h1>
@@ -51,7 +73,7 @@ export default function AlertLogPage() {
             <div className="flex justify-center items-center h-64">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
-          ) : logs.length === 0 ? (
+          ) : visibleLogs.length === 0 ? (
             <div className="text-center p-12 text-gray-500">
               <p>No alerts have been triggered yet.</p>
             </div>
@@ -68,7 +90,7 @@ export default function AlertLogPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map(log => (
+                  {visibleLogs.map(log => (
                     <tr key={log.id} className="border-b last:border-0 hover:bg-gray-50">
                       <td className="p-4">
                         <Badge variant={log.status === 'success' ? 'default' : 'destructive'} className={log.status === 'success' ? 'bg-green-100 text-green-800' : ''}>

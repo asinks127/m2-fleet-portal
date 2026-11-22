@@ -1,0 +1,257 @@
+import { Button } from "@/components/ui/button";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { LogIn, UserPlus, LayoutDashboard, ClipboardList, ClipboardPenLine, Wrench, FileText, Users, Calendar, Mail, PlusCircle, ListTodo, Settings, HardHat, BarChart3, ShieldCheck, Receipt, Construction, UserCheck, BookOpen, PenTool, Star } from "lucide-react";
+import TeamScheduler from "./pages/TeamScheduler";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import Messages from "./pages/Messages";
+import Inbox from "./pages/Inbox";
+import ComposeMessage from "./pages/ComposeMessage";
+import TaskBoard from "./pages/TaskBoard";
+import ProjectDashboard from "./pages/ProjectDashboard";
+import SafetyAdmin from "./pages/SafetyAdmin";
+import InvoiceManagement from "./pages/InvoiceManagement";
+import TechRoster from "./pages/TechRoster";
+import LessonsLearned from "./pages/LessonsLearned";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import LandingPage from "./pages/LandingPage";
+import AuditProgress from "./pages/AuditProgress";
+import JobPostingGenerator from "./pages/JobPostingGenerator";
+import ESignatureAssignment from "./pages/ESignatureAssignment";
+import SignerPage from "./pages/SignerPage";
+import SignDocument from "./pages/SignDocument";
+import Survey from "./pages/Survey";
+import { Route, Routes, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient.js";
+import { useState, useEffect } from "react";
+import pagesConfig from "./pages.config.js";
+import { AuthProvider, useAuth } from "@/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+
+function AdminProtectedRoute({ children, user, loading }) {
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.email !== 'info@m2fleet.com') {
+    return <div className="flex items-center justify-center min-h-screen"><p>Access Denied. Admin only.</p></div>;
+  }
+  return children;
+}
+
+function DashboardRedirect() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (user) {
+      const inboxPath = '/messages';
+      navigate(inboxPath, { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
+  }, [user, navigate]);
+  return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>;
+}
+
+function AuthenticatedApp() {
+  const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>;
+  if (!user) return <Navigate to="/login" replace />;
+
+  const isAdmin = user.email === 'info@m2fleet.com';
+
+  const mainNavigation = [
+    {
+      title: "Dashboard",
+      url: "/admin",
+      icon: LayoutDashboard,
+      adminOnly: true,
+      isActive: location.pathname === "/admin",
+    },
+    {
+      title: "Analytics",
+      url: "/admin/analytics",
+      icon: BarChart3,
+      adminOnly: true,
+      isActive: location.pathname.startsWith("/admin/analytics"),
+    },
+    {
+      title: "Inbox",
+      url: "/messages",
+      icon: Mail,
+      isActive: location.pathname === "/messages",
+    },
+    {
+      title: "Compose",
+      url: "/compose",
+      icon: PlusCircle,
+      isActive: location.pathname === "/compose",
+    },
+    {
+      title: "Task Board",
+      url: "/tasks",
+      icon: ListTodo,
+      isActive: location.pathname === "/tasks",
+    },
+  ];
+
+  const managementNavigation = [
+    {
+      title: "Project Dashboard",
+      url: "/project-dashboard",
+      icon: ClipboardPenLine,
+      adminOnly: true,
+      isActive: location.pathname === "/project-dashboard",
+    },
+    {
+      title: "Team Roster",
+      url: "/team-roster",
+      icon: Users,
+      adminOnly: true,
+      isActive: location.pathname === "/team-roster",
+    },
+    {
+      title: "Schedule",
+      url: "/schedule",
+      icon: Calendar,
+      adminOnly: true,
+      isActive: location.pathname === "/schedule",
+    },
+    {
+      title: "E-Sign Bulk",
+      url: "/e-signature-assignment",
+      icon: PenTool,
+      adminOnly: true,
+      isActive: location.pathname === "/e-signature-assignment",
+    },
+    {
+      title: "Velo Surveys",
+      url: "/velo-survey-dashboard",
+      icon: Star,
+      adminOnly: true,
+      isActive: location.pathname === "/velo-survey-dashboard",
+    },
+    {
+      title: "Job Postings",
+      url: "/job-postings",
+      icon: Construction,
+      adminOnly: true,
+      isActive: location.pathname === "/job-postings",
+    },
+  ];
+
+  const operationsNavigation = [
+    {
+      title: "Safety Admin",
+      url: "/safety-admin",
+      icon: ShieldCheck,
+      adminOnly: true,
+      isActive: location.pathname === "/safety-admin",
+    },
+    {
+      title: "Invoices",
+      url: "/invoices",
+      icon: Receipt,
+      adminOnly: true,
+      isActive: location.pathname === "/invoices",
+    },
+    {
+      title: "Audits",
+      url: "/audit-progress",
+      icon: ClipboardList,
+      adminOnly: true,
+      isActive: location.pathname === "/audit-progress",
+    },
+    {
+      title: "Lessons Learned",
+      url: "/lessons-learned",
+      icon: BookOpen,
+      adminOnly: true,
+      isActive: location.pathname === "/lessons-learned",
+    },
+    {
+      title: "Tech Roster",
+      url: "/tech-roster",
+      icon: HardHat,
+      adminOnly: true,
+      isActive: location.pathname === "/tech-roster",
+    },
+  ];
+
+  return (
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <AppSidebar
+        mainNavigation={mainNavigation}
+        managementNavigation={managementNavigation}
+        operationsNavigation={operationsNavigation}
+        isAdmin={isAdmin}
+        userEmail={user.email}
+      />
+      <main className="w-full">
+        <SidebarTrigger />
+        <div className="px-4 sm:px-6 lg:px-8">
+          <Routes>
+            <Route path="/" element={<DashboardRedirect />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/compose" element={<ComposeMessage />} />
+            <Route path="/tasks" element={<TaskBoard />} />
+            <Route path="/project-dashboard" element={<AdminProtectedRoute user={user} loading={loading}><ProjectDashboard /></AdminProtectedRoute>} />
+            <Route path="/schedule" element={<AdminProtectedRoute user={user} loading={loading}><TeamScheduler /></AdminProtectedRoute>} />
+            <Route path="/team-roster" element={<AdminProtectedRoute user={user} loading={loading}><TechRoster /></AdminProtectedRoute>} />
+            <Route path="/e-signature-assignment" element={<AdminProtectedRoute user={user} loading={loading}><ESignatureAssignment /></AdminProtectedRoute>} />
+            <Route path="/job-postings" element={<AdminProtectedRoute user={user} loading={loading}><JobPostingGenerator /></AdminProtectedRoute>} />
+            <Route path="/safety-admin" element={<AdminProtectedRoute user={user} loading={loading}><SafetyAdmin /></AdminProtectedRoute>} />
+            <Route path="/invoices" element={<AdminProtectedRoute user={user} loading={loading}><InvoiceManagement /></AdminProtectedRoute>} />
+            <Route path="/audit-progress" element={<AdminProtectedRoute user={user} loading={loading}><AuditProgress /></AdminProtectedRoute>} />
+            <Route path="/lessons-learned" element={<AdminProtectedRoute user={user} loading={loading}><LessonsLearned /></AdminProtectedRoute>} />
+            <Route path="/tech-roster" element={<AdminProtectedRoute user={user} loading={loading}><TechRoster /></AdminProtectedRoute>} />
+            <Route path="/velo-survey-dashboard" element={<AdminProtectedRoute user={user} loading={loading}>{React.lazy(() => import('./pages/VeloSurveyDashboard'))}</AdminProtectedRoute>} />
+          </Routes>
+        </div>
+      </main>
+    </SidebarProvider>
+  );
+}
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return (
+    <AuthProvider user={user} loading={loading}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/sign/:requestId/:token" element={<SignerPage />} />
+        <Route path="/sign-doc" element={<SignDocument />} />
+        <Route path="/velo-survey" element={<Survey />} />
+        <Route path="/*" element={<AuthenticatedApp />} />
+      </Routes>
+      <Toaster />
+    </AuthProvider>
+  );
+}
+
+export default App;

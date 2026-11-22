@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-08-31T06:31:35.238Z",
+  "attachedCsv": "/home/.z/chat-uploads/Invoice_export (1)-f25da0e61dcf.csv",
+  "attachedRows": 4055,
+  "currentInvoiceRows": 9194,
+  "attachedStatusCounts": {
+    "pending": 54,
+    "approved": 3957,
+    "rejected": 44
+  },
+  "currentStatusCounts": {
+    "approved": 8952,
+    "pending": 111,
+    "rejected": 128,
+    "eq.pending": 1,
+    "eq.rejected": 1,
+    "eq.approved": 1
+  },
+  "currentPendingRows": 111,
+  "currentPendingClassifications": {
+    "attached-approved-match": 93,
+    "not-in-attached-sheet": 18
+  },
+  "currentPendingMatchMethods": {
+    "contractor-date-amount": 77,
+    "none": 18,
+    "contractor-date-plus-or-minus-one-day-amount": 1,
+    "drivefileid": 15
+  },
+  "attachedPendingRows": 54,
+  "attachedPendingCurrentMatchCounts": {
+    "one-current-match": 54
+  },
+  "currentRowsMatchedToAttached": 9167,
+  "currentRowsNotMatchedToAttached": 27,
+  "duplicateDriveFileIdGroupsInAttached": 0,
+  "duplicateExactIdentityGroupsInAttached": 1
+}

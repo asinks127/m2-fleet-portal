@@ -1,0 +1,1316 @@
+[
+  {
+    "current": {
+      "id": "94b318cf-a3e8-49b6-a9ff-1c4de9bab305",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1480.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:16.336271+00:00",
+      "updated_at": "2026-05-24T19:15:16.336271+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "77a78635-6ea0-47f6-9e1a-3e17caee8cfd",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": null,
+      "totalAmount": 1480.0,
+      "pendingReason": null,
+      "driveFileId": null,
+      "driveLink": null,
+      "created_at": "2026-05-24T19:15:36.989978+00:00",
+      "updated_at": "2026-05-24T19:15:36.989978+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "01fe95b9-fddb-4684-9196-d6b16b655f5e",
+      "status": "pending",
+      "contractorName": "Matthew Bailey",
+      "contractorEmail": "mbailey.contractor@m2fleetcom.com",
+      "fileName": "MathewBaileyInvoice71.xlsx",
+      "invoiceDate": "2026-05-24T16:23:24.542+00:00",
+      "weekEndingDate": null,
+      "totalAmount": 1800.0,
+      "pendingReason": null,
+      "driveFileId": null,
+      "driveLink": null,
+      "created_at": "2026-05-24T19:15:36.989978+00:00",
+      "updated_at": "2026-05-24T19:15:36.989978+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "3ac4e3f8-300f-48d0-85a5-5efadb6999d4",
+      "status": "pending",
+      "contractorName": "Logan Hogg",
+      "contractorEmail": "lhogg.contractor@m2fleetcom.com",
+      "fileName": "Invoice_logan_36.xlsx",
+      "invoiceDate": "2026-05-24T14:18:51.136+00:00",
+      "weekEndingDate": null,
+      "totalAmount": 1500.0,
+      "pendingReason": null,
+      "driveFileId": null,
+      "driveLink": null,
+      "created_at": "2026-05-24T19:15:36.989978+00:00",
+      "updated_at": "2026-05-24T19:15:36.989978+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "cd0bada8-0b2e-463a-b224-5af132654c83",
+      "status": "pending",
+      "contractorName": "Brianna McLaughlin",
+      "contractorEmail": "bmclaughlin.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_173509_Sheets.jpg",
+      "invoiceDate": "2026-05-24T12:07:22.346+00:00",
+      "weekEndingDate": null,
+      "totalAmount": 720.0,
+      "pendingReason": null,
+      "driveFileId": null,
+      "driveLink": null,
+      "created_at": "2026-05-24T19:15:36.989978+00:00",
+      "updated_at": "2026-05-24T19:15:36.989978+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "3528e7be-3f7a-4820-a120-be9a5b450ec4",
+      "status": "pending",
+      "contractorName": "Beau Lyons",
+      "contractorEmail": "blyons.contractor@m2fleetcom.com",
+      "fileName": "IMG_8934.jpeg",
+      "invoiceDate": "2026-05-24T05:40:24.847+00:00",
+      "weekEndingDate": null,
+      "totalAmount": 1200.0,
+      "pendingReason": null,
+      "driveFileId": null,
+      "driveLink": null,
+      "created_at": "2026-05-24T19:15:36.989978+00:00",
+      "updated_at": "2026-05-24T19:15:36.989978+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "70fa9cd2-df78-46a4-bf73-d8c22d2e086f",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1480.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:50.510932+00:00",
+      "updated_at": "2026-05-24T19:15:50.510932+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "f576274a-8d3c-4a9d-94b1-226acd329e4f",
+      "status": "pending",
+      "contractorName": "Matthew Bailey",
+      "contractorEmail": "mbailey.contractor@m2fleetcom.com",
+      "fileName": "MathewBaileyInvoice71.xlsx",
+      "invoiceDate": "2026-05-24T16:23:24.542+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:50.510932+00:00",
+      "updated_at": "2026-05-24T19:15:50.510932+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "9bbdb30f-a3bc-4dd3-b738-fb497ff833f6",
+      "status": "pending",
+      "contractorName": "Samuel Morrison",
+      "contractorEmail": "smorrison.contractor@m2fleetcom.com",
+      "fileName": "IMG_1999.jpeg",
+      "invoiceDate": "2026-05-22T22:04:51.297+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1040.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1nAqr76im6TPtwryRqYxz8Fs4wDnhLM1C",
+      "driveLink": "https://drive.google.com/file/d/1nAqr76im6TPtwryRqYxz8Fs4wDnhLM1C/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "a583313f-7beb-407b-97f1-19b0fbd0e2f5",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1480.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "17609f05-a04a-4792-978f-35a0a30e727a",
+      "status": "pending",
+      "contractorName": "Matthew Bailey",
+      "contractorEmail": "mbailey.contractor@m2fleetcom.com",
+      "fileName": "MathewBaileyInvoice71.xlsx",
+      "invoiceDate": "2026-05-24T16:23:24.542+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "a7e1fa4c-20fa-430a-9022-8ab384d759c3",
+      "status": "pending",
+      "contractorName": "Logan Hogg",
+      "contractorEmail": "lhogg.contractor@m2fleetcom.com",
+      "fileName": "Invoice_logan_36.xlsx",
+      "invoiceDate": "2026-05-24T14:18:51.136+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1500.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "19zpXgsumVYufvL1zEptjP_g6kBYuDzC4",
+      "driveLink": "https://docs.google.com/spreadsheets/d/19zpXgsumVYufvL1zEptjP_g6kBYuDzC4/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "28f03473-1b80-43d7-91e6-c73b90c02cf3",
+      "status": "pending",
+      "contractorName": "Brianna McLaughlin",
+      "contractorEmail": "bmclaughlin.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_173509_Sheets.jpg",
+      "invoiceDate": "2026-05-24T12:07:22.346+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 720.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-E2VCZH6dcn5u8BGsrU5_iUX6jhbYT-W",
+      "driveLink": "https://drive.google.com/file/d/1-E2VCZH6dcn5u8BGsrU5_iUX6jhbYT-W/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "fe23af9e-6cf9-4630-a641-d94737173dbd",
+      "status": "pending",
+      "contractorName": "Beau Lyons",
+      "contractorEmail": "blyons.contractor@m2fleetcom.com",
+      "fileName": "IMG_8934.jpeg",
+      "invoiceDate": "2026-05-24T05:40:24.847+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1200.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "18M4NUa6s7glqy4aT0qDvn71KCUeBs-ZN",
+      "driveLink": "https://drive.google.com/file/d/18M4NUa6s7glqy4aT0qDvn71KCUeBs-ZN/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "da878a73-3aec-4019-9e80-7e7a72c5b4f2",
+      "status": "pending",
+      "contractorName": "Leo Guerrero",
+      "contractorEmail": "lguerrero.contractor@m2fleetcom.com",
+      "fileName": "ElektroHorse_Invoice_3.pdf",
+      "invoiceDate": "2026-05-24T02:06:14.893+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1JLxmfQ8yWlV7QruhiVqEp25YtVaY19V1",
+      "driveLink": "https://drive.google.com/file/d/1JLxmfQ8yWlV7QruhiVqEp25YtVaY19V1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "8ca41c93-3e55-4778-8229-e919e7d8e61c",
+      "status": "pending",
+      "contractorName": "David Ritchie",
+      "contractorEmail": "dritchie.contractor@m2fleetcom.com",
+      "fileName": "week_3_wally.pdf",
+      "invoiceDate": "2026-05-24T00:17:16.003+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2160.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1fM0X67lH79Slt4KP7zw-ZcAN8IOn3Va1",
+      "driveLink": "https://drive.google.com/file/d/1fM0X67lH79Slt4KP7zw-ZcAN8IOn3Va1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "e21e169b-494f-4efe-ba4b-00014c1e6cea",
+      "status": "pending",
+      "contractorName": "John Tran",
+      "contractorEmail": "jtran.contractor@m2fleetcom.com",
+      "fileName": "JTran_Invoice20.xlsx",
+      "invoiceDate": "2026-05-23T22:47:33.462+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2520.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1JCk2fRhj1zwK-QSZKfs1cJea5QeKRiAL",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1JCk2fRhj1zwK-QSZKfs1cJea5QeKRiAL/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "34e722c4-527f-41e4-84ff-ce6614f0fbaf",
+      "status": "pending",
+      "contractorName": "Jontavious Barker",
+      "contractorEmail": "jbarker.contractor@m2fleetcom.com",
+      "fileName": "5-18-26-5-22-26_Emerald.xlsx",
+      "invoiceDate": "2026-05-23T17:19:06.028+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1wPNAXN7Ng32CRJgjLMFzZORYI-okGw1M",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1wPNAXN7Ng32CRJgjLMFzZORYI-okGw1M/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "d8ea49ba-3e25-4b6a-8d12-6bd330753739",
+      "status": "pending",
+      "contractorName": "Leonel Hernandez",
+      "contractorEmail": "lhernandez.contractor@m2fleetcom.com",
+      "fileName": "image_2026-05-23_110533812.png",
+      "invoiceDate": "2026-05-23T16:05:46.757+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1UD46bmkBLMVjU4RIU6aukpNZeLoOtgXC",
+      "driveLink": "https://drive.google.com/file/d/1UD46bmkBLMVjU4RIU6aukpNZeLoOtgXC/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "96cf4631-b76e-4205-ba54-b866222ad14c",
+      "status": "pending",
+      "contractorName": "Bobby Wiestling",
+      "contractorEmail": "bwiestling.contractor@m2fleetcom.com",
+      "fileName": "BobbyWiestlingInvoice17.xlsx",
+      "invoiceDate": "2026-05-23T10:21:00.782+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2000.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1cK3wn52PwQ3gweP8KrpZHfAJwSqL9C8P",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1cK3wn52PwQ3gweP8KrpZHfAJwSqL9C8P/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "9aef72cb-7366-4c90-9e1c-2aec4c41a0d2",
+      "status": "pending",
+      "contractorName": "Erik Baltazar",
+      "contractorEmail": "ebaltazar.contractor@m2fleetcom.com",
+      "fileName": "Invoice_M2522.pdf",
+      "invoiceDate": "2026-05-22T22:11:00.769+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1KgGCoi2P9MNlmzasUXtEikIePvZja9Pp",
+      "driveLink": "https://drive.google.com/file/d/1KgGCoi2P9MNlmzasUXtEikIePvZja9Pp/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "a3dd2351-44a2-4385-b0b1-4328b2b660d4",
+      "status": "pending",
+      "contractorName": "Harley Traister",
+      "contractorEmail": "htraister.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260515_170619_Sheets.jpg",
+      "invoiceDate": "2026-05-22T21:06:29.623+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2450.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1C0uQEnliBN31uM-xSSUXzz-TfpF7UPz1",
+      "driveLink": "https://drive.google.com/file/d/1C0uQEnliBN31uM-xSSUXzz-TfpF7UPz1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "0610cdc8-56bf-4513-a3d6-05367342d577",
+      "status": "pending",
+      "contractorName": "Karon Smith",
+      "contractorEmail": "ksmith.contractor@m2fleetcom.com",
+      "fileName": "TYJ429.xlsx",
+      "invoiceDate": "2026-05-22T19:32:55.341+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1900.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "11zDrKDxptG-KkVS3jZXf3HRthX97gNzQ",
+      "driveLink": "https://docs.google.com/spreadsheets/d/11zDrKDxptG-KkVS3jZXf3HRthX97gNzQ/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "bafc15ef-a583-4493-a8e4-784ceefc2719",
+      "status": "pending",
+      "contractorName": "Zachary Mclarry",
+      "contractorEmail": "zmclarry.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_142518_CamScanner.jpg",
+      "invoiceDate": "2026-05-22T19:26:35.801+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "17aIgNauNEXQNDzD26ZXrlscngNqEHbbF",
+      "driveLink": "https://drive.google.com/file/d/17aIgNauNEXQNDzD26ZXrlscngNqEHbbF/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "8540a179-78eb-469f-95ba-6a44f62c402f",
+      "status": "pending",
+      "contractorName": "Bryan Patterson",
+      "contractorEmail": "bpatterson.contractor@m2fleetcom.com",
+      "fileName": "IMG_3497.jpeg",
+      "invoiceDate": "2026-05-22T19:06:32.995+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1NgpYO7unXkMYhkcX-bzJF07-x16iplrX",
+      "driveLink": "https://drive.google.com/file/d/1NgpYO7unXkMYhkcX-bzJF07-x16iplrX/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "d639d799-c26d-4205-868d-e33fca7c1ca6",
+      "status": "pending",
+      "contractorName": "Denzel Zeno",
+      "contractorEmail": "dzeno.contractor@m2fleetcom.com",
+      "fileName": "Invoice_68.xlsx",
+      "invoiceDate": "2026-05-22T18:16:08.919+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1s1U99gILnOF5PFFVr6E0TxBOTOkRrdlc",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1s1U99gILnOF5PFFVr6E0TxBOTOkRrdlc/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "3bdbc0da-817d-4ab7-add3-84c7c35b0e37",
+      "status": "pending",
+      "contractorName": "Carlos Rincon",
+      "contractorEmail": "crincon.contractor@m2fleetcom.com",
+      "fileName": "Invoice#21-2026.pdf",
+      "invoiceDate": "2026-05-22T13:55:01.373+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "12OE4TkaLrRuRfO-CuCyfLZxVxZwl5udo",
+      "driveLink": "https://drive.google.com/file/d/12OE4TkaLrRuRfO-CuCyfLZxVxZwl5udo/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "0f0d3e32-7aa7-447a-a10b-96b4dbe530ad",
+      "status": "pending",
+      "contractorName": "Martin McLaughlin",
+      "contractorEmail": "mmclaughlin.contractor@smcinstallations.com",
+      "fileName": "IMG-20260522-WA0000.jpg",
+      "invoiceDate": "2026-05-22T12:40:32.821+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1400.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1M1d8zNTKOsTroptgAvC452eYFqZBIk6z",
+      "driveLink": "https://drive.google.com/file/d/1M1d8zNTKOsTroptgAvC452eYFqZBIk6z/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "a16c5bb3-585d-4730-8002-d722aed988f7",
+      "status": "pending",
+      "contractorName": "Ray Bustamante",
+      "contractorEmail": "rbustamante.contractor@m2fleetcom.com",
+      "fileName": "RBJ_Installations_Invoice__192_-_5_11-5_15_-_2026.pdf",
+      "invoiceDate": "2026-05-21T20:05:54.169+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1200.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1mi5zXKJV74EKCVB5vpAI1o00ku1dBPa4",
+      "driveLink": "https://drive.google.com/file/d/1mi5zXKJV74EKCVB5vpAI1o00ku1dBPa4/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:15:57.104012+00:00",
+      "updated_at": "2026-05-24T19:15:57.104012+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "240ddb95-4fb8-45e3-9f32-cf64fa9d62f5",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1480.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:09.473055+00:00",
+      "updated_at": "2026-05-24T19:16:09.473055+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "26686058-63de-46c8-8097-ffb304bb7910",
+      "status": "pending",
+      "contractorName": "Matthew Bailey",
+      "contractorEmail": "mbailey.contractor@m2fleetcom.com",
+      "fileName": "MathewBaileyInvoice71.xlsx",
+      "invoiceDate": "2026-05-24T16:23:24.542+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:09.473055+00:00",
+      "updated_at": "2026-05-24T19:16:09.473055+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "394711dc-5e84-4c15-aa7b-6712aca291c8",
+      "status": "pending",
+      "contractorName": "David Ritchie",
+      "contractorEmail": "dritchie.contractor@m2fleetcom.com",
+      "fileName": "week_3_wally.pdf",
+      "invoiceDate": "2026-05-24T00:17:16.003+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2160.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1fM0X67lH79Slt4KP7zw-ZcAN8IOn3Va1",
+      "driveLink": "https://drive.google.com/file/d/1fM0X67lH79Slt4KP7zw-ZcAN8IOn3Va1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "e0b00309-d7aa-4ec4-baea-2adcc0eb0168",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1480.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "094c0bfa-10e7-4c2c-bd3e-853da04e3418",
+      "status": "pending",
+      "contractorName": "Matthew Bailey",
+      "contractorEmail": "mbailey.contractor@m2fleetcom.com",
+      "fileName": "MathewBaileyInvoice71.xlsx",
+      "invoiceDate": "2026-05-24T16:23:24.542+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "e5bd7d3d-3a80-4094-9ebc-33837fdc41cd",
+      "status": "pending",
+      "contractorName": "Logan Hogg",
+      "contractorEmail": "lhogg.contractor@m2fleetcom.com",
+      "fileName": "Invoice_logan_36.xlsx",
+      "invoiceDate": "2026-05-24T14:18:51.136+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1500.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "19zpXgsumVYufvL1zEptjP_g6kBYuDzC4",
+      "driveLink": "https://docs.google.com/spreadsheets/d/19zpXgsumVYufvL1zEptjP_g6kBYuDzC4/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "d04e7398-4395-4943-801d-a3ddcd1bee61",
+      "status": "pending",
+      "contractorName": "Brianna McLaughlin",
+      "contractorEmail": "bmclaughlin.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_173509_Sheets.jpg",
+      "invoiceDate": "2026-05-24T12:07:22.346+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 720.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-E2VCZH6dcn5u8BGsrU5_iUX6jhbYT-W",
+      "driveLink": "https://drive.google.com/file/d/1-E2VCZH6dcn5u8BGsrU5_iUX6jhbYT-W/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "bb6391cf-cffa-42e5-9d69-0973d97374c3",
+      "status": "pending",
+      "contractorName": "Beau Lyons",
+      "contractorEmail": "blyons.contractor@m2fleetcom.com",
+      "fileName": "IMG_8934.jpeg",
+      "invoiceDate": "2026-05-24T05:40:24.847+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1200.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "18M4NUa6s7glqy4aT0qDvn71KCUeBs-ZN",
+      "driveLink": "https://drive.google.com/file/d/18M4NUa6s7glqy4aT0qDvn71KCUeBs-ZN/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "1894ddb1-27ad-46ff-a4ea-e31698c15fc1",
+      "status": "pending",
+      "contractorName": "Leo Guerrero",
+      "contractorEmail": "lguerrero.contractor@m2fleetcom.com",
+      "fileName": "ElektroHorse_Invoice_3.pdf",
+      "invoiceDate": "2026-05-24T02:06:14.893+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1JLxmfQ8yWlV7QruhiVqEp25YtVaY19V1",
+      "driveLink": "https://drive.google.com/file/d/1JLxmfQ8yWlV7QruhiVqEp25YtVaY19V1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "b0736e44-8bfd-42e2-84ef-72013a358230",
+      "status": "pending",
+      "contractorName": "John Tran",
+      "contractorEmail": "jtran.contractor@m2fleetcom.com",
+      "fileName": "JTran_Invoice20.xlsx",
+      "invoiceDate": "2026-05-23T22:47:33.462+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2520.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1JCk2fRhj1zwK-QSZKfs1cJea5QeKRiAL",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1JCk2fRhj1zwK-QSZKfs1cJea5QeKRiAL/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "de5881a3-4bee-40e8-a9c7-d6f163f38d07",
+      "status": "pending",
+      "contractorName": "Jontavious Barker",
+      "contractorEmail": "jbarker.contractor@m2fleetcom.com",
+      "fileName": "5-18-26-5-22-26_Emerald.xlsx",
+      "invoiceDate": "2026-05-23T17:19:06.028+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1wPNAXN7Ng32CRJgjLMFzZORYI-okGw1M",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1wPNAXN7Ng32CRJgjLMFzZORYI-okGw1M/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "fe29e458-60a2-484e-8f99-e043894ac999",
+      "status": "pending",
+      "contractorName": "Leonel Hernandez",
+      "contractorEmail": "lhernandez.contractor@m2fleetcom.com",
+      "fileName": "image_2026-05-23_110533812.png",
+      "invoiceDate": "2026-05-23T16:05:46.757+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1UD46bmkBLMVjU4RIU6aukpNZeLoOtgXC",
+      "driveLink": "https://drive.google.com/file/d/1UD46bmkBLMVjU4RIU6aukpNZeLoOtgXC/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "ba219d7f-fa32-4399-8848-70256926894d",
+      "status": "pending",
+      "contractorName": "Bobby Wiestling",
+      "contractorEmail": "bwiestling.contractor@m2fleetcom.com",
+      "fileName": "BobbyWiestlingInvoice17.xlsx",
+      "invoiceDate": "2026-05-23T10:21:00.782+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2000.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1cK3wn52PwQ3gweP8KrpZHfAJwSqL9C8P",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1cK3wn52PwQ3gweP8KrpZHfAJwSqL9C8P/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "2babb09b-aa67-4c3a-b811-4c6aa15beb36",
+      "status": "pending",
+      "contractorName": "Erik Baltazar",
+      "contractorEmail": "ebaltazar.contractor@m2fleetcom.com",
+      "fileName": "Invoice_M2522.pdf",
+      "invoiceDate": "2026-05-22T22:11:00.769+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1KgGCoi2P9MNlmzasUXtEikIePvZja9Pp",
+      "driveLink": "https://drive.google.com/file/d/1KgGCoi2P9MNlmzasUXtEikIePvZja9Pp/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "1d50c8dd-039b-4d61-9ac7-a3db1e05d860",
+      "status": "pending",
+      "contractorName": "Samuel Morrison",
+      "contractorEmail": "smorrison.contractor@m2fleetcom.com",
+      "fileName": "IMG_1999.jpeg",
+      "invoiceDate": "2026-05-22T22:04:51.297+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1040.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1nAqr76im6TPtwryRqYxz8Fs4wDnhLM1C",
+      "driveLink": "https://drive.google.com/file/d/1nAqr76im6TPtwryRqYxz8Fs4wDnhLM1C/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "696f3a37-a9a0-4523-a4cd-f35e428b29fe",
+      "status": "pending",
+      "contractorName": "Harley Traister",
+      "contractorEmail": "htraister.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260515_170619_Sheets.jpg",
+      "invoiceDate": "2026-05-22T21:06:29.623+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2450.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1C0uQEnliBN31uM-xSSUXzz-TfpF7UPz1",
+      "driveLink": "https://drive.google.com/file/d/1C0uQEnliBN31uM-xSSUXzz-TfpF7UPz1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "391258f5-3777-4906-a34b-d24846bb8be1",
+      "status": "pending",
+      "contractorName": "Karon Smith",
+      "contractorEmail": "ksmith.contractor@m2fleetcom.com",
+      "fileName": "TYJ429.xlsx",
+      "invoiceDate": "2026-05-22T19:32:55.341+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1900.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "11zDrKDxptG-KkVS3jZXf3HRthX97gNzQ",
+      "driveLink": "https://docs.google.com/spreadsheets/d/11zDrKDxptG-KkVS3jZXf3HRthX97gNzQ/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "e969e83f-7e24-4fe9-ad96-2309bbfdb51e",
+      "status": "pending",
+      "contractorName": "Zachary Mclarry",
+      "contractorEmail": "zmclarry.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_142518_CamScanner.jpg",
+      "invoiceDate": "2026-05-22T19:26:35.801+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "17aIgNauNEXQNDzD26ZXrlscngNqEHbbF",
+      "driveLink": "https://drive.google.com/file/d/17aIgNauNEXQNDzD26ZXrlscngNqEHbbF/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "f148501b-9ed1-4707-946b-0799e93c5f05",
+      "status": "pending",
+      "contractorName": "Bryan Patterson",
+      "contractorEmail": "bpatterson.contractor@m2fleetcom.com",
+      "fileName": "IMG_3497.jpeg",
+      "invoiceDate": "2026-05-22T19:06:32.995+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1NgpYO7unXkMYhkcX-bzJF07-x16iplrX",
+      "driveLink": "https://drive.google.com/file/d/1NgpYO7unXkMYhkcX-bzJF07-x16iplrX/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "1ecf4f37-040c-4391-958b-48a7d69a00b0",
+      "status": "pending",
+      "contractorName": "Denzel Zeno",
+      "contractorEmail": "dzeno.contractor@m2fleetcom.com",
+      "fileName": "Invoice_68.xlsx",
+      "invoiceDate": "2026-05-22T18:16:08.919+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1s1U99gILnOF5PFFVr6E0TxBOTOkRrdlc",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1s1U99gILnOF5PFFVr6E0TxBOTOkRrdlc/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "2b86bc49-e75e-42c5-ad6c-28b95b195c4c",
+      "status": "pending",
+      "contractorName": "Carlos Rincon",
+      "contractorEmail": "crincon.contractor@m2fleetcom.com",
+      "fileName": "Invoice#21-2026.pdf",
+      "invoiceDate": "2026-05-22T13:55:01.373+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "12OE4TkaLrRuRfO-CuCyfLZxVxZwl5udo",
+      "driveLink": "https://drive.google.com/file/d/12OE4TkaLrRuRfO-CuCyfLZxVxZwl5udo/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "09673d78-b51f-456f-bbab-3e05e7c16a5b",
+      "status": "pending",
+      "contractorName": "Martin McLaughlin",
+      "contractorEmail": "mmclaughlin.contractor@smcinstallations.com",
+      "fileName": "IMG-20260522-WA0000.jpg",
+      "invoiceDate": "2026-05-22T12:40:32.821+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1400.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1M1d8zNTKOsTroptgAvC452eYFqZBIk6z",
+      "driveLink": "https://drive.google.com/file/d/1M1d8zNTKOsTroptgAvC452eYFqZBIk6z/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "d3d70932-b373-4a1d-97b1-08f509972726",
+      "status": "pending",
+      "contractorName": "Ray Bustamante",
+      "contractorEmail": "rbustamante.contractor@m2fleetcom.com",
+      "fileName": "RBJ_Installations_Invoice__192_-_5_11-5_15_-_2026.pdf",
+      "invoiceDate": "2026-05-21T20:05:54.169+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1200.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1mi5zXKJV74EKCVB5vpAI1o00ku1dBPa4",
+      "driveLink": "https://drive.google.com/file/d/1mi5zXKJV74EKCVB5vpAI1o00ku1dBPa4/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:16.721799+00:00",
+      "updated_at": "2026-05-24T19:16:16.721799+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "73bf0b54-da42-44f6-920a-10736c348d13",
+      "status": "pending",
+      "contractorName": "Zachary Mclarry",
+      "contractorEmail": "zmclarry.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_142518_CamScanner.jpg",
+      "invoiceDate": "2026-05-22T19:26:35.801+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "17aIgNauNEXQNDzD26ZXrlscngNqEHbbF",
+      "driveLink": "https://drive.google.com/file/d/17aIgNauNEXQNDzD26ZXrlscngNqEHbbF/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "0c5600f1-3e55-48cf-bab7-633a66f348e7",
+      "status": "pending",
+      "contractorName": "Denzel Zeno",
+      "contractorEmail": "dzeno.contractor@m2fleetcom.com",
+      "fileName": "Invoice_68.xlsx",
+      "invoiceDate": "2026-05-22T18:16:08.919+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1s1U99gILnOF5PFFVr6E0TxBOTOkRrdlc",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1s1U99gILnOF5PFFVr6E0TxBOTOkRrdlc/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "03663b8f-0b1f-4937-8be9-0f5453569ded",
+      "status": "pending",
+      "contractorName": "Carlos Rincon",
+      "contractorEmail": "crincon.contractor@m2fleetcom.com",
+      "fileName": "Invoice#21-2026.pdf",
+      "invoiceDate": "2026-05-22T13:55:01.373+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "12OE4TkaLrRuRfO-CuCyfLZxVxZwl5udo",
+      "driveLink": "https://drive.google.com/file/d/12OE4TkaLrRuRfO-CuCyfLZxVxZwl5udo/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "c00380d3-28ec-4e88-8b99-db0abc53513d",
+      "status": "pending",
+      "contractorName": "Martin McLaughlin",
+      "contractorEmail": "mmclaughlin.contractor@smcinstallations.com",
+      "fileName": "IMG-20260522-WA0000.jpg",
+      "invoiceDate": "2026-05-22T12:40:32.821+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1400.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1M1d8zNTKOsTroptgAvC452eYFqZBIk6z",
+      "driveLink": "https://drive.google.com/file/d/1M1d8zNTKOsTroptgAvC452eYFqZBIk6z/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "1ccaaf46-b129-4995-b25e-ae9e44742358",
+      "status": "pending",
+      "contractorName": "Joshua Weyland",
+      "contractorEmail": "jweyland.contractor@m2fleetcom.com",
+      "fileName": "Thunderbolt_12_Volt_Invoice_0092.xlsx",
+      "invoiceDate": "2026-05-24T18:33:38.666+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1480.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1-e8F5gUoS8usj9gFlQj0AkC8mK-IGmJM/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "8fa9b0cd-2885-45bd-9147-11f6759ad78c",
+      "status": "pending",
+      "contractorName": "Samuel Morrison",
+      "contractorEmail": "smorrison.contractor@m2fleetcom.com",
+      "fileName": "IMG_1999.jpeg",
+      "invoiceDate": "2026-05-22T22:04:51.297+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1040.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1nAqr76im6TPtwryRqYxz8Fs4wDnhLM1C",
+      "driveLink": "https://drive.google.com/file/d/1nAqr76im6TPtwryRqYxz8Fs4wDnhLM1C/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "c002d584-31db-489b-a47d-caa3823dc211",
+      "status": "pending",
+      "contractorName": "Harley Traister",
+      "contractorEmail": "htraister.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260515_170619_Sheets.jpg",
+      "invoiceDate": "2026-05-22T21:06:29.623+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2450.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1C0uQEnliBN31uM-xSSUXzz-TfpF7UPz1",
+      "driveLink": "https://drive.google.com/file/d/1C0uQEnliBN31uM-xSSUXzz-TfpF7UPz1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "0696d569-e7d3-4210-b94d-21ec7354da28",
+      "status": "pending",
+      "contractorName": "Karon Smith",
+      "contractorEmail": "ksmith.contractor@m2fleetcom.com",
+      "fileName": "TYJ429.xlsx",
+      "invoiceDate": "2026-05-22T19:32:55.341+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1900.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "11zDrKDxptG-KkVS3jZXf3HRthX97gNzQ",
+      "driveLink": "https://docs.google.com/spreadsheets/d/11zDrKDxptG-KkVS3jZXf3HRthX97gNzQ/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "661c6522-373f-4c98-b91c-cf3a59ba6a53",
+      "status": "pending",
+      "contractorName": "Bryan Patterson",
+      "contractorEmail": "bpatterson.contractor@m2fleetcom.com",
+      "fileName": "IMG_3497.jpeg",
+      "invoiceDate": "2026-05-22T19:06:32.995+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1NgpYO7unXkMYhkcX-bzJF07-x16iplrX",
+      "driveLink": "https://drive.google.com/file/d/1NgpYO7unXkMYhkcX-bzJF07-x16iplrX/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "1a33b669-1ff8-428b-96a6-e29ec0512bc2",
+      "status": "pending",
+      "contractorName": "Matthew Bailey",
+      "contractorEmail": "mbailey.contractor@m2fleetcom.com",
+      "fileName": "MathewBaileyInvoice71.xlsx",
+      "invoiceDate": "2026-05-24T16:23:24.542+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1zh5Ej2LV4SrZyk36fagVeYDu-kHRSoKz/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "f2619f7b-b49e-4d84-8c1a-7e6007da7382",
+      "status": "pending",
+      "contractorName": "Logan Hogg",
+      "contractorEmail": "lhogg.contractor@m2fleetcom.com",
+      "fileName": "Invoice_logan_36.xlsx",
+      "invoiceDate": "2026-05-24T14:18:51.136+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1500.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "19zpXgsumVYufvL1zEptjP_g6kBYuDzC4",
+      "driveLink": "https://docs.google.com/spreadsheets/d/19zpXgsumVYufvL1zEptjP_g6kBYuDzC4/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "8845a8b3-e36e-4441-9ff9-d70b30d1e4ca",
+      "status": "pending",
+      "contractorName": "Brianna McLaughlin",
+      "contractorEmail": "bmclaughlin.contractor@m2fleetcom.com",
+      "fileName": "Screenshot_20260522_173509_Sheets.jpg",
+      "invoiceDate": "2026-05-24T12:07:22.346+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 720.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1-E2VCZH6dcn5u8BGsrU5_iUX6jhbYT-W",
+      "driveLink": "https://drive.google.com/file/d/1-E2VCZH6dcn5u8BGsrU5_iUX6jhbYT-W/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "74ed4d18-134c-4284-a15b-bce495d9c6ba",
+      "status": "pending",
+      "contractorName": "Beau Lyons",
+      "contractorEmail": "blyons.contractor@m2fleetcom.com",
+      "fileName": "IMG_8934.jpeg",
+      "invoiceDate": "2026-05-24T05:40:24.847+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1200.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "18M4NUa6s7glqy4aT0qDvn71KCUeBs-ZN",
+      "driveLink": "https://drive.google.com/file/d/18M4NUa6s7glqy4aT0qDvn71KCUeBs-ZN/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "e8d8cac0-690e-46cd-ba2f-0ac30cd30cbd",
+      "status": "pending",
+      "contractorName": "Leo Guerrero",
+      "contractorEmail": "lguerrero.contractor@m2fleetcom.com",
+      "fileName": "ElektroHorse_Invoice_3.pdf",
+      "invoiceDate": "2026-05-24T02:06:14.893+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1JLxmfQ8yWlV7QruhiVqEp25YtVaY19V1",
+      "driveLink": "https://drive.google.com/file/d/1JLxmfQ8yWlV7QruhiVqEp25YtVaY19V1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "97cb2dd3-7c80-4a49-9b30-ca44458a6664",
+      "status": "pending",
+      "contractorName": "David Ritchie",
+      "contractorEmail": "dritchie.contractor@m2fleetcom.com",
+      "fileName": "week_3_wally.pdf",
+      "invoiceDate": "2026-05-24T00:17:16.003+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2160.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1fM0X67lH79Slt4KP7zw-ZcAN8IOn3Va1",
+      "driveLink": "https://drive.google.com/file/d/1fM0X67lH79Slt4KP7zw-ZcAN8IOn3Va1/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "6532f26c-d89d-4189-a6cc-792f62212327",
+      "status": "pending",
+      "contractorName": "Ray Bustamante",
+      "contractorEmail": "rbustamante.contractor@m2fleetcom.com",
+      "fileName": "RBJ_Installations_Invoice__192_-_5_11-5_15_-_2026.pdf",
+      "invoiceDate": "2026-05-21T20:05:54.169+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1200.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1mi5zXKJV74EKCVB5vpAI1o00ku1dBPa4",
+      "driveLink": "https://drive.google.com/file/d/1mi5zXKJV74EKCVB5vpAI1o00ku1dBPa4/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "2143246e-bd48-4c3c-8950-0f3cd0e895e4",
+      "status": "pending",
+      "contractorName": "John Tran",
+      "contractorEmail": "jtran.contractor@m2fleetcom.com",
+      "fileName": "JTran_Invoice20.xlsx",
+      "invoiceDate": "2026-05-23T22:47:33.462+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2520.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1JCk2fRhj1zwK-QSZKfs1cJea5QeKRiAL",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1JCk2fRhj1zwK-QSZKfs1cJea5QeKRiAL/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "a1e6b794-d679-4b4f-b21e-1f0ebba1e0bc",
+      "status": "pending",
+      "contractorName": "Jontavious Barker",
+      "contractorEmail": "jbarker.contractor@m2fleetcom.com",
+      "fileName": "5-18-26-5-22-26_Emerald.xlsx",
+      "invoiceDate": "2026-05-23T17:19:06.028+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1300.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1wPNAXN7Ng32CRJgjLMFzZORYI-okGw1M",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1wPNAXN7Ng32CRJgjLMFzZORYI-okGw1M/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "507ff6ca-5198-4e92-a8d0-fc68469d00bb",
+      "status": "pending",
+      "contractorName": "Leonel Hernandez",
+      "contractorEmail": "lhernandez.contractor@m2fleetcom.com",
+      "fileName": "image_2026-05-23_110533812.png",
+      "invoiceDate": "2026-05-23T16:05:46.757+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1UD46bmkBLMVjU4RIU6aukpNZeLoOtgXC",
+      "driveLink": "https://drive.google.com/file/d/1UD46bmkBLMVjU4RIU6aukpNZeLoOtgXC/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "a10e9f4d-2c9a-4610-8c3f-7f5885654ca5",
+      "status": "pending",
+      "contractorName": "Bobby Wiestling",
+      "contractorEmail": "bwiestling.contractor@m2fleetcom.com",
+      "fileName": "BobbyWiestlingInvoice17.xlsx",
+      "invoiceDate": "2026-05-23T10:21:00.782+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 2000.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1cK3wn52PwQ3gweP8KrpZHfAJwSqL9C8P",
+      "driveLink": "https://docs.google.com/spreadsheets/d/1cK3wn52PwQ3gweP8KrpZHfAJwSqL9C8P/edit?usp=drivesdk&ouid=108364092857920644730&rtpof=true&sd=true",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  },
+  {
+    "current": {
+      "id": "f468acb2-1fd2-4c57-a68b-5f7a50c71ed0",
+      "status": "pending",
+      "contractorName": "Erik Baltazar",
+      "contractorEmail": "ebaltazar.contractor@m2fleetcom.com",
+      "fileName": "Invoice_M2522.pdf",
+      "invoiceDate": "2026-05-22T22:11:00.769+00:00",
+      "weekEndingDate": "2026-05-24",
+      "totalAmount": 1800.0,
+      "pendingReason": "Awaiting manual review and approval",
+      "driveFileId": "1KgGCoi2P9MNlmzasUXtEikIePvZja9Pp",
+      "driveLink": "https://drive.google.com/file/d/1KgGCoi2P9MNlmzasUXtEikIePvZja9Pp/view?usp=drivesdk",
+      "created_at": "2026-05-24T19:16:21.008685+00:00",
+      "updated_at": "2026-05-24T19:16:21.008685+00:00"
+    },
+    "matches": []
+  }
+]

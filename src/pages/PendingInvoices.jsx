@@ -34,6 +34,10 @@ import { Checkbox } from '@/components/ui/checkbox.jsx';
 import { Label } from '@/components/ui/label.jsx';
 import { format } from 'date-fns';
 
+function getInvoiceCreatedAt(invoice) {
+  return invoice?.created_at || invoice?.created_date || invoice?.createdAt || null;
+}
+
 // Helper to convert UTC to Central Time for display using browser Intl API
 function formatCentralTime(utcDateString) {
   if (!utcDateString) return 'N/A';
@@ -296,7 +300,7 @@ function BulkRenameDialog({ open, invoices, onClose, onSave, isProcessing }) {
             <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 border rounded-lg bg-gray-50">
               <div className="w-full sm:w-1/3 truncate text-sm">
                 <span className="font-medium text-gray-900 block truncate" title={inv.contractorName}>{inv.contractorName}</span>
-                <span className="text-gray-500">{formatCentralTime(inv.created_date)}</span>
+                <span className="text-gray-500">{formatCentralTime(getInvoiceCreatedAt(inv))}</span>
               </div>
               <Input 
                 className="flex-1"
@@ -382,7 +386,11 @@ export default function PendingInvoices() {
     setIsLoading(true);
     try {
       const [pendingInvoices, allContractors] = await Promise.all([
-        (await supabase.from('Invoice').select('*').match({ status: 'pending' }, '-created_date')).data,
+        (await supabase
+          .from('Invoice')
+          .select('*')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })).data,
         (await supabase.from('User').select('*')).data
       ]);
 
@@ -456,33 +464,31 @@ export default function PendingInvoices() {
     }
 
     // Sorting
-    const [field, order] = sortConfig.split('_');
+    const [field, direction] = sortConfig.split('_');
     filtered.sort((a, b) => {
       let aVal, bVal;
 
       switch (field) {
         case 'created':
-          aVal = new Date(a.created_date || 0);
-          bVal = new Date(b.created_date || 0);
+          aVal = new Date(getInvoiceCreatedAt(a) || 0).getTime();
+          bVal = new Date(getInvoiceCreatedAt(b) || 0).getTime();
           break;
         case 'contractor':
           aVal = a.contractorName?.toLowerCase() || '';
           bVal = b.contractorName?.toLowerCase() || '';
           break;
         case 'amount':
-          aVal = a.totalAmount || 0;
-          bVal = b.totalAmount || 0;
+          aVal = Number(a.totalAmount || 0);
+          bVal = Number(b.totalAmount || 0);
           break;
         default:
-          aVal = new Date(a.created_date || 0);
-          bVal = new Date(b.created_date || 0);
+          aVal = new Date(getInvoiceCreatedAt(a) || 0).getTime();
+          bVal = new Date(getInvoiceCreatedAt(b) || 0).getTime();
       }
 
-      if (order === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
+      if (aVal === bVal) return 0;
+      const comparison = aVal > bVal ? 1 : -1;
+      return direction === 'asc' ? comparison : -comparison;
     });
 
     return filtered;
@@ -995,7 +1001,7 @@ export default function PendingInvoices() {
                         <Clock className="w-4 h-4 mt-1 text-gray-400" />
                         <div>
                           <p className="text-xs text-gray-500">Submitted</p>
-                          <p className="font-medium">{formatCentralTime(invoice.created_date)}</p>
+                          <p className="font-medium">{formatCentralTime(getInvoiceCreatedAt(invoice))}</p>
                         </div>
                       </div>
                     </div>

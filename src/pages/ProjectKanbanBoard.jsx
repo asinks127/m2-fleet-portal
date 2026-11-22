@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { User, Task, WorkersCompRecord, SafetyCertification } from '@/api/entities.js';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,6 +28,7 @@ import {
 import { isBefore, differenceInDays } from 'date-fns';
 import TechnicianDetailsModal from '../components/kanban/TechnicianDetailsModal';
 import AddTaskDialog from '../components/kanban/AddTaskDialog';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const adminEmails = ['austin@m2fleetcom.com', 'orville@m2fleetcom.com', 'lena@m2fleetcom.com'];
 
@@ -345,6 +345,10 @@ export default function ProjectKanbanBoard() {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initialTaskStatus = new URLSearchParams(location.search).get('taskStatus') || 'all';
+  const [taskStatusFilter, setTaskStatusFilter] = useState(initialTaskStatus);
   
   const queryClient = useQueryClient();
 
@@ -401,7 +405,12 @@ export default function ProjectKanbanBoard() {
     );
   }, [users]);
 
+  const pendingTasks = useMemo(() => tasks.filter(task => !['done', 'completed', 'closed'].includes(String(task.status || '').toLowerCase())), [tasks]);
+
   const filteredContractors = useMemo(() => {
+    const visibleContractorIds = taskStatusFilter === 'pending'
+      ? new Set(pendingTasks.flatMap(task => [task.technicianId, task.assignedToId, task.metadata?.technicianId]).filter(Boolean))
+      : null;
     return contractors.filter(tech => {
       const searchMatch = !searchTerm || 
         (tech.displayName || tech.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -419,9 +428,10 @@ export default function ProjectKanbanBoard() {
         (complianceFilter === 'warning' && compStatus === 'warning') ||
         (complianceFilter === 'critical' && compStatus === 'critical');
 
-      return searchMatch && statusMatch && complianceMatch;
+      const taskMatch = !visibleContractorIds || visibleContractorIds.has(tech.id);
+      return searchMatch && statusMatch && complianceMatch && taskMatch;
     });
-  }, [contractors, searchTerm, statusFilter, complianceFilter, compliance]);
+  }, [contractors, searchTerm, statusFilter, complianceFilter, compliance, taskStatusFilter, pendingTasks]);
 
   const projectGroups = useMemo(() => {
     const groups = {};
@@ -507,6 +517,13 @@ export default function ProjectKanbanBoard() {
             <p className="text-gray-600 mt-1">Drag technicians between projects to reassign</p>
           </div>
         </div>
+
+        {taskStatusFilter === 'pending' && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <span>Showing technicians with pending tasks ({pendingTasks.length} tasks).</span>
+            <Button variant="outline" size="sm" onClick={() => { setTaskStatusFilter('all'); navigate(location.pathname, { replace: true }); }}>Clear filter</Button>
+          </div>
+        )}
 
         {/* Filters */}
         <Card>

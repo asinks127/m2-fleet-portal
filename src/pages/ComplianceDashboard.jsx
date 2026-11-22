@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button.jsx';
 import { Loader2, ShieldAlert, ShieldCheck, ShieldOff, Download, Upload, ExternalLink } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function ComplianceDashboard() {
   const [complianceData, setComplianceData] = useState({
@@ -15,6 +16,9 @@ export default function ComplianceDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingFor, setUploadingFor] = useState(null);
   const fileInputRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState(() => new URLSearchParams(location.search).get('filter') || 'all');
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -51,6 +55,16 @@ export default function ComplianceDashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const nextFilter = new URLSearchParams(location.search).get('filter') || 'all';
+    if (nextFilter !== filter) setFilter(nextFilter);
+  }, [location.search]);
+
+  const clearFilter = () => {
+    setFilter('all');
+    navigate(location.pathname, { replace: true });
+  };
 
   const processRecords = (contractors, records) => {
     const today = new Date();
@@ -199,6 +213,7 @@ export default function ComplianceDashboard() {
   }
   
   const wc = complianceData.workersComp;
+  const filteredExpiringSoon = filter === 'expiringSoon' ? wc.expiringSoon : wc.expiringSoon;
 
   return (
     <div className="p-6 space-y-6">
@@ -210,6 +225,12 @@ export default function ComplianceDashboard() {
         onChange={handleFileChange}
       />
       <div className="mb-6">
+        {filter === 'expiringSoon' && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+            <span>Showing items expiring within the next 30 days.</span>
+            <Button variant="outline" size="sm" onClick={clearFilter}>Clear filter</Button>
+          </div>
+        )}
         <h1 className="text-3xl font-bold text-gray-900">Compliance Dashboard</h1>
         <p className="text-gray-600 mt-1">
           Monitor contractor Workers' Compensation compliance status. 
@@ -240,14 +261,20 @@ export default function ComplianceDashboard() {
 
       <div className="space-y-6">
           <h2 className="text-2xl font-semibold border-b pb-2">Workers' Compensation</h2>
-          <div className="grid lg:grid-cols-2 gap-6">
-             <ComplianceTable title="Expired Policies" items={wc.expired} columns={['Technician', 'Provider', 'Expired On', 'Days Past']} icon={<ShieldAlert className="text-red-600"/>} showActions />
-             <ComplianceTable title="Policies Expiring Soon" items={wc.expiringSoon} columns={['Technician', 'Provider', 'Expires On', 'Days Left']} icon={<ShieldCheck className="text-orange-500"/>} showActions />
-          </div>
-          <div className="grid lg:grid-cols-2 gap-6 mt-6">
-            <ComplianceTable title="Missing Policies" items={wc.missing} columns={['Technician']} icon={<ShieldOff className="text-yellow-500"/>} showActions />
-            <ComplianceTable title="Compliant Policies" items={wc.compliant} columns={['Technician', 'Provider', 'Expires On', 'Days Left']} icon={<ShieldCheck className="text-green-600"/>} showActions />
-          </div>
+          {filter === 'expiringSoon' ? (
+            <ComplianceTable title="Policies Expiring Soon (next 30 days)" items={filteredExpiringSoon} columns={['Technician', 'Provider', 'Expires On', 'Days Left']} icon={<ShieldCheck className="text-orange-500"/>} showActions />
+          ) : (
+            <>
+              <div className="grid lg:grid-cols-2 gap-6">
+                <ComplianceTable title="Expired Policies" items={wc.expired} columns={['Technician', 'Provider', 'Expired On', 'Days Past']} icon={<ShieldAlert className="text-red-600"/>} showActions />
+                <ComplianceTable title="Policies Expiring Soon" items={wc.expiringSoon} columns={['Technician', 'Provider', 'Expires On', 'Days Left']} icon={<ShieldCheck className="text-orange-500"/>} showActions />
+              </div>
+              <div className="grid lg:grid-cols-2 gap-6 mt-6">
+                <ComplianceTable title="Missing Policies" items={wc.missing} columns={['Technician']} icon={<ShieldOff className="text-yellow-500"/>} showActions />
+                <ComplianceTable title="Compliant Policies" items={wc.compliant} columns={['Technician', 'Provider', 'Expires On', 'Days Left']} icon={<ShieldCheck className="text-green-600"/>} showActions />
+              </div>
+            </>
+          )}
       </div>
 
     </div>

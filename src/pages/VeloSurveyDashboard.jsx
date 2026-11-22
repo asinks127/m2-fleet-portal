@@ -17,7 +17,7 @@ import {
 import { format } from 'date-fns';
 
 // Public survey page (PM-facing). The scheduled Zo agent emails this link from scheduling@m2fleetcom.com.
-const SURVEY_PAGE_URL = 'https://austin1.zo.space/velo-survey';
+const SURVEY_PAGE_URL = 'https://www.m2fleetcomportal.com/velo-survey';
 
 // ---- helpers ----
 const parseTechIds = (ti) => {
@@ -54,7 +54,7 @@ const techName = (u) => u?.full_name || u?.displayName || u?.fullName || u?.disp
 
 const callWebhook = async (record) => {
   try {
-    await fetch('https://austin1.zo.space/api/velo-survey-webhook', {
+    await fetch('https://www.m2fleetcomportal.com/api/velo-survey-webhook', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

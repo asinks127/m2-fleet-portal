@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.jsx';
-import { Loader2, UploadCloud, Folder, File, Trash2, Download, FilePlus, Upload, FolderPlus, FileSignature, CheckCircle, Clock, Eye } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader2, UploadCloud, Folder, File, Trash2, Download, FilePlus, Upload, FolderPlus, FileSignature, CheckCircle, Clock, Eye, ShieldCheck, FileText, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge.jsx';
+import { authFetch } from '@/api/authFetch.js';
 import { groupBy } from 'lodash';
 
 const getCurrentTimeInCT = () => {
@@ -27,6 +28,29 @@ const getCurrentTimeInCT = () => {
   const p = parts.reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});
   return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}.000Z`;
 };
+
+const INSURANCE_TYPE_LABELS = {
+  workers_comp: "Workers' Comp",
+  general_liability: 'General Liability',
+  commercial_auto: 'Commercial Auto',
+};
+
+function folderCategory(name) {
+  const n = String(name || '').toLowerCase();
+  if (INSURANCE_TYPE_LABELS[n]) return 'insurance';
+  if (/workers.?\s?comp|insurance|\bcoi\b|certificate of insurance|liability|auto policy/.test(n)) return 'insurance';
+  if (/safety|osha|certif|training|hazard|acknowledg/.test(n)) return 'safety';
+  if (/initial|paperwork|onboarding|w-?9|contract|agreement/.test(n)) return 'paperwork';
+  if (/invoice/.test(n)) return 'invoice';
+  return 'paperwork';
+}
+
+function policyStatusLabel(p) {
+  if (p?.policy_status) return String(p.policy_status).replace(/_/g, ' ');
+  if (!p?.expiration_date) return 'no expiration';
+  const d = new Date(p.expiration_date);
+  return isNaN(d.getTime()) ? 'unknown' : (d < new Date() ? 'expired' : 'active');
+}
 
 function CreateFolderDialog({ isOpen, onClose, onCreateFolder, existingFolders }) {
   const [folderName, setFolderName] = useState('');
@@ -363,6 +387,9 @@ function UploadDocumentDialog({ contractor, currentUser, onUploadSuccess, initia
 export default function ContractorDocumentsTab({ contractor }) {
   const [documents, setDocuments] = useState([]);
   const [signatureRequests, setSignatureRequests] = useState([]);
+  const [insurancePolicies, setInsurancePolicies] = useState([]);
+  const [policiesLoading, setPoliciesLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [uploadConfig, setUploadConfig] = useState({ isOpen: false, folderName: '' });
@@ -398,6 +425,31 @@ export default function ContractorDocumentsTab({ contractor }) {
     (supabase.auth.getUser().then(res => res.data.user)).then(setCurrentUser);
   }, [loadDocuments]);
 
+  // Insurance policies (COIs, workers' comp, commercial auto) — viewable for reports.
+  const loadInsurancePolicies = useCallback(async () => {
+    setPoliciesLoading(true);
+    try {
+      const res = await authFetch(`/api/insurance?technician_id=${encodeURIComponent(contractor.id)}`);
+      const json = await res.json().catch(() => ({}));
+      const all = Array.isArray(json?.policies) ? json.policies : [];
+      const pid = String(contractor.id || '');
+      const pemail = String(contractor.email || '').trim().toLowerCase();
+      const mine = all.filter(p => {
+        if (!p) return false;
+        if (p.technician_id && String(p.technician_id) === pid) return true;
+        const cands = [p.technician_email, p.contractor_name].filter(Boolean);
+        return pemail && cands.some(c => String(c).trim().toLowerCase() === pemail);
+      });
+      setInsurancePolicies(mine);
+    } catch (e) {
+      console.error('Insurance load failed:', e);
+      setInsurancePolicies([]);
+    } finally {
+      setPoliciesLoading(false);
+    }
+  }, [contractor.id, contractor.email]);
+
+  useEffect(() => { loadInsurancePolicies(); }, [loadInsurancePolicies]);
   const handleDelete = async (docId) => {
     if(window.confirm('Are you sure you want to delete this document? This action cannot be undone.')){
       try {
@@ -438,6 +490,11 @@ export default function ContractorDocumentsTab({ contractor }) {
     return Object.keys(groupedDocuments).sort();
   }, [groupedDocuments]);
 
+  const displayFolders = useMemo(() => {
+    if (categoryFilter === 'all') return existingFolders;
+    return existingFolders.filter(f => folderCategory(f) === categoryFilter);
+  }, [existingFolders, categoryFilter]);
+
   if (isLoading) {
     return <div className="flex justify-center items-center p-8"><Loader2 className="w-8 h-8 animate-spin" /></div>;
   }
@@ -464,6 +521,18 @@ export default function ContractorDocumentsTab({ contractor }) {
           </Button>
         </div>
       </div>
+
+      <div className="flex flex-wrap gap-2">
+        {[['all', 'All'], ['insurance', 'Insurance'], ['safety', 'Safety'], ['paperwork', 'Paperwork'], ['invoice', 'Invoices']].map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setCategoryFilter(val)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition ${categoryFilter === val ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       
       <Dialog open={uploadConfig.isOpen} onOpenChange={(isOpen) => !isOpen && handleCloseDialog()}>
         {currentUser && (
@@ -487,6 +556,63 @@ export default function ContractorDocumentsTab({ contractor }) {
         onCreateFolder={handleCreateFolder}
         existingFolders={existingFolders}
       />
+
+      {/* Insurance Documents Section */}
+      <Card className="border-emerald-200 bg-emerald-50/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base text-emerald-800">
+            <ShieldCheck className="h-5 w-5" />
+            Insurance Documents
+            {insurancePolicies.length > 0 && (
+              <Badge variant="secondary" className="ml-1">{insurancePolicies.length}</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {policiesLoading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading insurance documents...
+            </div>
+          ) : insurancePolicies.length === 0 ? (
+            <p className="text-sm text-gray-500">No insurance certificates on file for this contractor.</p>
+          ) : (
+            <ul className="divide-y divide-emerald-100">
+              {insurancePolicies.map((p) => (
+                <li key={p.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {INSURANCE_TYPE_LABELS[p.insurance_type] || p.insurance_type || 'Insurance Policy'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {[p.insurance_company, p.policy_number].filter(Boolean).join(' · ')}
+                        {p.expiration_date ? ` · Expires ${format(new Date(p.expiration_date), 'MMM d, yyyy')}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={policyStatusLabel(p) === 'active' ? 'default' : 'destructive'} className="capitalize">
+                      {policyStatusLabel(p)}
+                    </Badge>
+                    {p.document_path && (
+                      <a
+                        href={`/api/insuranceDoc?id=${encodeURIComponent(p.id)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="outline" size="sm">
+                          <ExternalLink className="h-4 w-4 mr-1" /> View Document
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Signature Requests Section */}
       {signatureRequests.length > 0 && (
@@ -531,17 +657,17 @@ export default function ContractorDocumentsTab({ contractor }) {
         </Card>
       )}
 
-      {Object.keys(groupedDocuments).length === 0 && signatureRequests.length === 0 ? (
+      {Object.keys(groupedDocuments).length === 0 && signatureRequests.length === 0 && !policiesLoading && insurancePolicies.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
             <File className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No documents found</h3>
-            <p className="mt-1 text-sm text-gray-500">No uploads or signature requests found for this contractor.</p>
+            <p className="mt-1 text-sm text-gray-500">No uploads, insurance documents, or signature requests found for this contractor.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {existingFolders.map((folderName) => (
+          {filteredFolders.map((folderName) => (
             <Card key={folderName}>
               <CardHeader>
                 <div className="flex justify-between items-center">

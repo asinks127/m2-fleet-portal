@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">M2 Fleet</title>
+  <desc id="desc">M2 Fleet blue shield mark</desc>
+  <path fill="#2563eb" d="M32 4 55 12v17c0 14.5-9.5 25.4-23 31C18.5 54.4 9 43.5 9 29V12z"/>
+  <path fill="#fff" d="M17 39V23.5c0-2.5 2-4.5 4.5-4.5h3c1.8 0 3.4 1 4.2 2.6L32 26l3.3-4.4c.8-1.6 2.4-2.6 4.2-2.6h3c2.5 0 4.5 2 4.5 4.5V39h-6V25.2l-5.2 7h-3.6l-5.2-7V39z"/>
+  <path fill="#bfdbfe" d="M20 45h24v4H20z"/>
+</svg>

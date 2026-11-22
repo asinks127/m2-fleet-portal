@@ -65,8 +65,8 @@ export default function Survey() {
       
       console.log('Survey data response:', response);
       
-      if (response.data && response.data.success) {
-        const { survey, technicians } = response.data;
+      if (response && response.success) {
+        const { survey, technicians } = response;
         setSurveyData({ survey, technicians });
         
         // Initialize responses array
@@ -84,7 +84,7 @@ export default function Survey() {
         }));
         setResponses(initialResponses);
       } else {
-        throw new Error(response.data?.error || 'Failed to load survey data');
+        throw new Error(response?.error || 'Failed to load survey data');
       }
     } catch (err) {
       console.error('Error loading survey:', err);
@@ -118,10 +118,10 @@ export default function Survey() {
         responses: responses
       });
 
-      if (response.data && response.data.success) {
+      if (response && response.success) {
         setSubmitted(true);
       } else {
-        throw new Error(response.data?.error || 'Failed to submit survey');
+        throw new Error(response?.error || 'Failed to submit survey');
       }
     } catch (err) {
       console.error('Error submitting survey:', err);

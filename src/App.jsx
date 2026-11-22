@@ -10,6 +10,8 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import SignerPage from './pages/documentSigning/SignerPage.jsx';
+import Survey from './pages/Survey';
+import TechnicianProfile from './pages/TechnicianProfile';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -68,6 +70,11 @@ const AuthenticatedApp = () => {
           {Pages.TechScheduleMap ? <Pages.TechScheduleMap /> : null}
         </LayoutWrapper>
       } />
+      <Route path="/technicians/:id" element={
+        <LayoutWrapper currentPageName="TechnicianProfile">
+          <TechnicianProfile />
+        </LayoutWrapper>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -81,6 +88,7 @@ function App() {
           <NavigationTracker />
           <Routes>
             <Route path="/sign/:requestId/:token" element={<SignerPage />} />
+            <Route path="/velo-survey" element={<Survey />} />
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>

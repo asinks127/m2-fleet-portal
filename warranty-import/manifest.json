@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-10-05T04:26:53.776432+00:00",
+  "live_import_performed": false,
+  "counts": {
+    "WarrantyProject": 1245,
+    "Technician": 307,
+    "QCIssue": 2883,
+    "WarrantyClaim": 5914,
+    "UserSession": 717
+  },
+  "unique_records": 11066,
+  "identical_project_export_ignored": "Project_export-ecd0a730fccf.csv",
+  "source_sha256": {
+    "Project_export-1a01deb47942.csv": "61f2a42aa5e7cb7d367cbf162d2135d571d4bd74a4ad803b95b1e0edfa076ed3",
+    "Technician_export-1535e4bb238e.csv": "d8b9a809778debbddf150c51de4e520117c7a5e8f7fef2609525a057cdd2b862",
+    "QCIssue_export-42cd917dc677.csv": "9aca7171d524f90b676e1734dac410c7f7c13668d2aee167a519ce197e4b583a",
+    "WarrantyClaim_export-9eb934756e21.csv": "80cceee431193fba551915b9eacb99c7b05b794c71687d2187e8271198772a68",
+    "UserSession_export-abd37d503827.csv": "40a846ee37b1f6fb71560f733126f1bc4658f61ea98eb94618be78d6c0419cb8",
+    "Project_export-ecd0a730fccf.csv": "61f2a42aa5e7cb7d367cbf162d2135d571d4bd74a4ad803b95b1e0edfa076ed3"
+  },
+  "unmapped_fields": {
+    "WarrantyProject": [],
+    "Technician": [],
+    "QCIssue": [],
+    "WarrantyClaim": [],
+    "UserSession": []
+  },
+  "links": {
+    "Technician:preserved_id": 2486,
+    "WarrantyProject:preserved_id": 2779,
+    "Technician:unresolved": 296,
+    "Technician:recovered_by_exact_name": 5817,
+    "WarrantyProject:recovered_by_exact_name": 43,
+    "WarrantyProject:unresolved": 36,
+    "legacy_audit_logs_preserved": 315,
+    "claim_issue_link:matched": 3514,
+    "claim_issue_link:unresolved": 1328,
+    "claim_issue_link:ambiguous": 1072
+  },
+  "review_reasons": {
+    "invalid_date:last_qc_issue_date": 18,
+    "placeholder_technician_name": 343,
+    "unresolved_reference:technician_id": 289,
+    "ambiguous_reference:project_id": 34,
+    "missing_issue_type": 1718,
+    "missing_asset_number": 140,
+    "unresolved_reference:duplicate_of": 1,
+    "unresolved_reference:project_id": 2,
+    "ambiguous_reference:technician_id": 7,
+    "missing_required_text:issue_description": 1,
+    "historical_session_active_flag_preserved": 10,
+    "session_activity_exceeds_duration": 2,
+    "unresolved_reference:qc_issue_id": 1328,
+    "claim_pending_but_qc_resolved": 2172,
+    "ambiguous_reference:qc_issue_id": 1072
+  },
+  "records_needing_review": 6463,
+  "ambiguous_active_technician_names": {
+    "carlos rinco n": [
+      "69d7c5985555303d40e4ed51",
+      "69c49aab662511ff678a1617"
+    ]
+  },
+  "repeated_claim_number_groups": 815,
+  "source_issue_status_counts": {
+    "pending_repair": 1397,
+    "repaired": 31,
+    "closed": 1449,
+    "scheduled": 6
+  }
+}

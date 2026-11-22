@@ -1,8 +1,7 @@
+import Dashboard from './Dashboard';
+
+// Legacy route: the Warranty Management nav link now renders the full
+// warranty/QC flow dashboard (ported from the warranty app).
 export default function WarrantyManagement() {
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold text-gray-900">Warranty Management</h1>
-      <p className="mt-2 text-gray-600">Coming soon.</p>
-    </div>
-  );
+  return <Dashboard />;
 }

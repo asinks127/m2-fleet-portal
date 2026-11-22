@@ -10,3 +10,6 @@ node_modules/
 supabase/.temp/
 test_*.mjs
 node_modules/
+warranty-import/source/
+warranty-import/*.jsonl
+warranty-import/review-needed.csv

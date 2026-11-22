@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-08-31T06:25:01.089Z",
+  "csvPath": "/home/.z/chat-uploads/Invoice_export (1)-f25da0e61dcf.csv",
+  "matchingMethod": "contractor email or name + normalized filename + week ending/invoice date + amount; database IDs are not used because IDs were regenerated during migration",
+  "driveScope": "app Invoice records and their stored driveFileId/driveLink references; no external Google Drive search was used",
+  "historicalRows": 4055,
+  "currentRows": 9191,
+  "historicalRowsWithIdentityKey": 4055,
+  "currentRowsWithIdentityKey": 9182,
+  "uniqueHistoricalIdentityKeys": 4054,
+  "uniqueCurrentIdentityKeys": 2970,
+  "uniqueIdentityMatches": 0,
+  "missingFromCurrentByIdentity": 1170,
+  "ambiguousHistoricalMatches": 2885,
+  "currentNotInHistoricalByIdentity": 9191,
+  "fieldStatusDifferences": 0,
+  "historicalApprovedCurrentPendingMatches": 0,
+  "currentPendingInvoices": 111,
+  "currentPendingDuplicateGroups": 21,
+  "currentInvoicesWithAnyAppDriveReference": 6987,
+  "currentInvoicesWithCompleteAppDriveReference": 6987,
+  "approvedInvoicesWithCompleteAppDriveReference": 6916,
+  "statusCountsHistorical": {
+    "pending": 54,
+    "approved": 3957,
+    "rejected": 44
+  },
+  "statusCountsCurrent": {
+    "approved": 8952,
+    "pending": 111,
+    "rejected": 128
+  }
+}

@@ -7,8 +7,7 @@ import {
   LayoutDashboard, LogOut, FileText, Users, Briefcase, Shield, CheckSquare,
   Truck, UserCheck, FileSearch, DollarSign, BarChart3, ChevronDown,
   ChevronRight, Menu, X, Calendar, UserCog, AlertTriangle, Phone,
-  Star, TrendingUp, Megaphone, KanbanSquare, FileSignature, UserSquare, Settings, Zap, Home, Sparkles, UserX, MessageSquare, ShieldAlert, ClipboardList, ClipboardCheck, Play, Plus, Search
-} from 'lucide-react';
+  Star, TrendingUp, Megaphone, KanbanSquare, FileSignature, Send, UserSquare, Settings, Zap, Home, Sparkles, UserX, MessageSquare, ShieldAlert, ClipboardList, ClipboardCheck, ShieldCheck, Play, Plus, Search, AlertCircle, Inbox, Wrench, Navigation, Database, FileWarning} from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 
 const NavLink = ({ href, children, icon: Icon }) => {
@@ -65,7 +64,28 @@ const adminNavLinks = [
       { href: createPageUrl('Performance'), label: 'Performance Dashboard', icon: TrendingUp },
       { href: createPageUrl('VeloSurveyDashboard'), label: 'Velo Surveys', icon: Star },
       { href: createPageUrl('CallLogsReport'), label: 'Call Logs', icon: Phone },
-      { href: createPageUrl('WarrantyManagement'), label: 'Warranty Management', icon: ClipboardCheck },
+    ],
+  },
+  {
+    title: 'Warranty & QC Flow',
+    icon: ClipboardCheck,
+    children: [
+      { href: createPageUrl('InsuranceManagement'), label: 'Insurance Management', icon: ShieldCheck },
+      { href: createPageUrl('WarrantyManagement'), label: 'Warranty Dashboard', icon: ClipboardCheck },
+      { href: createPageUrl('SchedulingInbox'), label: 'Scheduling Inbox', icon: Inbox },
+      { href: createPageUrl('WarrantyActionQueue'), label: 'Warranty Action Queue', icon: AlertCircle },
+      { href: createPageUrl('WarrantyClaims'), label: 'Warranty Claims', icon: FileWarning },
+      { href: createPageUrl('QCIssues'), label: 'QC Issues', icon: Shield },
+      { href: createPageUrl('QCCommandCenter'), label: 'QC Command Center', icon: Zap },
+      { href: createPageUrl('QCTrends'), label: 'QC Trends', icon: TrendingUp },
+      { href: createPageUrl('IntakeReviewQueue'), label: 'Intake Review Queue', icon: Inbox },
+      { href: createPageUrl('TechnicianScorecards'), label: 'Tech Scorecards', icon: Star },
+      { href: createPageUrl('Technicians'), label: 'Warranty Technicians', icon: Wrench },
+      { href: createPageUrl('ServiceCalls'), label: 'Service Calls', icon: Truck },
+      { href: createPageUrl('MileageReports'), label: 'Mileage Reports', icon: Navigation },
+      { href: createPageUrl('OpenIssuesReport'), label: 'Open Issues Report', icon: FileSearch },
+      { href: createPageUrl('QCDataQuality'), label: 'Data Quality', icon: Database },
+      { href: createPageUrl('AdminTools'), label: 'Warranty Admin Tools', icon: Settings },
     ],
   },
   {
@@ -118,6 +138,7 @@ const adminNavLinks = [
       { href: createPageUrl('RecruitingDashboard'), label: 'Recruiting', icon: Briefcase },
       { href: createPageUrl('InactiveTechs'), label: 'Inactive Techs', icon: UserCog },
       { href: createPageUrl('DocumentSigningDashboard'), label: 'E-Signatures', icon: FileSignature },
+      { href: createPageUrl('ESignatureAssignment'), label: 'E-Sign Bulk', icon: Send },
       { href: createPageUrl('PaymentLedger'), label: 'Payment Ledger', icon: DollarSign },
       { href: createPageUrl('AnnouncementManager'), label: 'Announcements', icon: Megaphone },
       { href: createPageUrl('AutomationSettings'), label: 'Automation', icon: Settings },
@@ -172,7 +193,7 @@ const veloNavLinks = [
 const adminOnlyPages = [
   'AdminDashboard', 'PendingInvoices',
   'RecruitingDashboard', 'InvoicesDrive', 'PaymentLedger', 'DocusignDashboard',
-  'DocumentSigningDashboard', 'InvoiceManagement', 'ContractorAccounting',
+  'DocumentSigningDashboard', 'ESignatureAssignment', 'InvoiceManagement', 'ContractorAccounting',
   'WeeklyApprovedInvoices', 'AutoApprovedInvoices', 'InactiveTechs', 'Calendar',
   'Performance', 'BulkInvite', 'AlertLog', 'VeloSurveyDashboard',
   'ProjectKanbanBoard', 'AutomationSettings', 'DiagnosticReport',
@@ -253,7 +274,7 @@ function PrivateLayout({ children, currentPageName }) {
           const specialContractorEmails = ['tjserota@gmail.com'];
 
           const isVeloPM = userEmail.endsWith('@velociti.com') || userEmail === 'omcvay@gmail.com';
-          const isAdmin = effectiveUser?.user_metadata?.role === 'admin' || adminEmails.includes(userEmail);
+          const isAdmin = effectiveUser?.user_metadata?.role === 'admin' || adminEmails.includes(userEmail) || (userEmail.endsWith('@m2fleetcom.com') && !userEmail.includes('.contractor@'));
           const isQC = qcEmails.includes(userEmail);
           const isContractor = !isVeloPM && (
             userEmail.includes('.contractor@m2fleetcom.com') || 
@@ -375,7 +396,7 @@ function PrivateLayout({ children, currentPageName }) {
 
   const isVeloPM = userEmail.endsWith('@velociti.com') ||
                   userEmail === 'omcvay@gmail.com';
-  const isAdmin = user?.user_metadata?.role === 'admin' || adminEmails.includes(userEmail);
+  const isAdmin = user?.user_metadata?.role === 'admin' || adminEmails.includes(userEmail) || (userEmail.endsWith('@m2fleetcom.com') && !userEmail.includes('.contractor@'));
   const isQC = qcEmails.includes(userEmail);
   const isContractor = !isVeloPM && (
     userEmail.includes('.contractor@m2fleetcom.com') || 

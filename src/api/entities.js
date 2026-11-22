@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient.js';
+import { createWarrantyEntityProxy, WARRANTY_COLUMN_TYPES } from '../../shared/warrantyContract.js';
 
 // Entities helper - wraps Supabase table queries in a familiar interface
 // Each entity maps to a Supabase table of the same name
@@ -64,6 +65,35 @@ const TABLE_COLUMN_OVERRIDES = {
   SafetyLessonAcknowledgment: {
     messageId: 'messageId',
     userId: 'userId',
+  },
+  VeloSurvey: {
+    completedDate: 'completedDate',
+    surveyToken: 'surveyToken',
+    projectName: 'projectName',
+    veloPM: 'veloPM',
+    veloPMEmail: 'veloPMEmail',
+    technicianIds: 'technicianIds',
+    sentDate: 'sentDate',
+    remindersSent: 'remindersSent',
+    driveFileUrl: 'driveFileUrl',
+    autoTriggered: 'autoTriggered',
+    surveyType: 'surveyType',
+    surveyLink: 'surveyLink',
+  },
+  VeloSurveyResponse: {
+    surveyId: 'surveyId',
+    technicianId: 'technicianId',
+    technicianName: 'technicianName',
+    communicationSkills: 'communicationSkills',
+    installQuality: 'installQuality',
+    reliability: 'reliability',
+    problemSolving: 'problemSolving',
+    safetyCompliance: 'safetyCompliance',
+    overallPerformance: 'overallPerformance',
+    additionalNotes: 'additionalNotes',
+    calculatedScore: 'calculatedScore',
+    submittedDate: 'submittedDate',
+    comments: 'comments',
   },
 };
 
@@ -202,18 +232,27 @@ const entityNames = [
   'OnboardingCompletionRecord', 'OnboardingDocument',
   // Workforce
   'TechnicianMaster',
+  'velo_project_managers',
   // App logging
   'AppLog', 'AppActivityLog',
   // Misc
   'DelayDetail', 'DailyActivityRecord', 'ManagerCallLog', 'ManagerQCInspection',
   'Range', 'ReportHistory', 'SyncLog', 'TimeEntry',
   // Tech Schedule Parser & Service Map
-  'tech_schedule_uploads', 'tech_schedule_rows'
+  'tech_schedule_uploads', 'tech_schedule_rows',
+  // Warranty / QC flow (ported from the warranty app).
+  // The warranty app's Project/CallLog entities map to WarrantyProject and
+  // WarrantyCallLog because Project/CallLog are already taken by existing
+  // M2 tables (renamed inside the ported pages).
+  'QCIssue', 'Technician', 'ServiceCall', 'WarrantyProject',
+  'WarrantyClaim', 'WarrantyCallLog', 'UserSession', 'SchedulingEmail',
+  // Insurance management (admin-only, RLS-gated)
+  'InsurancePolicy', 'ContractorPrivateInfo'
 ];
 
 const entities = {};
 for (const name of entityNames) {
-  entities[name] = createEntityProxy(name);
+  entities[name] = WARRANTY_COLUMN_TYPES[name] ? createWarrantyEntityProxy(supabase, name) : createEntityProxy(name);
 }
 
 export default entities;
@@ -246,7 +285,12 @@ export const {
   DelayDetail, DailyActivityRecord, ManagerCallLog, ManagerQCInspection,
   Range, ReportHistory, SyncLog, TimeEntry,
   // Tech Schedule Parser & Service Map
-  TechScheduleUpload, TechScheduleRow
+  TechScheduleUpload, TechScheduleRow,
+  // Warranty / QC flow (ported from the warranty app)
+  QCIssue, Technician, ServiceCall, WarrantyProject,
+  WarrantyClaim, WarrantyCallLog, UserSession,
+  // Insurance management (admin-only)
+  InsurancePolicy, ContractorPrivateInfo
 } = entities;
 
 // Custom User entity with me() function

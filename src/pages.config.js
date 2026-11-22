@@ -42,6 +42,7 @@ import DelayReviewDashboard from './pages/DelayReviewDashboard';
 import DiagnosticReport from './pages/DiagnosticReport';
 import DocumentSigningDashboard from './pages/DocumentSigningDashboard';
 import DocusignDashboard from './pages/DocusignDashboard';
+import ESignatureAssignment from './pages/ESignatureAssignment';
 import EmergencyContactReport from './pages/EmergencyContactReport';
 import ExecutiveComplianceDashboard from './pages/ExecutiveComplianceDashboard';
 import FirstMeetingChecklist from './pages/FirstMeetingChecklist';
@@ -72,6 +73,7 @@ import OnboardingFlow from './pages/OnboardingFlow';
 import PaperworkReviewQueue from './pages/PaperworkReviewQueue';
 import PaymentLedger from './pages/PaymentLedger';
 import PendingInvoices from './pages/PendingInvoices';
+import PendingTasks from './pages/PendingTasks';
 import Performance from './pages/Performance';
 import PortalAccess from './pages/PortalAccess';
 import ProjectKanbanBoard from './pages/ProjectKanbanBoard';
@@ -104,9 +106,31 @@ import TechnicianReportingDashboard from './pages/TechnicianReportingDashboard';
 import VeloSurveyDashboard from './pages/VeloSurveyDashboard';
 import VeloSurveyPortal from './pages/VeloSurveyPortal';
 import TechScheduleMap from './pages/TechScheduleMap';
+import InsuranceManagement from './pages/InsuranceManagement';
 import WarrantyManagement from './pages/WarrantyManagement';
 import WeeklyApprovedInvoices from './pages/WeeklyApprovedInvoices';
 import __Layout from './Layout.jsx';
+import AdminSessionTracker from './pages/AdminSessionTracker';
+import AdminTools from './pages/AdminTools';
+import CustomerAccountView from './pages/CustomerAccountView';
+import Dashboard from './pages/Dashboard';
+import IntakeReviewQueue from './pages/IntakeReviewQueue';
+import MileageReports from './pages/MileageReports';
+import OAuthConsent from './pages/OAuthConsent';
+import OpenIssuesReport from './pages/OpenIssuesReport';
+import QCCommandCenter from './pages/QCCommandCenter';
+import QCDataAudit from './pages/QCDataAudit';
+import QCDataCleanup from './pages/QCDataCleanup';
+import QCDataQuality from './pages/QCDataQuality';
+import QCIssues from './pages/QCIssues';
+import QCTrends from './pages/QCTrends';
+import ServiceCalls from './pages/ServiceCalls';
+import SchedulingInbox from './pages/SchedulingInbox';
+import TechnicianProfile from './pages/TechnicianProfile';
+import TechnicianScorecards from './pages/TechnicianScorecards';
+import Technicians from './pages/Technicians';
+import WarrantyActionQueue from './pages/WarrantyActionQueue';
+import WarrantyClaims from './pages/WarrantyClaims';
 
 export const PAGES = {
     "AdminAnalytics": AdminAnalytics,
@@ -143,6 +167,7 @@ export const PAGES = {
     "DiagnosticReport": DiagnosticReport,
     "DocumentSigningDashboard": DocumentSigningDashboard,
     "DocusignDashboard": DocusignDashboard,
+    "ESignatureAssignment": ESignatureAssignment,
     "EmergencyContactReport": EmergencyContactReport,
     "ExecutiveComplianceDashboard": ExecutiveComplianceDashboard,
     "FirstMeetingChecklist": FirstMeetingChecklist,
@@ -173,6 +198,7 @@ export const PAGES = {
     "PaperworkReviewQueue": PaperworkReviewQueue,
     "PaymentLedger": PaymentLedger,
     "PendingInvoices": PendingInvoices,
+    "PendingTasks": PendingTasks,
     "Performance": Performance,
     "PortalAccess": PortalAccess,
     "ProjectKanbanBoard": ProjectKanbanBoard,
@@ -205,7 +231,29 @@ export const PAGES = {
     "VeloSurveyDashboard": VeloSurveyDashboard,
     "VeloSurveyPortal": VeloSurveyPortal,
     "TechScheduleMap": TechScheduleMap,
-    "WarrantyManagement": WarrantyManagement,
+    "AdminSessionTracker": AdminSessionTracker,
+    "AdminTools": AdminTools,
+    "CustomerAccountView": CustomerAccountView,
+    "Dashboard": Dashboard,
+    "IntakeReviewQueue": IntakeReviewQueue,
+    "MileageReports": MileageReports,
+    "OAuthConsent": OAuthConsent,
+    "OpenIssuesReport": OpenIssuesReport,
+    "QCCommandCenter": QCCommandCenter,
+    "QCDataAudit": QCDataAudit,
+    "QCDataCleanup": QCDataCleanup,
+    "QCDataQuality": QCDataQuality,
+    "QCIssues": QCIssues,
+    "QCTrends": QCTrends,
+    "ServiceCalls": ServiceCalls,
+    "SchedulingInbox": SchedulingInbox,
+    "TechnicianProfile": TechnicianProfile,
+    "TechnicianScorecards": TechnicianScorecards,
+    "Technicians": Technicians,
+    "WarrantyActionQueue": WarrantyActionQueue,
+    "WarrantyClaims": WarrantyClaims,
+    "WarrantyManagement": WarrantyManagement,    "InsuranceManagement": InsuranceManagement,
+
     "WeeklyApprovedInvoices": WeeklyApprovedInvoices
 };
 

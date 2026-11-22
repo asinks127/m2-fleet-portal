@@ -1,0 +1,11 @@
+{
+  "status": "imported_and_verified",
+  "counts": {
+    "WarrantyProject": 1245,
+    "Technician": 307,
+    "QCIssue": 2883,
+    "WarrantyClaim": 5914,
+    "UserSession": 717
+  },
+  "verified_at_unix": 1791354037.6672838
+}

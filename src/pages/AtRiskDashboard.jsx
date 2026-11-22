@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils/index.js';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
@@ -26,6 +26,9 @@ export default function AtRiskDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dashboardFilter = new URLSearchParams(location.search).get('filter') || 'all';
 
   const loadAtRiskData = async () => {
     setIsLoading(true);
@@ -57,6 +60,18 @@ export default function AtRiskDashboard() {
   useEffect(() => {
     loadAtRiskData();
   }, []);
+
+  useEffect(() => {
+    if (dashboardFilter === 'all') return;
+    if (dashboardFilter === 'critical') setRiskFilter('critical');
+    if (dashboardFilter === 'performance') setTypeFilter('performance');
+  }, [dashboardFilter]);
+
+  const clearDashboardFilter = () => {
+    setRiskFilter('all');
+    setTypeFilter('all');
+    navigate(location.pathname, { replace: true });
+  };
 
   useEffect(() => {
     let filtered = atRiskData.filter(tech => {
@@ -104,6 +119,12 @@ export default function AtRiskDashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      {dashboardFilter !== 'all' && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <span>Showing dashboard at-risk records{dashboardFilter === 'critical' ? ' with critical risk' : ''}.</span>
+          <Button variant="outline" size="sm" onClick={clearDashboardFilter}>Show all at-risk technicians</Button>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">

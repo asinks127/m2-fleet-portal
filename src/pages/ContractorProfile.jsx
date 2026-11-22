@@ -16,7 +16,7 @@ import CallLogDialog from '../components/qc/CallLogDialog';
 import QCInspectionDialog from '../components/qc/QCInspectionDialog';
 import VeloFeedbackTab from '../components/profile/VeloFeedbackTab';
 import PerformanceAdjustmentsTab from '../components/profile/PerformanceAdjustmentsTab';
-import ContractorDocumentsTab from '../components/profile/ContractorDocumentsTab';
+import ContractorDocumentsTab from '../components/profile/ContractorDocumentsTab';import PrivateInfoSection from '../components/profile/PrivateInfoSection';
 import ActivityHistoryTab from '../components/profile/ActivityHistoryTab';
 import ReviewDocumentsTab from '../components/dashboard/ReviewDocumentsTab';
 
@@ -663,6 +663,10 @@ export default function ContractorProfile() {
               </form>
             </CardContent>
           </Card>
+
+          {getUserId() && user && (
+            <PrivateInfoSection user={user} />
+          )}
         </TabsContent>
 
         {/* Emergency Contact Tab - Only for contractors viewing their own profile */}

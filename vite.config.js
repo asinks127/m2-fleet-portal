@@ -17,6 +17,18 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@napi-rs/canvas': path.resolve(__dirname, './src/lib/noop-canvas.js'),
     },
+  },
+  define: {
+    'process.getBuiltinModule': 'undefined',
+  },
+  build: {
+    rollupOptions: {
+      external: [],
+    },
+  },
+  optimizeDeps: {
+    exclude: ['@napi-rs/canvas'],
   },
 })

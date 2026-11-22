@@ -49,6 +49,30 @@ function formatCentralTime(utcDateString) {
   }
 }
 
+const INVOICE_PAGE_SIZE = 1000;
+
+async function fetchAllContractorInvoices(email) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail) return [];
+
+  const invoices = [];
+  for (let offset = 0; ; offset += INVOICE_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('Invoice')
+      .select('*')
+      .ilike('contractorEmail', normalizedEmail)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(offset, offset + INVOICE_PAGE_SIZE - 1);
+
+    if (error) throw error;
+    invoices.push(...(data || []));
+    if (!data || data.length < INVOICE_PAGE_SIZE) break;
+  }
+
+  return invoices;
+}
+
 export default function ContractorDashboard() {
   const [user, setUser] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -82,8 +106,7 @@ export default function ContractorDashboard() {
       setUser(currentUser);
 
       console.log('Loading invoices for:', currentUser.email);
-      const { data: contractorInvoicesRaw = [] } = await supabase.from('Invoice').select('*').eq('contractorEmail', currentUser.email).order('created_at', { ascending: false }).limit(100);
-      const contractorInvoices = contractorInvoicesRaw || [];
+      const contractorInvoices = await fetchAllContractorInvoices(currentUser.email);
 
       console.log('Loaded invoices:', contractorInvoices.length);
       setInvoices(contractorInvoices);

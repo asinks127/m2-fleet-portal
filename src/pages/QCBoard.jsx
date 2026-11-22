@@ -19,6 +19,7 @@ export default function QCBoard() {
   const [technicians, setTechnicians] = useState([]);
   const [qcList, setQcList] = useState(['Ryan Miller', 'Chance Hoffman']);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selectedQc, setSelectedQc] = useState('all');
   const [selectedProject, setSelectedProject] = useState('all'); // NEW: Project filter
   const [currentUser, setCurrentUser] = useState(null);
@@ -37,14 +38,27 @@ export default function QCBoard() {
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
+    setLoadError('');
     try {
-      const response = await (await fetch('/api/getQcBoardData', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })).json();
-      const { users, currentUser: me } = response.data;
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch('/api/getQcBoardData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
+        body: JSON.stringify({})
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to load QC Board data');
+      const { users = [], currentUser: me = null } = payload.data || payload;
       setCurrentUser(me);
-      setAllUsers(users); // Store raw list
+      setAllUsers(users);
+      setTechnicians(users);
       
     } catch (error) {
       console.error('Error loading data:', error);
+      setLoadError(error?.message || 'Unable to load QC Board data.');
     } finally {
       setIsLoading(false);
     }
@@ -305,6 +319,13 @@ export default function QCBoard() {
               </div>
           )}
         </div>
+
+        {loadError && (
+          <div className="mb-4 flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <span>QC Board could not load: {loadError}</span>
+            <Button variant="outline" size="sm" onClick={loadData}>Retry</Button>
+          </div>
+        )}
 
         {(viewMode === 'grid' || boardType === 'manager') ? (
           <QCGridView 

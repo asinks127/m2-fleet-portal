@@ -7,9 +7,16 @@ const qcEmails = [
 ];
 
 const adminEmails = [
-    'lena@m2fleetcom.com', 'orville@m2fleetcom.com', 'steve@m2fleetcom.com',
-    'austin@m2fleetcom.com', 'adam@m2fleetcom.com', 'jason@m2fleetcom.com', 'erica@m2fleetcom.com'
+    'lena@m2fleetcom.com', 'orville@m2fleetcom.com', 'steve@m2fleet.com',
+    'austin@m2fleetcom.com', 'adam@m2fleetcom.com', 'jason@m2fleetcom.com', 'erica@m2fleetcom.com',
+    'tjserota@gmail.com', 'zo-test@m2fleetcom.com'
 ];
+
+function rows(result) {
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result?.data)) return result.data;
+    return [];
+}
 
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -19,9 +26,11 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Unauthorized: Not logged in' });
     }
 
-    const userEmail = user.email.toLowerCase();
+    const userEmail = (user.email || '').toLowerCase();
+    const authRole = user.user_metadata?.role || user.app_metadata?.role || user.role;
     const isQC = qcEmails.includes(userEmail);
-    const isAdmin = adminEmails.includes(userEmail) || user.role === 'admin';
+    const isM2DomainAdmin = userEmail.endsWith('@m2fleetcom.com') && !userEmail.includes('.contractor@');
+    const isAdmin = adminEmails.includes(userEmail) || isM2DomainAdmin || authRole === 'admin' || authRole === 'administrator';
 
     // Only QC and Admins can access this board's data
     if (!isQC && !isAdmin) {
@@ -30,25 +39,55 @@ export default async function handler(req, res) {
 
     try {
         // Use service role to get all users, regardless of who is asking (as long as they are authorized)
-        const [allUsers, externalManagers] = await Promise.all([
+        const [allUsersResult, externalManagersResult] = await Promise.all([
             supabase.from('User').select('*'),
-            supabase.from('ExternalManager').select('*').match({ active: true }).then(r => r.data || [])
+            supabase.from('ExternalManager').select('*').eq('active', true)
         ]);
+        const rows = (result) => {
+            if (Array.isArray(result)) return result;
+            if (Array.isArray(result?.data)) return result.data;
+            return [];
+        };
+        const queryError = (result) => result && !Array.isArray(result) ? result.error : null;
+        if (queryError(allUsersResult)) throw queryError(allUsersResult);
+        const allUsers = rows(allUsersResult);
+        const externalManagers = rows(externalManagersResult);
         
-        // Fetch recent call logs
-        const recentCalls = await supabase.from('CallLog').select('*').match({}, '-callDate', 2000).then(r => r.data || []);
+        // Fetch recent call logs and technician QC history
+        const [recentCallsResult, technicianInspectionsResult] = await Promise.all([
+            supabase.from('CallLog').select('*').order('callDate', { ascending: false }).limit(2000),
+            supabase.from('QCInspection').select('*').order('inspection_date', { ascending: false }).limit(2000)
+        ]);
+        if (queryError(recentCallsResult)) throw queryError(recentCallsResult);
+        if (queryError(technicianInspectionsResult)) throw queryError(technicianInspectionsResult);
+        const recentCalls = rows(recentCallsResult);
+        const technicianInspections = rows(technicianInspectionsResult);
         
         // Fetch recent manager call logs
-        const recentManagerCalls = await supabase.from('ManagerCallLog').select('*').match({}, '-callDate', 2000).then(r => r.data || []);
+        const recentManagerCallsResult = await supabase.from('ManagerCallLog').select('*').order('callDate', { ascending: false }).limit(2000);
+        const recentManagerCalls = rows(recentManagerCallsResult);
 
         // Fetch recent manager inspections for score calc
-        const recentManagerInspections = await supabase.from('ManagerQCInspection').select('*').match({}, '-inspectionDate', 2000).then(r => r.data || []);
+        const recentManagerInspectionsResult = await supabase.from('ManagerQCInspection').select('*').order('inspectionDate', { ascending: false }).limit(2000);
+        const recentManagerInspections = rows(recentManagerInspectionsResult);
 
         console.log(`Fetched ${recentCalls.length} call logs and ${recentManagerCalls.length} manager logs`);
 
         const latestCallByTech = {};
         const latestCallByManager = {};
         const managerScores = {};
+        const technicianInspectionMap = {};
+        for (const inspection of technicianInspections) {
+            const key = inspection.technicianId;
+            if (!key) continue;
+            if (!technicianInspectionMap[key]) technicianInspectionMap[key] = [];
+            technicianInspectionMap[key].push(inspection);
+        }
+        const technicianScores = {};
+        Object.entries(technicianInspectionMap).forEach(([technicianId, inspections]) => {
+            const scores = inspections.map(item => Number(item.score)).filter(Number.isFinite);
+            if (scores.length) technicianScores[technicianId] = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        });
 
         // Helper to index logs
         const indexLogs = (logs, targetDict, idField, emailField, dateField) => {
@@ -122,7 +161,10 @@ export default async function handler(req, res) {
                 // Manager specific fields
                 managerLastContacted: lastManagerCall?.callDate || null,
                 managerLastContactedBy: lastManagerCall?.loggedBy || null,
-                managerAvgQcScore: managerScores[userId] || 0
+                avgQcScore: technicianScores[userId] || 0,
+                managerAvgQcScore: managerScores[userId] || 0,
+                qcInspectionCount: technicianInspectionMap[userId]?.length || 0,
+                latestQcInspection: technicianInspectionMap[userId]?.[0] || null
             };
         });
 

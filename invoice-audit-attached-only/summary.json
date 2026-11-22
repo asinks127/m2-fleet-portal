@@ -1,0 +1,19 @@
+{
+  "source": "/home/.z/chat-uploads/Invoice_export (1)-f25da0e61dcf.csv",
+  "rows": 4055,
+  "pending": 54,
+  "approved": 3957,
+  "rejected": 44,
+  "pendingClassifications": {
+    "no-approved-match": 53,
+    "exact-approved-match": 1
+  },
+  "pendingMethods": {
+    "none": 53,
+    "contractor-week-amount": 1
+  },
+  "exactDriveIdDuplicateGroups": 0,
+  "fullIdentityDuplicateGroups": 1,
+  "exactDriveIdDuplicateRows": 0,
+  "fullIdentityDuplicateRows": 2
+}

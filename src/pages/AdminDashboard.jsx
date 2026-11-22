@@ -20,8 +20,6 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 
 import ProjectTeamModal from '../components/dashboard/ProjectTeamModal';
 import ShadowingModal from '../components/dashboard/ShadowingModal';
 import ExpiringComplianceModal from '../components/dashboard/ExpiringComplianceModal';
-import PendingTasksModal from '../components/dashboard/PendingTasksModal';
-import CriticalAlertsModal from '../components/dashboard/CriticalAlertsModal';
 
 export default function AdminDashboard() {
   const location = useLocation();
@@ -55,10 +53,6 @@ export default function AdminDashboard() {
   // NEW: Modal states
   const [selectedProject, setSelectedProject] = useState(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
-  const [showShadowingModal, setShowShadowingModal] = useState(false);
-  const [showExpiringModal, setShowExpiringModal] = useState(false);
-  const [showTasksModal, setShowTasksModal] = useState(false);
-  const [showAlertsModal, setShowAlertsModal] = useState(false);
 
   const { data: contractors = [] } = useQuery({
     queryKey: ['contractors'],
@@ -120,6 +114,31 @@ export default function AdminDashboard() {
     refetchInterval: 30000,
   });
 
+  const { data: atRiskAnalysis = null } = useQuery({
+    queryKey: ['atRiskAnalysis'],
+    queryFn: async () => {
+      const response = await fetch('/api/analyzeAtRiskTechnicians', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (!response.ok) return null;
+      return response.json();
+    },
+    initialData: null,
+    refetchInterval: 30000,
+  });
+
+  const { data: alertLogs = [] } = useQuery({
+    queryKey: ['alertLogs'],
+    queryFn: async () => {
+      const { data } = await supabase.from('AlertLog').select('*');
+      return data || [];
+    },
+    initialData: [],
+    refetchInterval: 30000,
+  });
+
   const { data: invoices = [] } = useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
@@ -136,6 +155,7 @@ export default function AdminDashboard() {
   const safeInspections = Array.isArray(inspections) ? inspections : [];
   const safeTasks = Array.isArray(tasks) ? tasks : [];
   const safeInvoices = Array.isArray(invoices) ? invoices : [];
+  const safeAlertLogs = Array.isArray(alertLogs) ? alertLogs : [];
 
   const activeContractors = useMemo(() =>
     safeContractors.filter(c =>
@@ -151,7 +171,7 @@ export default function AdminDashboard() {
     if (activeContractors.length > 0) {
       calculateTeamMetrics();
     }
-  }, [activeContractors, wcRecords, certRecords, inspections, tasks, invoices]);
+  }, [activeContractors, wcRecords, certRecords, inspections, tasks, invoices, atRiskAnalysis, alertLogs]);
 
   const calculateTeamMetrics = () => {
     const today = new Date();
@@ -210,12 +230,18 @@ export default function AdminDashboard() {
     // Pending tasks
     const pendingTasksCount = safeTasks.filter(t => !['done','completed','closed'].includes((t.status || '').toLowerCase())).length;
 
-    // Critical alerts
-    const criticalCount = atRisk + pendingTasksCount; // Sum of at-risk contractors and pending tasks
+    const analyzedAtRiskCount = Array.isArray(atRiskAnalysis?.atRiskTechnicians)
+      ? atRiskAnalysis.atRiskTechnicians.length
+      : atRisk;
+    const criticalCount = safeAlertLogs.filter(alert => {
+      const severity = String(alert.severity || '').toLowerCase();
+      const status = String(alert.status || '').toLowerCase();
+      return severity === 'critical' && !['resolved', 'closed', 'dismissed'].includes(status) && alert.resolved !== true;
+    }).length;
 
     setTeamMetrics({
       teamHealthScore: teamHealth,
-      atRiskCount: atRisk,
+      atRiskCount: analyzedAtRiskCount,
       complianceExpiringSoon: expiringSoon,
       avgQCScore: avgQC,
       shadowingInProgress: shadowingCount,
@@ -314,147 +340,6 @@ export default function AdminDashboard() {
     return activeContractors.filter(c => (c.project || 'Unassigned') === projectName);
   };
 
-  // NEW: Helper functions to get filtered data for modals
-  const getShadowingTechs = () => {
-    return activeContractors.filter(c => c.shadowingStatus === 'in_progress');
-  };
-
-  const getExpiringComplianceTechs = () => {
-    const today = new Date();
-    const thirtyDaysOut = addDays(today, 30);
-
-    return activeContractors.filter(contractor => {
-      const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
-      const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
-
-      // We only care about expiring, not missing (missing is handled by critical alerts)
-      if (!wc && !cert) return false;
-
-      const wcExpDate = wc?.expirationDate ? new Date(wc.expirationDate) : null;
-      const certExpDate = cert?.expirationDate ? new Date(cert.expirationDate) : null;
-
-      // Contractor has an expiring document within the next 30 days and not already expired
-      return (wcExpDate && wcExpDate <= thirtyDaysOut && wcExpDate >= today) ||
-             (certExpDate && certExpDate <= thirtyDaysOut && certExpDate >= today);
-    });
-  };
-
-  const getPendingTasks = () => {
-    return safeTasks.filter(t => !['done','completed','closed'].includes((t.status || '').toLowerCase()));
-  };
-
-  const getCriticalAlerts = () => {
-    const alerts = [];
-    const today = new Date();
-
-    // Compliance and Performance Alerts for Contractors
-    activeContractors.forEach(contractor => {
-      const wc = safeWCRecords.find(r => r.userEmail === contractor.email);
-      const cert = safeCertRecords.find(r => r.userEmail === contractor.email);
-      const contractorDisplayName = contractor.displayName || contractor.full_name || contractor.email;
-
-      // 1. Missing Compliance Documents
-      if (!wc || !cert) {
-        alerts.push({
-          id: `${contractor.id}-missing-compliance`, // Unique ID for key
-          technicianId: contractor.id,
-          technicianName: contractorDisplayName,
-          type: 'compliance',
-          severity: 'critical',
-          message: `Missing critical compliance documents for ${contractorDisplayName} (WC/Cert)`,
-          action: 'Upload Workers Comp and Safety Certification documents',
-          link: createPageUrl('ComplianceDashboard') // Example link
-        });
-      } else {
-        // 2. Expired Compliance Documents
-        const wcExpDate = wc.expirationDate ? new Date(wc.expirationDate) : null;
-        const certExpDate = cert.expirationDate ? new Date(cert.expirationDate) : null;
-
-        if ((wcExpDate && isBefore(wcExpDate, today)) || (certExpDate && isBefore(certExpDate, today))) {
-          let message = 'Compliance documents expired';
-          if (wcExpDate && isBefore(wcExpDate, today) && (!certExpDate || !isBefore(certExpDate, today))) {
-            message = 'Workers Comp expired';
-          } else if (certExpDate && isBefore(certExpDate, today) && (!wcExpDate || !isBefore(wcExpDate, today))) {
-            message = 'Safety Certification expired';
-          } else if (wcExpDate && isBefore(wcExpDate, today) && certExpDate && isBefore(certExpDate, today)) {
-            message = 'Workers Comp & Safety Certification expired';
-          }
-
-          alerts.push({
-            id: `${contractor.id}-expired-compliance`,
-            technicianId: contractor.id,
-            technicianName: contractorDisplayName,
-            type: 'compliance',
-            severity: 'critical',
-            message: `${contractorDisplayName}: ${message}`,
-            action: 'Renew expired documents immediately',
-            link: createPageUrl('ComplianceDashboard')
-          });
-        }
-      }
-
-      // 3. Low Performance Scores (using 70 as per outline)
-      const qcScore = contractor.avgQcScore || 0;
-      const velocitiScore = contractor.velocitiScore || 0;
-
-      if (qcScore < 70 || velocitiScore < 70) {
-        let severity = 'medium'; // Default
-        let message = `Performance concern for ${contractorDisplayName}: `;
-        if (qcScore < 70 && velocitiScore < 70) {
-          severity = 'critical';
-          message += `QC (${qcScore}) & Velo (${velocitiScore}) scores are low`;
-        } else if (qcScore < 70) {
-          severity = 'high';
-          message += `QC score (${qcScore}) is low`;
-        } else {
-          severity = 'high';
-          message += `Velo score (${velocitiScore}) is low`;
-        }
-
-        alerts.push({
-          id: `${contractor.id}-low-performance`,
-          technicianId: contractor.id,
-          technicianName: contractorDisplayName,
-          type: 'performance',
-          severity: severity,
-          message: message,
-          action: 'Schedule performance review and remediation plan',
-          link: createPageUrl('Performance')
-        });
-      }
-    });
-
-    // Overdue Urgent Tasks Alerts
-    safeTasks.filter(t => !['done','completed','closed'].includes((t.status || '').toLowerCase())).forEach(task => {
-      if (task.dueDate && isBefore(new Date(task.dueDate), today) && task.priority === 'Urgent') {
-        // Find the technician name if available, otherwise use a generic label
-        const taskTechnician = activeContractors.find(c => c.id === task.technicianId);
-        const taskTechnicianName = taskTechnician ? (taskTechnician.displayName || taskTechnician.full_name) : 'Unassigned/Unknown';
-
-        alerts.push({
-          id: `${task.id}-overdue-task`,
-          technicianId: task.technicianId,
-          technicianName: taskTechnicianName,
-          type: 'task',
-          severity: 'high',
-          message: `Urgent task overdue: "${task.title}" (assigned to ${taskTechnicianName})`,
-          action: 'Complete or reassign urgent task',
-          link: createPageUrl('QCBoard') // Assuming tasks might be managed here, or a dedicated task board
-        });
-      }
-    });
-
-    // Sort by severity (critical first)
-    const severityOrder = { 'critical': 0, 'high': 1, 'medium': 2, 'low': 3 };
-    alerts.sort((a, b) => {
-      const orderA = severityOrder[a.severity] !== undefined ? severityOrder[a.severity] : 99;
-      const orderB = severityOrder[b.severity] !== undefined ? severityOrder[b.severity] : 99;
-      return orderA - orderB;
-    });
-
-    return alerts;
-  };
-
   const QuickActionCard = ({ title, description, href, icon: Icon, color = "blue", count }) => (
     <Link to={href}>
       <Card className="group hover:shadow-lg transition-all duration-200 hover:border-blue-300 cursor-pointer h-full">
@@ -533,18 +418,21 @@ export default function AdminDashboard() {
             value={`${teamMetrics.teamHealthScore}%`}
             icon={Target}
             color={teamMetrics.teamHealthScore >= 85 ? "green" : teamMetrics.teamHealthScore >= 70 ? "yellow" : "red"}
+            href={createPageUrl('Performance')}
           />
           <MetricCard
             title="At Risk"
             value={teamMetrics.atRiskCount}
             icon={AlertTriangle}
             color="red"
+            href={createPageUrl('AtRiskDashboard') + '?filter=all'}
           />
           <MetricCard
             title="Active Team"
             value={teamMetrics.activeContractors}
             icon={Users}
             color="blue"
+            href={createPageUrl('TechRoster') + '?status=active'}
           />
           <MetricCard
             title="Avg QC Score"
@@ -556,9 +444,9 @@ export default function AdminDashboard() {
 
         {/* Secondary Metrics - NOW CLICKABLE */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+          <Link to={createPageUrl('ShadowingDashboard') + '?status=in_progress'} className="block h-full">
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowShadowingModal(true)}
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-blue-300"
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -573,10 +461,11 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+          </Link>
 
+          <Link to={createPageUrl('ComplianceDashboard') + '?filter=expiringSoon'} className="block h-full">
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowExpiringModal(true)}
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-blue-300"
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -591,10 +480,11 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+          </Link>
 
+          <Link to={createPageUrl('PendingTasks') + '?status=pending'} className="block h-full">
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowTasksModal(true)}
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-blue-300"
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -609,10 +499,11 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+          </Link>
 
+          <Link to={createPageUrl('AlertLog') + '?severity=critical&status=unresolved'} className="block h-full">
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all"
-            onClick={() => setShowAlertsModal(true)}
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-blue-300"
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -627,6 +518,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+          </Link>
         </div>
 
         {/* Charts Section */}
@@ -809,46 +701,6 @@ export default function AdminDashboard() {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav items={mobileNavItems} currentPath={location.pathname} />
 
-      {/* All Modals */}
-      {selectedProject && (
-        <ProjectTeamModal
-          isOpen={showProjectModal}
-          onClose={() => {
-            setShowProjectModal(false);
-            setSelectedProject(null);
-          }}
-          projectName={selectedProject}
-          technicians={getProjectTechnicians(selectedProject)}
-          wcRecords={wcRecords}
-          certRecords={certRecords}
-        />
-      )}
-
-      <ShadowingModal
-        isOpen={showShadowingModal}
-        onClose={() => setShowShadowingModal(false)}
-        technicians={getShadowingTechs()}
-      />
-
-      <ExpiringComplianceModal
-        isOpen={showExpiringModal}
-        onClose={() => setShowExpiringModal(false)}
-        technicians={getExpiringComplianceTechs()}
-        wcRecords={wcRecords}
-        certRecords={certRecords}
-      />
-
-      <PendingTasksModal
-        isOpen={showTasksModal}
-        onClose={() => setShowTasksModal(false)}
-        tasks={getPendingTasks()}
-      />
-
-      <CriticalAlertsModal
-        isOpen={showAlertsModal}
-        onClose={() => setShowAlertsModal(false)}
-        alerts={getCriticalAlerts()}
-      />
     </div>
   );
 }

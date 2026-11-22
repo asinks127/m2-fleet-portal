@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { 
   ResponsiveContainer, 
@@ -50,7 +51,7 @@ export function LiveDashboard({ children, refreshInterval = 30000 }) {
 /**
  * Metric card with trend indicator
  */
-export function MetricCard({ title, value, previousValue, icon: Icon, color = "blue" }) {
+export function MetricCard({ title, value, previousValue, icon: Icon, color = "blue", href }) {
   const asNumber = (v) => {
     const n = typeof v === 'number' ? v : Number(v);
     return Number.isFinite(n) ? n : 0;
@@ -68,8 +69,8 @@ export function MetricCard({ title, value, previousValue, icon: Icon, color = "b
   const previous = asNumber(previousValue);
   const percentChange = previousValue ? ((current - previous) / previous * 100).toFixed(1) : 0;
 
-  return (
-    <Card>
+  const card = (
+    <Card className={href ? 'cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all focus-within:ring-2 focus-within:ring-blue-500' : ''}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -97,6 +98,8 @@ export function MetricCard({ title, value, previousValue, icon: Icon, color = "b
       </CardContent>
     </Card>
   );
+
+  return href ? <Link to={href} className="block h-full" aria-label={`Open ${title}`}>{card}</Link> : card;
 }
 
 /**

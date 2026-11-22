@@ -2,12 +2,16 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient.js';
 import {
   getTemplates, createTemplate, deleteTemplate, getTemplate,
-  getDocuments, createDocument, getDocument, voidDocument, resendToRecipient,
+  getCompletedSignatureRequests, getDocuments, createDocument, getDocument, voidDocument, resendToRecipient,
   getAuditLog, getSettings, updateSettings, uploadSignedPdf, getPdfBytes,
   getContractors, getSignedPdfUrl,
 } from '@/lib/documentSigning/esignService.js';
 import { FIELD_TYPES, DOCUMENT_STATUS, SIGNER_STATUS } from '@/lib/documentSigning/models.js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { Document as PdfDocument, Page as PdfPage, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 import {
   FileText, Upload, Send, Trash2, Eye, Plus, X, Clock, CheckCircle2,
   AlertCircle, Ban, Mail, RefreshCw, Download, User, Settings as SettingsIcon,
@@ -56,14 +60,15 @@ export default function DocumentsAdmin() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [tmpls, docs, ctrs, sett] = await Promise.all([
+      const [tmpls, docs, legacyCompleted, ctrs, sett] = await Promise.all([
         getTemplates().catch(() => []),
         getDocuments().catch(() => []),
+        getCompletedSignatureRequests().catch(() => []),
         getContractors().catch(() => []),
         getSettings().catch(() => ({})),
       ]);
       setTemplates(tmpls);
-      setDocuments(docs);
+      setDocuments([...docs, ...legacyCompleted]);
       setContractors(ctrs);
       setSettings(sett);
     } finally {
@@ -154,24 +159,30 @@ export default function DocumentsAdmin() {
         const page = pages[pageIdx];
         if (!page) continue;
 
-        const x = field.x || 0;
-        const y = page.getHeight() - (field.y || 0) - (field.height || 20);
+        // Fields are stored as percentages of the page (matches the template
+        // builder and the signer view); convert to PDF points here.
+        const pageW = page.getWidth();
+        const pageH = page.getHeight();
+        const fW = ((field.width || 20) / 100) * pageW;
+        const fH = ((field.height || 3.5) / 100) * pageH;
+        const x = ((field.x || 0) / 100) * pageW;
+        const y = pageH - ((field.y || 0) / 100) * pageH - fH;
         const value = fv.value || '';
 
         if (field.type === FIELD_TYPES.SIGNATURE || field.type === FIELD_TYPES.INITIALS) {
           page.drawRectangle({
-            x, y, width: field.width || 200, height: field.height || 40,
+            x, y, width: fW, height: fH,
             color: rgb(0.85, 0.85, 0.95), borderColor: rgb(0.4, 0.4, 0.6), borderWidth: 1,
           });
           const font = field.type === FIELD_TYPES.SIGNATURE ? helvBold : helv;
-          const fontSize = (field.height || 40) * 0.6;
-          page.drawText(value, { x: x + 8, y: y + (field.height || 40) * 0.25, size: fontSize, font, color: rgb(0.1, 0.1, 0.3) });
+          const fontSize = Math.max(10, fH * 0.6);
+          page.drawText(value, { x: x + 4, y: y + fH * 0.25, size: fontSize, font, color: rgb(0.1, 0.1, 0.3) });
         } else if (field.type === FIELD_TYPES.CHECKBOX) {
           if (value === 'true' || value === true) {
-            page.drawText('✓', { x: x + 4, y: y + 2, size: 16, font: helvBold, color: rgb(0, 0, 0) });
+            page.drawText('✓', { x: x + fW * 0.2, y: y + fH * 0.15, size: Math.max(10, fH * 0.8), font: helvBold, color: rgb(0, 0, 0) });
           }
         } else {
-          page.drawText(String(value).substring(0, 80), { x: x + 4, y: y + 4, size: 11, font: helv, color: rgb(0, 0, 0) });
+          page.drawText(String(value).substring(0, 80), { x: x + 2, y: y + fH * 0.28, size: Math.max(8, fH * 0.55), font: helv, color: rgb(0, 0, 0) });
         }
       }
 
@@ -596,23 +607,77 @@ function TemplateModal({ onClose, onCreated, showToast }) {
     } catch (e) { /* default to 1 */ }
   };
 
-  const handlePdfClick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setFields([...fields, {
-      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      type: selectedFieldType,
-      page: currentPage,
-      x, y,
-      width: selectedFieldType === FIELD_TYPES.SIGNATURE ? 200 : selectedFieldType === FIELD_TYPES.CHECKBOX ? 20 : 150,
-      height: selectedFieldType === FIELD_TYPES.SIGNATURE ? 40 : 20,
-      label: '',
-      required: true,
-    }]);
+  const pageWrapRef = React.useRef(null);
+  const dragStateRef = React.useRef(null);
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
+
+  // All field coordinates are stored as PERCENT of the rendered page
+  // (x/y = top-left corner, width/height = box size). The signer and the
+  // signed-PDF generator interpret the same percentages, so placement is
+  // identical for admins and contractors regardless of screen size.
+  const updateField = (id, patch) => {
+    setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
   };
 
-  const handleSave = async () => {
+  const handlePdfClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const t = selectedFieldType;
+    const width = t === FIELD_TYPES.SIGNATURE ? 25 : t === FIELD_TYPES.CHECKBOX ? 4 : 20;
+    const height = t === FIELD_TYPES.SIGNATURE ? 6 : t === FIELD_TYPES.CHECKBOX ? 3 : 3.5;
+    const f = {
+      id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: t,
+      page: currentPage,
+      x: Math.min(Math.max(x, 0), 100 - width),
+      y: Math.min(Math.max(y, 0), 100 - height),
+      width, height,
+      label: '',
+      required: true,
+    };
+    setFields([...fields, f]);
+    setSelectedFieldId(f.id);
+  };
+
+  const beginDrag = (e, field) => {
+    e.stopPropagation();
+    setSelectedFieldId(field.id);
+    const rect = pageWrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    dragStateRef.current = {
+      mode: 'move',
+      id: field.id,
+      startX: e.clientX, startY: e.clientY,
+      origX: field.x, origY: field.y,
+      origW: field.width, origH: field.height,
+      rect,
+    };
+    const onMove = (ev) => {
+      const ds = dragStateRef.current;
+      if (!ds) return;
+      const dxPct = ((ev.clientX - ds.startX) / ds.rect.width) * 100;
+      const dyPct = ((ev.clientY - ds.startY) / ds.rect.height) * 100;
+      if (ds.mode === 'move') {
+        updateField(ds.id, {
+          x: Math.min(Math.max(ds.origX + dxPct, 0), 100 - ds.origW),
+          y: Math.min(Math.max(ds.origY + dyPct, 0), 100 - ds.origH),
+        });
+      } else {
+        updateField(ds.id, {
+          width: Math.min(Math.max(ds.origW + dxPct, 2), 100 - ds.origX),
+          height: Math.min(Math.max(ds.origH + dyPct, 1.5), 100 - ds.origY),
+        });
+      }
+    };
+    const onUp = () => {
+      dragStateRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };  const handleSave = async () => {
     if (!pdfFile) { showToast('error', 'Upload a PDF first.'); return; }
     if (!name.trim()) { showToast('error', 'Enter a template name.'); return; }
     setBusy(true);
@@ -711,34 +776,69 @@ function TemplateModal({ onClose, onCreated, showToast }) {
                 </div>
               </div>
 
-              <div className="border rounded-lg overflow-hidden bg-gray-100 relative" style={{ height: 500 }}>
-                {pdfUrl && (
-                  <iframe src={`${pdfUrl}#page=${currentPage}&toolbar=0`} className="w-full h-full"
-                    style={{ pointerEvents: 'none' }} title="PDF Preview" />
-                )}
-                <div className="absolute inset-0 cursor-crosshair" onClick={handlePdfClick}>
-                  {fields.filter((f) => f.page === currentPage).map((f, i) => (
-                    <div key={f.id}
-                      className="absolute border-2 border-blue-500 bg-blue-100/40 flex items-center justify-center text-xs"
-                      style={{
-                        left: f.x, top: f.y, width: f.width, height: f.height,
-                        cursor: 'move',
-                      }}
-                      onClick={(e) => { e.stopPropagation(); }}
-                    >
-                      <span className="bg-white px-1 rounded text-blue-600 pointer-events-none">
-                        {f.type} {i + 1}
-                      </span>
-                      <button
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                        onClick={(e) => { e.stopPropagation(); setFields(fields.filter((x) => x.id !== f.id)); }}
-                      >×</button>
-                    </div>
-                  ))}
+              <div className="border rounded-lg bg-gray-100 flex justify-center relative" style={{ minHeight: 500 }}>
+                <div ref={pageWrapRef} className="relative shadow-md cursor-crosshair" style={{ width: '100%', maxWidth: 640 }}>
+                  {pdfUrl && (
+                    <PdfDocument file={pdfUrl} onLoadSuccess={(p) => setPageCount(p.numPages)}
+                      loading={<div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
+                      <PdfPage pageNumber={currentPage} width={640}
+                        renderAnnotationLayer={false} renderTextLayer={false} />
+                    </PdfDocument>
+                  )}
+                  <div className="absolute inset-0" onClick={handlePdfClick}>
+                    {fields.filter((f) => f.page === currentPage).map((f, i) => {
+                      const selected = selectedFieldId === f.id;
+                      return (
+                        <div key={f.id}
+                          className={`absolute border-2 flex items-center justify-center text-xs select-none ${selected ? 'border-orange-500 bg-orange-100/50 z-10' : 'border-blue-500 bg-blue-100/40'}`}
+                          style={{
+                            left: `${f.x}%`, top: `${f.y}%`,
+                            width: `${f.width}%`, height: `${f.height}%`,
+                            cursor: 'move',
+                          }}
+                          onMouseDown={(e) => beginDrag(e, f)}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="bg-white px-1 rounded text-blue-600 pointer-events-none truncate max-w-full">
+                            {f.label || `${f.type} ${i + 1}`}
+                          </span>
+                          <button
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 items-center justify-center text-xs hidden hover:flex"
+                            style={{ display: selected ? 'flex' : undefined }}
+                            onClick={(e) => { e.stopPropagation(); setFields(fields.filter((x) => x.id !== f.id)); }}
+                          >×</button>
+                          {selected && (
+                            <span
+                              className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-orange-500 border-2 border-white rounded-sm cursor-se-resize"
+                              onMouseDown={(e) => beginDrag(e, { ...f, mode: 'resize' })}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-500">
+              {selectedFieldId && (() => {
+                const sf = fields.find((x) => x.id === selectedFieldId);
+                if (!sf) return null;
+                return (
+                  <div className="flex items-center gap-3 border rounded-lg p-3 bg-orange-50">
+                    <span className="text-xs font-medium uppercase text-orange-700">Editing: {sf.type}</span>
+                    <input type="text" value={sf.label} placeholder="Field label (e.g. Driver Signature)"
+                      onChange={(e) => updateField(sf.id, { label: e.target.value })}
+                      className="flex-1 border rounded px-2 py-1 text-sm" />
+                    <label className="flex items-center gap-1 text-sm">
+                      <input type="checkbox" checked={sf.required !== false}
+                        onChange={(e) => updateField(sf.id, { required: e.target.checked })} /> Required
+                    </label>
+                    <button onClick={() => { setFields(fields.filter((x) => x.id !== sf.id)); setSelectedFieldId(null); }}
+                      className="text-red-600 text-sm hover:underline">Delete</button>
+                  </div>
+                );
+              })()}              <p className="text-sm text-gray-500">
                 Click on the document to place a <strong>{selectedFieldType}</strong> field.
                 {fields.length > 0 && ` ${fields.length} field(s) placed.`}
               </p>

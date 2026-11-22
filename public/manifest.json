@@ -1,0 +1,10 @@
+{
+  "name": "M2 Fleet Communications Portal",
+  "short_name": "M2Fleet",
+  "description": "M2 Fleet Communications & E-Signature Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": []
+}

@@ -1,69 +1,80 @@
-import { supabase, getAuthUser } from './_lib/supabaseServer.js';
+import { supabase } from './_lib/supabaseServer.js';
 
 export default async function handler(req, res) {
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // CRITICAL: This function MUST work without any user authentication
-  // It's designed for external Velo PMs who are NOT users of our system
-  
   try {
     const { surveyToken, responses } = req.body;
-
-    if (!surveyToken || !responses || !Array.isArray(responses)) {
-      return res.status(400).json({ success: false, error: 'Invalid request data' });
+    if (!surveyToken || !Array.isArray(responses) || responses.length === 0) {
+      return res.status(400).json({ error: 'surveyToken and responses[] are required' });
     }
 
-    // Use service role to bypass all authentication - this is a PUBLIC survey    
-    // Verify survey exists and is still active
-    const surveys = await supabase.from('VeloSurvey').select('*').match({ surveyToken }).then(r => r.data || []);
-    
-    if (!surveys || surveys.length === 0) {
-      return res.status(404).json({ success: false, error: 'Invalid or expired survey token' });
+    const { data: survey, error: surveyError } = await supabase
+      .from('VeloSurvey')
+      .select('*')
+      .eq('surveyToken', surveyToken)
+      .single();
+
+    if (surveyError || !survey) {
+      return res.status(404).json({ error: 'Survey not found or invalid token' });
     }
 
-    const survey = surveys[0];
+    if (survey.status === 'Completed') {
+      return res.status(400).json({ error: 'This survey has already been completed' });
+    }
 
-    // Save each response
     const savedResponses = [];
+
     for (const response of responses) {
-      try {
-        const savedResponse = await supabase.from('VeloSurveyResponse').insert({
+      if (!response.technicianId || !response.technicianName) continue;
+
+      const scoreFields = ['communicationSkills', 'availability', 'installQuality', 'reliability', 'problemSolving', 'safetyCompliance', 'overallPerformance'];
+      const validScores = scoreFields.filter(f => typeof response[f] === 'number' && response[f] >= 1 && response[f] <= 5);
+      const calculatedScore = validScores.length > 0
+        ? Math.round((validScores.reduce((sum, f) => sum + response[f], 0) / validScores.length) * 100) / 100
+        : null;
+
+      const { data: saved, error: insertError } = await supabase
+        .from('VeloSurveyResponse')
+        .insert({
           surveyId: survey.id,
           technicianId: response.technicianId,
           technicianName: response.technicianName,
-          communicationSkills: response.communicationSkills,
-          availability: response.availability,
-          installQuality: response.installQuality,
-          reliability: response.reliability,
-          problemSolving: response.problemSolving,
-          safetyCompliance: response.safetyCompliance,
-          overallPerformance: response.overallPerformance,
-          additionalNotes: response.additionalNotes || ''
-        }).select().single().then(r => r.data);
-        savedResponses.push(savedResponse);
-      } catch (err) {
-        console.error('Error saving individual response:', err);
+          communicationSkills: response.communicationSkills ?? null,
+          availability: response.availability ?? null,
+          installQuality: response.installQuality ?? null,
+          reliability: response.reliability ?? null,
+          problemSolving: response.problemSolving ?? null,
+          safetyCompliance: response.safetyCompliance ?? null,
+          overallPerformance: response.overallPerformance ?? null,
+          additionalNotes: response.additionalNotes || '',
+          calculatedScore: calculatedScore
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Insert response error:', insertError);
+        continue;
       }
+
+      savedResponses.push(saved);
     }
 
-    // Mark survey as completed
-    await supabase.from('VeloSurvey').update({
-      status: 'Completed',
-      completedDate: new Date().toISOString()
-    }).eq('id', survey.id);
+    await supabase
+      .from('VeloSurvey')
+      .update({ status: 'Completed', completedDate: new Date().toISOString() })
+      .eq('id', survey.id);
 
     return res.status(200).json({
       success: true,
-      message: 'Survey responses submitted successfully',
-      responsesCount: savedResponses.length
+      surveyId: survey.id,
+      responses: savedResponses,
     });
 
   } catch (error) {
-    console.error('Error in submitVeloSurveyResponse:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to submit survey responses' 
-    });
+    console.error('submitVeloSurveyResponse error:', error);
+    return res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
   }
 }

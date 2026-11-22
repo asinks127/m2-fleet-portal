@@ -82,7 +82,7 @@ export default function InvoiceManagement() {
     try {
       const [userData, invoiceData, meData] = await Promise.all([ // Fetched current user
         User.list(),
-        Invoice.list('-created_date', 1000),
+        Invoice.list('-created_at', 5000),
         (supabase.auth.getUser().then(res => res.data.user)), // Fetch current user
       ]);
       setContractors(userData);
@@ -204,6 +204,17 @@ export default function InvoiceManagement() {
         rejectionReason: null,
         pendingReason: null
       });
+
+      // Push the file to the contractor's Drive folder (background, non-blocking).
+      if (invoice.fileUrl && !invoice.driveFileId) {
+        fetch('/api/uploadToDrive', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+          fileUrl: invoice.fileUrl,
+          fileName: invoice.fileName,
+          documentType: 'invoice',
+          contractorName: invoice.contractorName,
+          invoiceId: invoice.id
+        }) }).catch(err => console.error('Background Drive upload failed for ' + invoice.id + ':', err));
+      }
 
       setSuccess('Invoice has been approved successfully.');
       await loadData(); // Reload data to reflect changes

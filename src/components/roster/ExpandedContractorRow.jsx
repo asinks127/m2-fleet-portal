@@ -19,6 +19,7 @@ import {
 import { format, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
 import CallLogDialog from '../qc/CallLogDialog';
 import QCInspectionDialog from '../qc/QCInspectionDialog';
+import AdminInsuranceSection from './AdminInsuranceSection';
 
 export default function ExpandedContractorRow({ user, onUpdate }) {
   const [data, setData] = useState({
@@ -117,6 +118,7 @@ export default function ExpandedContractorRow({ user, onUpdate }) {
 
   return (
     <div className="p-6 space-y-6">
+      <AdminInsuranceSection user={user} onRefresh={loadExpandedData} />
       {/* Quick Actions Bar */}
       <div className="flex gap-3 pb-4 border-b">
         <Button size="sm" onClick={() => setShowCallLogDialog(true)}>

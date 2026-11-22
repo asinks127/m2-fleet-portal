@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils/index.js';
 import { supabase } from '@/lib/supabaseClient.js';
-import { Loader2, Building2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const getUserRole = (email) => {
   if (!email) return null;
@@ -115,7 +115,7 @@ export default function PortalAccessPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
-          <Building2 className="mx-auto mb-4 h-12 w-12 text-blue-600" />
+          <img src="/m2-fleet-mark.svg" alt="M2 Fleet" className="mx-auto mb-4 h-14 w-14" />
           <h1 className="text-2xl font-semibold text-slate-900">M2 Fleet Portal</h1>
           <p className="mt-2 text-sm text-slate-600">Sign in with Google to access your dashboard.</p>
         </div>

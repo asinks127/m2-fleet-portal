@@ -102,7 +102,10 @@ export default async function handler(req, res) {
       success: true,
       message: 'Documents sync processed',
       total: documents?.length || 0,
-      ...results,
+      synced: results.success,
+      failed: results.failed,
+      skipped: results.skipped,
+      details: results.details,
     });
   } catch (error) {
     console.error('Error in syncContractorDocumentsToDrive:', error);

@@ -49,7 +49,7 @@ export default function InvoicesHub() {
     setError(null);
     try {
       const [invoices, users] = await Promise.all([
-        (await supabase.from('Invoice').select('*') /* TODO: restore sorting/limit '-created_date', 2000 */).data,
+        (await supabase.from('Invoice').select('*').order('created_at', { ascending: false }).limit(5000)).data,
         (await supabase.from('User').select('*')).data
       ]);
 

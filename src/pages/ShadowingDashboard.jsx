@@ -17,6 +17,7 @@ import {
   ClipboardCheck, UserPlus, Edit, Send, Mail
 } from 'lucide-react';
 import { differenceInDays, addDays } from 'date-fns';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function ShadowingDashboard() {
   const [shadowingContractors, setShadowingContractors] = useState([]);
@@ -29,6 +30,9 @@ export default function ShadowingDashboard() {
   const [editingChecklist, setEditingChecklist] = useState(null);
   const [leadTechEmail, setLeadTechEmail] = useState('');
   const [leadTechName, setLeadTechName] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(location.search).get('status') || 'all');
 
   useEffect(() => {
     loadData();
@@ -50,7 +54,8 @@ export default function ShadowingDashboard() {
         user.shadowingStatus &&
         ['in_progress', 'not_started'].includes(user.shadowingStatus) &&
         user.active !== false &&
-        user.email && user.email.includes('.contractor@')
+        user.email && user.email.includes('.contractor@') &&
+        (statusFilter === 'all' || user.shadowingStatus === statusFilter)
       );
 
       setShadowingContractors(shadowingUsers);
@@ -60,6 +65,16 @@ export default function ShadowingDashboard() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const nextStatus = new URLSearchParams(location.search).get('status') || 'all';
+    if (nextStatus !== statusFilter) setStatusFilter(nextStatus);
+  }, [location.search]);
+
+  const clearStatusFilter = () => {
+    setStatusFilter('all');
+    navigate(location.pathname, { replace: true });
   };
 
   const startShadowing = async (contractorId) => {
@@ -310,6 +325,12 @@ export default function ShadowingDashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      {statusFilter !== 'all' && (
+        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <span>Showing: {statusFilter === 'in_progress' ? 'Currently shadowing' : statusFilter}</span>
+          <Button variant="outline" size="sm" onClick={clearStatusFilter}>Clear filter</Button>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Shadowing Dashboard</h1>
