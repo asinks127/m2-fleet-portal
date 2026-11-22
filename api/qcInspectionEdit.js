@@ -39,7 +39,20 @@ export default async function handler(req, res) {
     const { error: updErr } = await supabase.from('QCInspection').update(updates).eq('id', inspectionId);
     if (updErr) throw updErr;
 
-    return res.json({ success: true, changed: Object.keys(updates).length - 1, editHistory: history });
+    // If this inspection was already filed to Drive, regenerate the PDF so the
+    // filed copy always matches the corrected record.
+    let refiled = false;
+    if (current.driveStatus === 'filed') {
+      try {
+        const { default: fileInspection } = await import('./qcInspectionDrive.js');
+        await fileInspection(inspectionId);
+        refiled = true;
+      } catch (e) {
+        await supabase.from('QCInspection').update({ driveStatus: 'failed', driveError: 'Re-file after edit failed: ' + String(e?.message || e).slice(0, 300) }).eq('id', inspectionId);
+      }
+    }
+
+    return res.json({ success: true, changed: Object.keys(updates).length - 1, editHistory: history, refiled });
   } catch (err) {
     console.error('[qcInspectionEdit] failed:', err);
     return res.status(500).json({ error: err?.message || 'Internal server error' });
