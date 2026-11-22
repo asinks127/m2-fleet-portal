@@ -225,8 +225,18 @@ export async function fileInspection(inspectionId) {
   const reportsFolderId = await getOrCreateFolder(drive, REPORTS_SUBFOLDER, qcFolderId);
 
   const dt = new Date(inspection.inspectionDate || inspection.inspection_date || inspection.created_at || Date.now());
-  const stamp = dt.toISOString().slice(0, 16).replace('T', ' ');
+  const stamp = dt.toISOString().slice(0, 19).replace('T', ' ');
   const baseName = `QC Inspection - ${getTechnicianName(tech, inspection)} - ${stamp}`;
+
+  // Re-filing after an edit: retire the previously filed PDF so the folder
+  // never accumulates stale copies of the same inspection.
+  if (inspection.driveFileId) {
+    try {
+      await drive.files.update({ fileId: inspection.driveFileId, requestBody: { trashed: true }, supportsAllDrives: true });
+    } catch (e) {
+      console.error(`[qcInspectionDrive] could not trash previous PDF ${inspection.driveFileId}:`, e?.message);
+    }
+  }
 
   const pdfUpload = await drive.files.create({
     requestBody: { name: `${baseName}.pdf`, parents: [reportsFolderId] },
