@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { sendPerformanceAlert } from '@/functions.js';
-import { QCInspection, User } from '@/api/entities.js';
+import entities, { QCInspection, User } from '@/api/entities.js';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Input } from '@/components/ui/input.jsx';
@@ -49,7 +49,7 @@ export default function QCInspectionDialog({
         setCurrentUser(user);
         
         // Dynamically fetch inspections based on entity type
-        const InspectionEntity = /* FIXME: Unconverted base44 call */ supabase.entities[entityType];
+        const InspectionEntity = entities[entityType];
         if (InspectionEntity) {
             const filter = {};
             filter[idField] = technician.id;
@@ -86,7 +86,7 @@ export default function QCInspectionDialog({
       // Set ID field dynamically
       inspectionData[idField] = technician.id;
 
-      const InspectionEntity = /* FIXME: Unconverted base44 call */ supabase.entities[entityType];
+      const InspectionEntity = entities[entityType];
       if (!InspectionEntity) throw new Error(`Entity ${entityType} not found`);
 
       if (inspectionToEdit) {
