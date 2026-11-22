@@ -11,7 +11,9 @@ import {
   Users,
   Shield,
   CalendarCheck,
-  FileSignature
+  FileSignature,
+  ClipboardCheck,
+  PhoneForwarded
 } from 'lucide-react';
 
 export default function ReportsHub() {
@@ -46,6 +48,20 @@ export default function ReportsHub() {
           url: 'CallLogsReport',
           icon: Phone,
           color: 'bg-green-500'
+        },
+        {
+          title: 'QC Inspections Report',
+          description: 'Full inspection records with photos, availability, Drive filing status, and exports',
+          url: 'QCInspectionsReport',
+          icon: ClipboardCheck,
+          color: 'bg-indigo-500'
+        },
+        {
+          title: 'Velociti PM & QC Calls',
+          description: 'Communication history with Velociti project managers and quality control personnel',
+          url: 'VeloPMQCCallsReport',
+          icon: PhoneForwarded,
+          color: 'bg-amber-500'
         },
         {
           title: 'Negative Interactions Report',

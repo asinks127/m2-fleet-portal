@@ -7,7 +7,7 @@ import { Loader2, Users, Grid3x3, Columns } from 'lucide-react';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import BoardColumn from '../components/qc/BoardColumn';
 import QCGridView from '../components/qc/QCGridView';
-import QCInspectionDialog from '../components/qc/QCInspectionDialog';
+import QcInspectionFormDialog from '../components/qc/QcInspectionFormDialog';
 import CallLogDialog from '../components/qc/CallLogDialog';
 import QCTechnicianDetailsModal from '../components/qc/QCTechnicianDetailsModal';
 import ProjectEditDialog from '../components/qc/ProjectEditDialog';
@@ -30,6 +30,8 @@ export default function QCBoard() {
   // State for dialogs
   const [selectedTechnician, setSelectedTechnician] = useState(null);
   const [isInspectionDialogOpen, setIsInspectionDialogOpen] = useState(false);
+  // New Inspection can be opened from the header (no preselected technician) or from a card.
+  const [inspectionDialogOpen, setInspectionDialogOpen] = useState(false);
   const [isCallLogDialogOpen, setIsCallLogDialogOpen] = useState(false);
   const [showTechnicianDetails, setShowTechnicianDetails] = useState(false);
   const [boardType, setBoardType] = useState('technician'); // 'technician' or 'manager'
@@ -69,6 +71,12 @@ export default function QCBoard() {
   }, [loadData]);
   
   const handleOpenInspection = (technician) => {
+    // technician === null means "New Inspection" from the header — the form lets the QC pick anyone from the roster.
+    if (technician === null) {
+      setSelectedTechnician(null);
+      setInspectionDialogOpen(true);
+      return;
+    }
     setSelectedTechnician(technician);
     setIsInspectionDialogOpen(true);
   };
@@ -164,15 +172,7 @@ export default function QCBoard() {
         const contractorEmails = ['.contractor@m2fleetcom.com', '.contractor@smcinstallations.com'];
         const qcEmails = ['rmiller.contractor@m2fleetcom.com', 'choffman.contractor@m2fleetcom.com'];
         
-        data = allUsers.filter(user => {
-            // Include explicitly marked external managers
-            if (user.type === 'external_manager') return true;
-
-            const email = user.email?.toLowerCase() || '';
-            const isContractor = contractorEmails.some(d => email.includes(d));
-            const isQC = qcEmails.includes(email);
-            return !isContractor && !isQC && user.active !== false;
-        });
+        data = allUsers.filter((user) => user.type === 'external_manager');
     }
 
     // Filter by QC assignment (only for techs usually, but keeps logic consistent)
@@ -313,6 +313,9 @@ export default function QCBoard() {
           
           {boardType === 'manager' && (
               <div className="mt-4 flex justify-end">
+                <Button onClick={() => { handleOpenInspection(null); }} className="gap-2 bg-blue-600 hover:bg-blue-700">
+                  <Plus className="w-4 h-4" /> New Inspection
+                </Button>
                 <Button onClick={() => setIsAddManagerDialogOpen(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
                     <Plus className="w-4 h-4" /> Add Manager
                 </Button>
@@ -375,6 +378,16 @@ export default function QCBoard() {
         {/* Dialogs */}
         {selectedTechnician && (
           <>
+            <QcInspectionFormDialog
+              isOpen={inspectionDialogOpen}
+              onClose={() => setInspectionDialogOpen(false)}
+              technicians={technicians.filter((t) => t.type !== 'external_manager')}
+              currentUser={currentUser}
+              onSuccess={() => {
+                setInspectionDialogOpen(false);
+                loadData();
+              }}
+            />
             <QCInspectionDialog
               isOpen={isInspectionDialogOpen}
               onClose={() => setIsInspectionDialogOpen(false)}

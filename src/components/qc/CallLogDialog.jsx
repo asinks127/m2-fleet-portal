@@ -1,15 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { CallLog, ManagerCallLog, User } from '@/api/entities.js';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Textarea } from '@/components/ui/textarea.jsx';
 import { Label } from '@/components/ui/label.jsx';
 import { Loader2, Phone, Sparkles } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient.js';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx';
 
 export default function CallLogDialog({ technician, isOpen, onClose, onSuccess, entityType = 'CallLog', idField = 'technicianId' }) {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const isManagerCall = entityType === 'ManagerCallLog';
+  const [linkedTechnicianId, setLinkedTechnicianId] = useState('');
+  const [technicianOptions, setTechnicianOptions] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen || !isManagerCall) return;
+    (async () => {
+      try {
+        const users = await User.list();
+        setTechnicianOptions((users || []).filter(u => u.email && (
+          u.email.toLowerCase().includes('.contractor@m2fleetcom.com') ||
+          u.email.toLowerCase().includes('.contractor@smcinstallations.com')
+        ) && u.active !== false));
+      } catch (e) {
+        console.error('Failed to load technician roster:', e);
+      }
+    })();
+  }, [isOpen, isManagerCall]);
 
   const handleSubmit = async () => {
     if (notes.trim() === '') {
@@ -21,27 +40,32 @@ export default function CallLogDialog({ technician, isOpen, onClose, onSuccess, 
     setError(null);
     
     try {
-      const currentUser = (await supabase.auth.getUser()).data.user;
-      
-      // Construct payload dynamically based on entity type
+      const currentUser = await User.me();
+      if (!currentUser) throw new Error('Not signed in');
+
+      // Construct payload dynamically based on entity type. Column names match
+      // the actual Supabase tables (camelCase).
       const payload = {
         note: notes.trim(),
         callDate: new Date().toISOString(),
         loggedBy: currentUser.email
       };
-      
+
       payload[idField] = technician.id;
-      // Handle email field naming difference
-      if (entityType === 'ManagerCallLog') {
+      if (isManagerCall) {
           payload.managerEmail = technician.email;
+          // Optional link back to the M2 technician the call was about
+          const linked = technicianOptions.find(t => String(t.id) === String(linkedTechnicianId));
+          if (linked) {
+            payload.technicianId = linked.id;
+            payload.technicianName = linked.displayName || linked.full_name || linked.email;
+          }
       } else {
           payload.technicianEmail = technician.email;
       }
 
       // Step 1: Save the call log
-      const logEntity = /* FIXME: Unconverted base44 call */ supabase.entities[entityType];
-      if (!logEntity) throw new Error(`Entity ${entityType} not found`);
-      
+      const logEntity = isManagerCall ? ManagerCallLog : CallLog;
       const callLog = await logEntity.create(payload);
 
       console.log('Call log saved successfully');
@@ -117,6 +141,22 @@ export default function CallLogDialog({ technician, isOpen, onClose, onSuccess, 
               AI will automatically analyze for urgent issues in the background
             </p>
           </div>
+          
+          {isManagerCall && (
+            <div>
+              <Label>Related M2 Technician (optional)</Label>
+              <Select value={linkedTechnicianId} onValueChange={setLinkedTechnicianId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Not tied to a technician" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not tied to a technician</SelectItem>
+                  {technicianOptions.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.displayName || t.full_name || t.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">Link this call to the technician it concerned, if any.</p>
+            </div>
+          )}
           
           {error && (
             <div className="text-red-600 text-sm">{error}</div>

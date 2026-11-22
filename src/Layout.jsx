@@ -7,7 +7,7 @@ import {
   LayoutDashboard, LogOut, FileText, Users, Briefcase, Shield, CheckSquare,
   Truck, UserCheck, FileSearch, DollarSign, BarChart3, ChevronDown,
   ChevronRight, Menu, X, Calendar, UserCog, AlertTriangle, Phone,
-  Star, TrendingUp, Megaphone, KanbanSquare, FileSignature, Send, UserSquare, Settings, Zap, Home, Sparkles, UserX, MessageSquare, ShieldAlert, ClipboardList, ClipboardCheck, ShieldCheck, Play, Plus, Search, AlertCircle, Inbox, Wrench, Navigation, Database, FileWarning} from 'lucide-react';
+  Star, TrendingUp, Megaphone, KanbanSquare, FileSignature, Send, UserSquare, Settings, Zap, Home, Sparkles, UserX, MessageSquare, ShieldAlert, ClipboardList, ClipboardCheck, ShieldCheck, Play, Plus, Search, AlertCircle, Inbox, Wrench, Navigation, Database, FileWarning, PhoneForwarded} from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 
 const NavLink = ({ href, children, icon: Icon }) => {
@@ -64,6 +64,8 @@ const adminNavLinks = [
       { href: createPageUrl('Performance'), label: 'Performance Dashboard', icon: TrendingUp },
       { href: createPageUrl('VeloSurveyDashboard'), label: 'Velo Surveys', icon: Star },
       { href: createPageUrl('CallLogsReport'), label: 'Call Logs', icon: Phone },
+      { href: createPageUrl('QCInspectionsReport'), label: 'QC Inspections', icon: ClipboardCheck },
+      { href: createPageUrl('VeloPMQCCallsReport'), label: 'Velociti PM & QC Calls', icon: PhoneForwarded },
     ],
   },
   {
@@ -205,7 +207,7 @@ const veloRestrictedPages = [
   'ContractorDashboard', 'SubmitInvoice', 'ContractorProfile', 'TechRoster',
   'QCBoard', 'ShadowingDashboard', 'CallLogsReport', 'MyTeam', 'ComplianceDashboard',
   'SafetyAdmin', 'EmergencyContactReport', 'InvoiceComplianceReport', 'InvoiceHistory',
-  'ReportsHub'
+  'ReportsHub', 'QCInspectionsReport', 'VeloPMQCCallsReport'
 ];
 
 const publicPages = ['Survey', 'SignDocument', 'ShadowingChecklistResponse'];

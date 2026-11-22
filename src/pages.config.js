@@ -81,6 +81,8 @@ import ProjectManagerMapping from './pages/ProjectManagerMapping';
 import QCBoard from './pages/QCBoard';
 import RecruitingDashboard from './pages/RecruitingDashboard';
 import ReportsHub from './pages/ReportsHub';
+import QCInspectionsReport from './pages/QCInspectionsReport';
+import VeloPMQCCallsReport from './pages/VeloPMQCCallsReport';
 import ResourceAdmin from './pages/ResourceAdmin';
 import ResourceBrowse from './pages/ResourceBrowse';
 import ResourceContacts from './pages/ResourceContacts';
@@ -155,6 +157,8 @@ export const PAGES = {
     "BulkInvite": BulkInvite,
     "Calendar": Calendar,
     "CallLogsReport": CallLogsReport,
+    "QCInspectionsReport": QCInspectionsReport,
+    "VeloPMQCCallsReport": VeloPMQCCallsReport,
     "ComplianceDashboard": ComplianceDashboard,
     "ContractorAccounting": ContractorAccounting,
     "ContractorDashboard": ContractorDashboard,
