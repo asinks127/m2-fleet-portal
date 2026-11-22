@@ -22,6 +22,20 @@ export default async function handler(req, res) {
   if (!isAdminAuth(user)) return res.status(403).json({ error: 'Forbidden — admin only' });
 
   try {
+    if (req.method === 'POST' && req.body?.fileBase64) {
+      // Upload a photo on behalf of an authenticated admin (service role write).
+      const inspectionId = String(req.body.inspectionId || 'unfiled');
+      const fileName = String(req.body.fileName || 'photo.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const mime = req.body.mimeType || 'image/jpeg';
+      const ext = (fileName.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${inspectionId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const buf = Buffer.from(String(req.body.fileBase64), 'base64');
+      if (!buf.length) return res.status(400).json({ error: 'Empty file' });
+      const { error } = await supabase.storage.from(BUCKET).upload(path, buf, { contentType: mime, upsert: false });
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ success: true, photo: { path, name: fileName, size: buf.length } });
+    }
+
     if (req.method === 'POST') {
       const paths = (req.body?.paths || []).filter(Boolean).slice(0, 50);
       const urls = {};
